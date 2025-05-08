@@ -1,3 +1,5 @@
+# Blockchain Engineering - Class of 2025 - Team 1 
+
 # TrustChain Super App 
 [![Build Status](https://github.com/Tribler/trustchain-superapp/workflows/build/badge.svg)](https://github.com/Tribler/trustchain-superapp/actions) [![ktlint](https://img.shields.io/badge/ktlint%20code--style-%E2%9D%A4-FF4081)](https://pinterest.github.io/ktlint/)
 
