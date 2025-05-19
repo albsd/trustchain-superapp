@@ -51,6 +51,11 @@
                 android:layout_height="wrap_content"
                 android:text="All Roles"
                 android:id="@+id/JoinAsAllRolesButton"/>
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Open in wallet"
+                android:id="@+id/OpenInWallet"/>
         </LinearLayout>
         </LinearLayout>
 </LinearLayout>
