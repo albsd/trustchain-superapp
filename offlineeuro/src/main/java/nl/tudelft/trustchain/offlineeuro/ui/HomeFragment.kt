@@ -29,6 +29,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 import androidx.core.content.edit
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.interfaces.DecodedJWT
 
 class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
     private val client = OkHttpClient()
@@ -163,6 +166,10 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
             if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
             val json = response.body?.string() ?: throw Exception("Empty response")
             Log.d("transaction details", json)
+            val vpToken = JSONObject(json).getString("vp_token")
+            val decoded: DecodedJWT = JWT.decode(vpToken)
+            val vpClaim = decoded.getClaim("vp").asMap()
+            Log.d("VP Claim", vpClaim.toString())
             return@use mapOf()
         }
     }
