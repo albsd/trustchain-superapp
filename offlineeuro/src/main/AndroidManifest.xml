@@ -2,37 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
-
-        <!-- Normal launcher entry point -->
-        <activity
-            android:name=".OfflineEuroMainActivity"
-            android:exported="true"
-            android:launchMode="singleTask">
-
-            <!-- App icon in the launcher -->
+        <activity android:name=".OfflineEuroMainActivity"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!-- Redirect handler for myapp://callback?... -->
-        <activity
-            android:name=".RedirectActivity"
-            android:exported="true"
-            android:launchMode="singleTask">
-
-            <!-- opens the app from a browser / another app -->
-            <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-
-                <!-- MUST match redirect_uri exactly -->
-                <data android:scheme="myapp"
-                    android:host="callback"/>
+                <data android:scheme="offlineeuro" android:host="wallet_response"/>
             </intent-filter>
-        </activity>
 
+        </activity>
     </application>
+
 </manifest>
