@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
+import nl.tudelft.trustchain.offlineeuro.utils.DcSdJWTDecoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -32,6 +33,7 @@ import androidx.core.content.edit
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
+import java.util.Base64
 
 class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
     private val client = OkHttpClient()
@@ -74,33 +76,37 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
 
     override fun onResume() {
         super.onResume()
-
-//        activity?.intent?.data?.let { uri ->
-
-            val prefs = context?.getSharedPreferences("offline_euro", Context.MODE_PRIVATE)
-            transactionId = prefs?.getString("transaction_id", null)
-            Log.d("Application has returned", transactionId!!)
-//            if (uri.scheme == "offlineeuro" && uri.host == "wallet_response") {
-                if (transactionId != null) {
-                    lifecycleScope.launch {
-                        try {
-                            getWalletDetails(transactionId!!)
-                        } catch (e: Exception) {
-                            Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
+        val prefs = context?.getSharedPreferences("offline_euro", Context.MODE_PRIVATE)
+        transactionId = prefs?.getString("transaction_id", null)
+        if (transactionId != null) {
+            lifecycleScope.launch {
+                try {
+                    val claims = getWalletDetails(transactionId!!)
+                    var details: String = ""
+                    for ((key, value) in claims) {
+                        details += ("$value ")
                     }
-                } else {
-                    Toast.makeText(requireContext(), "Could not record identity!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Hello $details", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
-//            }
-//        }
+            }
+            prefs?.edit(commit = true) {
+                remove("transaction_id")
+            }
+        } else {
+            // Toast.makeText(requireContext(), "Could not record identity!", Toast.LENGTH_LONG).show()
+        }
     }
+
+
 
     private fun createPostBody(nonce: String): String {
         return JSONObject().apply {
             put("type", "vp_token")
             put("nonce", nonce)
             put("request_uri_method", "get")
+// TODO: see if maybe there is a way to redirect
 //            put("wallet_response_redirect_uri_template", "https://appurl.io/ACns8QEcLZ?response_code={RESPONSE_CODE}")
             put("presentation_definition", JSONObject().apply {
                 put("id", "albertino")
@@ -117,7 +123,6 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
                         })
                         put("constraints", JSONObject().apply {
                             put("fields", JSONArray().apply {
-                                // Field definitions
                                 put(JSONObject().apply {
                                     put("path", JSONArray(listOf("\$.vct")))
                                     put("filter", JSONObject().apply {
@@ -125,12 +130,14 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
                                         put("const", "urn:eu.europa.ec.eudi:pid:1")
                                     })
                                 })
-                                // Add other fields similarly...
                                 put(JSONObject().apply {
                                     put("path", JSONArray(listOf("\$.family_name")))
                                     put("intent_to_retain", false)
                                 })
-                                // ... Add all your remaining fields here ...
+                                put(JSONObject().apply {
+                                    put("path", JSONArray(listOf("\$.given_name")))
+                                    put("intent_to_retain", false)
+                                })
                             })
                         })
                     })
@@ -165,26 +172,17 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
             val json = response.body?.string() ?: throw Exception("Empty response")
-            Log.d("transaction details", json)
-            val vpToken = JSONObject(json).getString("vp_token")
-            val decoded: DecodedJWT = JWT.decode(vpToken)
-            val vpClaim = decoded.getClaim("vp").asMap()
-            Log.d("VP Claim", vpClaim.toString())
-            return@use mapOf()
+            val dcSdJwtString = JSONObject(json).getString("vp_token")
+            val claims = DcSdJWTDecoder.decodeSdJwt(dcSdJwtString)
+            return@use claims
         }
     }
 
+
     private fun launchWalletIntent(response: Map<String, String>) {
-        Log.d( "client_id: " ,  "" + response["client_id"])
-        Log.d( "request_uri: " ,  "" + response["request_uri"])
-        Log.d("transaction_id: ", "" + response["transaction_id"])
         val prefs = context?.getSharedPreferences("offline_euro", Context.MODE_PRIVATE)
         transactionId = response["transaction_id"]
         prefs?.edit(commit = true) { putString("transaction_id", transactionId!!) }
-
-        // https://verifier.eudiw.dev/get-wallet-code?response_code=3752894f-3bea-4455-b6e2-3958459499c8
-        // https://verifier-backend.eudiw.dev/wallet/request.jwt/KHPI0d7u5hcBGh0sOhcb4-Q-gGJlXdOgfZryVuPvlSVS7DYjV1nLuMom_LXoecLDFt1rLUAJJZ7a-7tPa2lOKw
-        Log.d( "request_uri_method: " ,  "" + response["request_uri_method"])
         val deepLink = Uri.parse("eudi-openid4vp://").buildUpon()
             .appendQueryParameter("client_id", response["client_id"])
             .appendQueryParameter("request_uri", response["request_uri"])
