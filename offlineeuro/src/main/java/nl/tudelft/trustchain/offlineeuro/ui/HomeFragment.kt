@@ -73,7 +73,7 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
         // Set positive button
         alertDialogBuilder.setPositiveButton("Join!") { dialog, which ->
             val username = editText.text.toString()
-            moveToUserHome(username)
+            moveToSelectBank(username)
         }
 
         // Set negative button
@@ -86,8 +86,8 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
         alertDialog.show()
     }
 
-    private fun moveToUserHome(userName: String) {
+    private fun moveToSelectBank(userName: String) {
         val bundle = bundleOf("userName" to userName)
-        findNavController().navigate(R.id.nav_home_userhome, bundle)
+        findNavController().navigate(R.id.nav_home_bankSelected, bundle)
     }
 }

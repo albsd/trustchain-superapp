@@ -1,8 +1,10 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -13,6 +15,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
+import nl.tudelft.trustchain.offlineeuro.enums.Role
 
 class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     private lateinit var user: User
@@ -29,12 +32,12 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             user = ParticipantHolder.user!!
             communicationProtocol = user.communicationProtocol as IPV8CommunicationProtocol
             val userName: String = user.name
-            val welcomeTextView = view.findViewById<TextView>(R.id.user_home_welcome_text)
+            val welcomeTextView = view.findViewById<TextView>(R.id.bank_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName)
         } else {
             activity?.title = "User"
             val userName: String? = arguments?.getString("userName")
-            val welcomeTextView = view.findViewById<TextView>(R.id.user_home_welcome_text)
+            val welcomeTextView = view.findViewById<TextView>(R.id.bank_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName!!)
             community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
 
@@ -52,17 +55,59 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         view.findViewById<Button>(R.id.user_home_reset_button).setOnClickListener {
             communicationProtocol.addressBookManager.clear()
             user.reset()
-            val addressList = view.findViewById<LinearLayout>(R.id.user_home_addresslist)
-            val addresses = communicationProtocol.addressBookManager.getAllAddresses()
-            TableHelpers.addAddressesToTable(addressList, addresses, user, requireContext())
+            updateAllAddresses(view)
         }
         view.findViewById<Button>(R.id.user_home_sync_addresses).setOnClickListener {
             communicationProtocol.scopePeers()
         }
-        val addressList = view.findViewById<LinearLayout>(R.id.user_home_addresslist)
-        val addresses = communicationProtocol.addressBookManager.getAllAddresses()
-        TableHelpers.addAddressesToTable(addressList, addresses, user, requireContext())
+
+        updateAllAddresses(view)
         onUserDataChangeCallBack(null)
+    }
+
+    fun updateAllAddresses(view: View) {
+        val addresses = communicationProtocol.addressBookManager.getAllAddresses()
+
+        val bankAddresses = addresses.filter { it.type == Role.Bank }
+        val userAddresses = addresses.filter { it.type == Role.User }
+        val ttpAddresses  = addresses.filter { it.type == Role.TTP }
+
+        // Update bank accounts table
+        val bankAccountsList = view.findViewById<LinearLayout>(R.id.user_home_bankAccountsList)
+        TableHelpers.addAddressesToTable(bankAccountsList, bankAddresses, user, requireContext(), ::showTransactionWindow)
+
+        // Update peer table
+        val peerList = view.findViewById<LinearLayout>(R.id.user_home_peerList)
+        TableHelpers.addAddressesToTable(peerList, userAddresses, user, requireContext(), ::showTransactionWindow)
+
+        // Update TTP table
+        val TTPList = view.findViewById<LinearLayout>(R.id.user_home_TTPList)
+        TableHelpers.addAddressesToTable(TTPList, ttpAddresses, user, requireContext(), ::showTransactionWindow)
+    }
+
+    // Alert dialog for performing a transaction
+    private fun showTransactionWindow(userName: String) {
+        val builder = AlertDialog.Builder(requireContext())
+        val editText = EditText(requireContext())
+
+        builder.setView(editText)
+        builder.setTitle("Amount to send:")
+
+        // Listener for performing a transaction: sending euro to another peer
+        builder.setPositiveButton("Send") { _, _ ->
+                try {
+                    user.sendDigitalEuroTo(userName)
+                } catch (e: Exception) {
+                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                }
+        }
+
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+        }
+
+        builder.setIcon(R.drawable.ic_baseline_euro_symbol_24)
+        builder.show()
     }
 
     private val onUserDataChangeCallBack: (String?) -> Unit = { message ->
@@ -74,9 +119,13 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
                     message,
                     requireView(),
                     communicationProtocol,
-                    user
+                    user,
+                    ::updateAllAddresses
                 )
             }
         }
     }
+
+    val updateUI: (View) -> Unit
+        get() = { view -> updateAllAddresses(view) }
 }

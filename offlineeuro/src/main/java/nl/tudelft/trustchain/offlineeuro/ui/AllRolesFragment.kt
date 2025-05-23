@@ -24,6 +24,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
     private lateinit var ttp: TTP
     private lateinit var bank: Bank
     private lateinit var user: User
+    private lateinit var userFragment: UserHomeFragment
 
     override fun onViewCreated(
         view: View,
@@ -120,7 +121,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
 
     private fun setUserAsChild() {
         iPV8CommunicationProtocol.participant = user
-        val userFragment = UserHomeFragment()
+        userFragment = UserHomeFragment()
         childFragmentManager.beginTransaction()
             .replace(R.id.parent_fragment_container, userFragment)
             .commit()
@@ -144,7 +145,8 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                     message,
                     requireView(),
                     iPV8CommunicationProtocol,
-                    user
+                    user,
+                    userFragment.updateUI
                 )
             }
         }

@@ -63,11 +63,11 @@
             />
 
         <Button
+            android:id="@+id/all_roles_set_user"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="User"
             android:layout_weight="0.3"
-            android:id="@+id/all_roles_set_user"/>
+            android:text="User" />
 
         <View
             android:layout_width="0dp"

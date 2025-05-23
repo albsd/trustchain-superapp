@@ -12,14 +12,14 @@
             android:id="@+id/nav_home_bankhome"
             app:destination="@id/bankHomeFragment" />
         <action
-            android:id="@+id/nav_home_userhome"
-            app:destination="@id/userHomeFragment" />
-        <action
             android:id="@+id/nav_home_ttphome"
             app:destination="@id/TTPHomeFragment" />
         <action
             android:id="@+id/nav_home_all_roles_home"
             app:destination="@id/allRolesFragment" />
+        <action
+            android:id="@+id/nav_home_bankSelected"
+            app:destination="@id/bankSelectorFragment" />
     </fragment>
     <fragment
         android:id="@+id/bankHomeFragment"
@@ -28,21 +28,17 @@
     <fragment
         android:id="@+id/userHomeFragment"
         android:name="nl.tudelft.trustchain.offlineeuro.ui.UserHomeFragment"
-        android:label="UserHomeFragment" >
-        <action
-            android:id="@+id/nav_userHome_bankSelected"
-            app:destination="@id/bankSelectedFragment" />
-    </fragment>
+        android:label="UserHomeFragment" />
     <fragment
-        android:id="@+id/bankSelectedFragment"
-        android:name="nl.tudelft.trustchain.offlineeuro.ui.BankSelectedFragment"
-        android:label="BankSelectedFragment" >
-        <argument
-            android:name="bankName"
-            app:argType="string" />
+        android:id="@+id/bankSelectorFragment"
+        android:name="nl.tudelft.trustchain.offlineeuro.ui.BankSelectorFragment"
+        android:label="BankSelectorFragment">
         <argument
             android:name="userName"
             app:argType="string" />
+        <action
+            android:id="@+id/nav_home_userhome"
+            app:destination="@id/userHomeFragment" />
     </fragment>
     <fragment
         android:id="@+id/TTPHomeFragment"
