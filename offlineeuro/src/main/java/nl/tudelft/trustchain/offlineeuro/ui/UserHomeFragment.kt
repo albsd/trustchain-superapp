@@ -32,12 +32,12 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             user = ParticipantHolder.user!!
             communicationProtocol = user.communicationProtocol as IPV8CommunicationProtocol
             val userName: String = user.name
-            val welcomeTextView = view.findViewById<TextView>(R.id.bank_welcome_text)
+            val welcomeTextView = view.findViewById<TextView>(R.id.user_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName)
         } else {
             activity?.title = "User"
             val userName: String? = arguments?.getString("userName")
-            val welcomeTextView = view.findViewById<TextView>(R.id.bank_welcome_text)
+            val welcomeTextView = view.findViewById<TextView>(R.id.user_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName!!)
             community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
 

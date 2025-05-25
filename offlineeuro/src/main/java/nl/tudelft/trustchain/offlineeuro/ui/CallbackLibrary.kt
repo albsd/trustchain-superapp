@@ -41,7 +41,7 @@ object CallbackLibrary {
         view: View,
         ttp: TTP
     ) {
-        val table = view.findViewById<LinearLayout>(R.id.tpp_home_registered_user_list) ?: return
+        val table = view.findViewById<LinearLayout>(R.id.ttp_home_registered_user_list) ?: return
         val users = ttp.getRegisteredUsers()
         TableHelpers.removeAllButFirstRow(table)
         TableHelpers.addRegisteredUsersToTable(table, users)

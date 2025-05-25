@@ -162,7 +162,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
     }
 
     private fun updateUserList(view: View) {
-        val table = view.findViewById<LinearLayout>(R.id.tpp_home_registered_user_list) ?: return
+        val table = view.findViewById<LinearLayout>(R.id.ttp_home_registered_user_list) ?: return
         val users = ttp.getRegisteredUsers()
         TableHelpers.removeAllButFirstRow(table)
         TableHelpers.addRegisteredUsersToTable(table, users)
