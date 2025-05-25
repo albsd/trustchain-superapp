@@ -11,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.view.marginTop
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
@@ -29,6 +30,7 @@ object TableHelpers {
         }
     }
 
+    // Function to add the registered users to the table in the TTP Fragment
     fun addRegisteredUsersToTable(
         table: LinearLayout,
         users: List<RegisteredUser>
@@ -43,36 +45,36 @@ object TableHelpers {
         user: RegisteredUser,
         context: Context,
     ): LinearLayout {
-        val layout =
-            LinearLayout(context).apply {
-                layoutParams = rowParams()
-                orientation = LinearLayout.HORIZONTAL
-            }
+        val tableRow = LinearLayout(context)
+        tableRow.layoutParams = rowParams(context)
+        tableRow.orientation = LinearLayout.HORIZONTAL
+
+        val styledContext = ContextThemeWrapper(context, R.style.TableCell)
 
         val idField =
-            TextView(context).apply {
+            TextView(styledContext).apply {
                 text = user.id.toString()
                 layoutParams = layoutParams(0.2f)
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
         val nameField =
-            TextView(context).apply {
+            TextView(styledContext).apply {
                 text = user.name
                 layoutParams = layoutParams(0.2f)
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
         val publicKeyField =
-            TextView(context).apply {
+            TextView(styledContext).apply {
                 text = user.publicKey.toString()
                 layoutParams = layoutParams(0.7f)
             }
 
-        layout.addView(idField)
-        layout.addView(nameField)
-        layout.addView(publicKeyField)
-        return layout
+        tableRow.addView(idField)
+        tableRow.addView(nameField)
+        tableRow.addView(publicKeyField)
+        return tableRow
     }
 
     fun addDepositedEurosToTable(
@@ -91,7 +93,7 @@ object TableHelpers {
     ): LinearLayout {
         val layout =
             LinearLayout(context).apply {
-                layoutParams = rowParams()
+                layoutParams = rowParams(context)
                 orientation = LinearLayout.HORIZONTAL
             }
 
@@ -123,22 +125,13 @@ object TableHelpers {
         onSendClick: (String) -> Unit       // Listener for clicking the send euro button
     ) {
         removeAllButFirstRow(table)
-        var isFirst = true
+
         for (address in addresses) {
             val row = when (address.type) {
                 Role.Bank -> addressToBankAccountsTableRow(address, context, user)                     // Add row to Bank Accounts table
                 Role.User -> addressToPeerTransactionsTableRow(address, context, user, onSendClick)   // Add row to Peer Transactions table
                 Role.TTP -> addressToTTPTableRow(address, context, user)                             // Add row to TTP table
             }
-
-            if (isFirst) {
-                val params = LinearLayout.LayoutParams(row.layoutParams).apply {
-                    topMargin = 6.dp(context)
-                }
-                row.layoutParams = params
-                isFirst = false
-            }
-
             table.addView(row)
         }
     }
@@ -148,9 +141,8 @@ object TableHelpers {
         context: Context,
         user: User
     ): LinearLayout {
-
         val tableRow = LinearLayout(context)
-        tableRow.layoutParams = rowParams()
+        tableRow.layoutParams = rowParams(context)
         tableRow.orientation = LinearLayout.HORIZONTAL
         val styledContext = ContextThemeWrapper(context, R.style.TableCell)
 
@@ -205,7 +197,7 @@ object TableHelpers {
         onSendClick: (String) -> Unit
     ): LinearLayout {
         val tableRow = LinearLayout(context)
-        tableRow.layoutParams = rowParams()
+        tableRow.layoutParams = rowParams(context)
         tableRow.orientation = LinearLayout.HORIZONTAL
         val styledContext = ContextThemeWrapper(context, R.style.TableCell)
 
@@ -216,12 +208,12 @@ object TableHelpers {
                 gravity = Gravity.CENTER
             }
 
-        val sendEuroButton = Button(context).apply {
+        val sendEuroButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
             layoutParams = layoutParams(0.30f)
             text = "Send"
         }
 
-        val doubleSpendButton = Button(context).apply {
+        val doubleSpendButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
             layoutParams = layoutParams(0.35f).apply {
                 (this as? LinearLayout.LayoutParams)?.marginStart = 2.dp(context)
             }
@@ -245,7 +237,7 @@ object TableHelpers {
         user: User
     ): LinearLayout {
         val tableRow = LinearLayout(context)
-        tableRow.layoutParams = rowParams()
+        tableRow.layoutParams = rowParams(context)
         tableRow.orientation = LinearLayout.HORIZONTAL
         val styledContext = ContextThemeWrapper(context, R.style.TableCell)
 
@@ -329,11 +321,13 @@ object TableHelpers {
         )
     }
 
-    private fun rowParams(): LinearLayout.LayoutParams {
+    private fun rowParams(context: Context): LinearLayout.LayoutParams {
         return LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        ).apply {
+            topMargin = 6.dp(context)
+        }
     }
 
     private fun applyButtonStylingToBankActions(
@@ -350,10 +344,6 @@ object TableHelpers {
         }
     }
 
-    private fun Int.dp(context: Context): Int {
-        return (this * context.resources.displayMetrics.density).toInt()
-    }
-
     private fun applyButtonStylingToPeerActions(
         button: Button,
         context: Context
@@ -361,11 +351,13 @@ object TableHelpers {
         button.apply {
             textSize = 14f
             setPadding(8.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
-            setTextColor(context.getColor(R.color.white))
-            background.setTint(context.resources.getColor(R.color.colorPrimary))
-            button.letterSpacing = 0f
+            backgroundTintList = ContextCompat.getColorStateList(context, R.color.colorPrimary)
             isClickable = true
             isFocusable = true
         }
+    }
+
+    private fun Int.dp(context: Context): Int {
+        return (this * context.resources.displayMetrics.density).toInt()
     }
 }

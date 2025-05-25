@@ -28,7 +28,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/user_home_layout"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@id/user_home_buttons">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -92,11 +92,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="2dp"
                 android:text="Transactions"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/user_home_peerList"
@@ -125,7 +125,10 @@
                 android:id="@+id/user_home_TTPList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:showDividers="middle"
+                android:divider="?android:attr/dividerHorizontal"
+                android:dividerPadding="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
