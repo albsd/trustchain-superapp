@@ -77,6 +77,7 @@ object TableHelpers {
         return tableRow
     }
 
+    // Function to add deposited euro information to the table in the Bank Fragment
     fun addDepositedEurosToTable(
         table: LinearLayout,
         bank: Bank
@@ -114,6 +115,55 @@ object TableHelpers {
         layout.addView(numberField)
         layout.addView(doubleSpendingField)
         return layout
+    }
+
+    // Function to add banks to the table in the Bank Selector Fragment
+    fun addBanksToTable(
+        table: LinearLayout,
+        banks: List<Address>,
+        context: Context
+    ) {
+        for (address in banks) {
+            table.addView(bankToTableRow(address, context))
+        }
+    }
+
+    fun bankToTableRow(
+        address: Address,
+        context: Context
+    ): LinearLayout {
+        val tableRow = LinearLayout(context)
+        tableRow.layoutParams = rowParams(context)
+        tableRow.orientation = LinearLayout.HORIZONTAL
+
+        val styledContext = ContextThemeWrapper(context, R.style.TableCell)
+
+        val bankNameField =
+            TextView(styledContext).apply {
+                layoutParams = layoutParams(1f)
+                text = address.name
+                gravity = Gravity.CENTER
+            }
+
+        val pkField =
+            TextView(styledContext).apply {
+                layoutParams = layoutParams(1f)
+                text = address.publicKey.toString()
+                gravity = Gravity.CENTER
+            }
+
+        val registerAtBankButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
+            layoutParams = layoutParams(1f)
+            text = "Register"
+        }
+
+        applyButtonStylingToAction(registerAtBankButton, context)
+        setBankRegisterActionButton(registerAtBankButton, context)
+
+        tableRow.addView(bankNameField)
+        tableRow.addView(pkField)
+
+        return tableRow
     }
 
     // Function to add addresses to the tables in the User Fragment
@@ -167,7 +217,7 @@ object TableHelpers {
         }
 
         val depositButton = ImageButton(context)
-        applyButtonStylingToBankActions(depositButton, context)
+        applyButtonStylingToBankAction(depositButton, context)
         depositContainer.addView(depositButton)
 
         val withdrawContainer = LinearLayout(context).apply {
@@ -177,7 +227,7 @@ object TableHelpers {
         }
 
         val withdrawButton = ImageButton(context)
-        applyButtonStylingToBankActions(withdrawButton, context)
+        applyButtonStylingToBankAction(withdrawButton, context)
         withdrawContainer.addView(withdrawButton)
 
         setBankActionButtons(depositButton, withdrawButton, address.name, user, context)
@@ -220,8 +270,8 @@ object TableHelpers {
             text = "Double Spend"
         }
 
-        applyButtonStylingToPeerActions(sendEuroButton, context)
-        applyButtonStylingToPeerActions(doubleSpendButton, context)
+        applyButtonStylingToAction(sendEuroButton, context)
+        applyButtonStylingToAction(doubleSpendButton, context)
         setUserActionButtons(sendEuroButton, doubleSpendButton, address.name, user, context, onSendClick)
 
         tableRow.addView(peerNameField)
@@ -313,6 +363,15 @@ object TableHelpers {
         }
     }
 
+    private fun setBankRegisterActionButton(
+        registerAtBankButton: Button,
+        context: Context
+    ) {
+        registerAtBankButton.setOnClickListener {
+            //todo
+        }
+    }
+
     private fun layoutParams(weight: Float): LinearLayout.LayoutParams {
         return LinearLayout.LayoutParams(
             0,
@@ -330,7 +389,7 @@ object TableHelpers {
         }
     }
 
-    private fun applyButtonStylingToBankActions(
+    private fun applyButtonStylingToBankAction(
         button: ImageButton,
         context: Context
     ) {
@@ -344,7 +403,7 @@ object TableHelpers {
         }
     }
 
-    private fun applyButtonStylingToPeerActions(
+    private fun applyButtonStylingToAction(
         button: Button,
         context: Context
     ) {

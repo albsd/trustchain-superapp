@@ -18,8 +18,8 @@
             android:id="@+id/nav_home_all_roles_home"
             app:destination="@id/allRolesFragment" />
         <action
-            android:id="@+id/nav_home_bankSelected"
-            app:destination="@id/bankSelectorFragment" />
+            android:id="@+id/nav_wallet_registration"
+            app:destination="@id/walletRegistrationFragment" />
     </fragment>
     <fragment
         android:id="@+id/bankHomeFragment"
@@ -48,4 +48,15 @@
         android:id="@+id/allRolesFragment"
         android:name="nl.tudelft.trustchain.offlineeuro.ui.AllRolesFragment"
         android:label="AllRolesFragment" />
+    <fragment
+        android:id="@+id/walletRegistrationFragment"
+        android:name="nl.tudelft.trustchain.offlineeuro.ui.WalletRegistrationFragment"
+        android:label="WalletRegistrationFragment" >
+        <action
+            android:id="@+id/nav_bank_selector"
+            app:destination="@id/bankSelectorFragment" />
+        <argument
+            android:name="userName"
+            app:argType="string" />
+    </fragment>
 </navigation>

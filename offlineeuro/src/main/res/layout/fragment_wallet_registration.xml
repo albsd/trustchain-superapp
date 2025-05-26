@@ -6,19 +6,19 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/bank_selector_layout"
+        android:id="@+id/wallet_registration_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/bank_selector_welcome_text"
+            android:id="@+id/wallet_registration_welcome_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginVertical="30dp"
             android:gravity="center"
-            android:text="Hello _name_, Welcome"
+            android:text="Registration"
             android:textSize="20sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -28,7 +28,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bank_selector_layout">
+        app:layout_constraintTop_toBottomOf="@id/wallet_registration_layout">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -41,12 +41,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="Select a bank to register at"
+                android:text="Select a TTP to register at"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
             <LinearLayout
-                android:id="@+id/bank_selector_list"
+                android:id="@+id/wallet_registration_ttp_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
@@ -64,7 +64,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Bank Name" />
+                        android:text="TTP Name" />
 
                     <TextView
                         style="@style/TableHeader"
@@ -81,8 +81,23 @@
                         android:text="Action" />
                 </LinearLayout>
             </LinearLayout>
-
-
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/wallet_registration_button_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingBottom="32dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/wallet_registration_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Open in wallet" />
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

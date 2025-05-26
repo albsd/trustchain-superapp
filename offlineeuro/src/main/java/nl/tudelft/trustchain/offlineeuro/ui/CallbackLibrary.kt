@@ -9,8 +9,10 @@ import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.entity.User
+import nl.tudelft.trustchain.offlineeuro.enums.Role
 
 object CallbackLibrary {
+
     fun bankCallback(
         context: Context,
         message: String?,
