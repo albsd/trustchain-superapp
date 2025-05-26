@@ -29,7 +29,10 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
         }
 
         view.findViewById<Button>(R.id.JoinAsUserButton).setOnClickListener {
-            showAlertDialog()
+            if (ParticipantHolder.user == null)
+                showAlertDialog()
+            else
+                findNavController().navigate(R.id.action_homeFragment_to_userHomeFragment)
         }
         view.findViewById<Button>(R.id.JoinAsAllRolesButton).setOnClickListener {
             findNavController().navigate(R.id.nav_home_all_roles_home)
@@ -72,8 +75,18 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
         alertDialogBuilder.setMessage("")
         // Set positive button
         alertDialogBuilder.setPositiveButton("Join!") { dialog, which ->
-            val username = editText.text.toString()
-            moveToWalletRegistration(username)
+            val username = editText.text?.toString() ?: ""
+            if (username.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "Illegal username",
+                    Toast.LENGTH_LONG
+                )
+                    .show()
+                dialog.cancel()
+            } else {
+                moveToWalletRegistration(username)
+            }
         }
 
         // Set negative button

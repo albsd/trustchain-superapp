@@ -6,9 +6,11 @@ import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import nl.tudelft.trustchain.offlineeuro.R
+import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -20,18 +22,30 @@ import nl.tudelft.trustchain.offlineeuro.enums.Role
 class BankSelectorFragment : OfflineEuroBaseFragment(R.layout.fragment_bank_selector) {
     private lateinit var community: OfflineEuroCommunity
     private lateinit var communicationProtocol: IPV8CommunicationProtocol
+    private lateinit var user: User
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
-        val group = BilinearGroup(PairingTypes.FromFile, context = context)
-        val addressBookManager = AddressBookManager(context, group)
-        communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
-        fetchBanks(requireContext(), view, communicationProtocol)
 
-        val userName = arguments?.getString("userName")
+        if (ParticipantHolder.user == null) {
+            Toast.makeText(
+                requireContext(),
+                "Something went wrong",
+                Toast.LENGTH_SHORT
+            ).show()
+            findNavController().popBackStack()
+        } else {
+            user = ParticipantHolder.user!!
+        }
+
+        community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
+
+        communicationProtocol = user.communicationProtocol as IPV8CommunicationProtocol
+
         val welcomeTextView = view.findViewById<TextView>(R.id.bank_selector_welcome_text)
-        welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName!!)
+        welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", user.name)
+
+        fetchBanks(requireContext(), view, communicationProtocol)
     }
 
     private fun fetchBanks(

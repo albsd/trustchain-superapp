@@ -2,12 +2,14 @@ package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.navigation.fragment.findNavController
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -31,25 +33,15 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         if (ParticipantHolder.user != null) {
             user = ParticipantHolder.user!!
             communicationProtocol = user.communicationProtocol as IPV8CommunicationProtocol
+            community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
             val userName: String = user.name
             val welcomeTextView = view.findViewById<TextView>(R.id.user_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName)
-        } else {
-            activity?.title = "User"
-            val userName: String? = arguments?.getString("userName")
-            val welcomeTextView = view.findViewById<TextView>(R.id.user_welcome_text)
-            welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName!!)
-            community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
 
-            val group = BilinearGroup(PairingTypes.FromFile, context = context)
-            val addressBookManager = AddressBookManager(context, group)
-            communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
-            try {
-                user = User(userName, group, context, null, communicationProtocol, onDataChangeCallback = onUserDataChangeCallBack)
-                communicationProtocol.scopePeers()
-            } catch (e: Exception) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            }
+
+        } else {
+            Log.e("user_home", "User should have been initialized already before reaching user home fragment!!")
+            return findNavController().navigate(R.id.action_userHomeFragment_to_homeFragment)
         }
 
         view.findViewById<Button>(R.id.user_home_reset_button).setOnClickListener {
