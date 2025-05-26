@@ -218,7 +218,7 @@ class SystemTest {
         // Create address messages
         val senderAddressMessage = AddressMessage(sender.name, Role.User, sender.publicKey.toBytes(), sender.name.toByteArray())
         val receiverAddressMessage = AddressMessage(receiver.name, Role.User, receiver.publicKey.toBytes(), receiver.name.toByteArray())
-        
+
         // Add address messages to both communities to trigger address registration
         val senderCommunity = userList[sender]!!
         val receiverCommunity =
@@ -227,7 +227,7 @@ class SystemTest {
             } else {
                 userList[receiver]!!
             }
-            
+
         // Add address messages to both communities
         senderCommunity.messageList.add(senderAddressMessage)
         senderCommunity.messageList.add(receiverAddressMessage)
@@ -235,10 +235,10 @@ class SystemTest {
             receiverCommunity.messageList.add(senderAddressMessage)
             receiverCommunity.messageList.add(receiverAddressMessage)
         }
-        
+
         // Wait a bit for address messages to be processed
         Thread.sleep(100)
-        
+
         val spenderPeer = Mockito.mock(Peer::class.java)
         val randomizationElementsCaptor = argumentCaptor<RandomizationElementsBytes>()
         val transactionDetailsCaptor = argumentCaptor<TransactionDetailsBytes>()
@@ -282,6 +282,8 @@ class SystemTest {
     fun createTestUser(): User {
         // Start with a random group
         val addressBookManager = createAddressManager(group)
+        addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
+
         val walletManager = WalletManager(null, group, createDriver())
 
         // Add the community for later access
@@ -290,7 +292,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
+        val user = User(userName, group, null, walletManager, communicationProtocol, ttp, runSetup = false)
         user.crs = crs
         user.group = group
         userList[user] = community
