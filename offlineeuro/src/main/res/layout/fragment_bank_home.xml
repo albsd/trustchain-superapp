@@ -74,36 +74,6 @@
                         android:text="Double Spend" />
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="8dp"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="123456789" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:padding="4dp">
-
-                        <Button
-                            android:id="@+id/check_double_spend_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:text="Check"
-                            android:textSize="12sp"/>
-                    </LinearLayout>
-                </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>

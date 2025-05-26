@@ -2,9 +2,8 @@ package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
+import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
@@ -13,6 +12,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
+import nl.tudelft.trustchain.offlineeuro.enums.Role
 
 class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wallet_registration) {
     private lateinit var community: OfflineEuroCommunity
@@ -40,12 +40,31 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 communicationProtocol,
                 runSetup = false
             )
-            //communicationProtocol.scopePeers()
+
             ParticipantHolder.user = user
+            user.addCallback(onDataChangeCallback)
+            communicationProtocol.scopePeers()
         } catch (e: Exception) {
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
         }
     }
 
+    private val onDataChangeCallback: (String?) -> Unit = { message ->
+        if (this::user.isInitialized) {
+            requireActivity().runOnUiThread {
+                val context = requireContext()
+                val view = requireView()
 
+                if (message != null) {
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+
+                // Update TTP addresses for wallet registration
+                val ttpAddresses = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.TTP }
+                val ttpTable = view.findViewById<LinearLayout>(R.id.wallet_registration_ttp_list)
+                TableHelpers.removeAllButFirstRow(ttpTable)
+                TableHelpers.addTTPsToTable(ttpTable, ttpAddresses, context)
+            }
+        }
+    }
 }

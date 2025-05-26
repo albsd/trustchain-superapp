@@ -92,29 +92,30 @@ object TableHelpers {
         depositedEuro: Pair<String, Boolean>,
         context: Context
     ): LinearLayout {
-        val layout =
-            LinearLayout(context).apply {
-                layoutParams = rowParams(context)
-                orientation = LinearLayout.HORIZONTAL
-            }
+        val tableRow = LinearLayout(context)
+        tableRow.layoutParams = rowParams(context)
+        tableRow.orientation = LinearLayout.HORIZONTAL
 
-        val numberField =
-            TextView(context).apply {
+        val styledContext = ContextThemeWrapper(context, R.style.TableCell)
+
+        val serialNumberField =
+            TextView(styledContext).apply {
                 text = depositedEuro.first
-                layoutParams = layoutParams(0.7f)
+                layoutParams = layoutParams(1f)
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
         val doubleSpendingField =
-            TextView(context).apply {
+            TextView(styledContext).apply {
                 text = depositedEuro.second.toString()
-                layoutParams = layoutParams(0.4f)
+                layoutParams = layoutParams(1f)
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
-        layout.addView(numberField)
-        layout.addView(doubleSpendingField)
-        return layout
+        tableRow.addView(serialNumberField)
+        tableRow.addView(doubleSpendingField)
+
+        return tableRow
     }
 
     // Function to add banks to the table in the Bank Selector Fragment
@@ -162,7 +163,56 @@ object TableHelpers {
 
         tableRow.addView(bankNameField)
         tableRow.addView(pkField)
+        tableRow.addView(registerAtBankButton)
 
+        return tableRow
+    }
+
+    // Function to add TTP addresses to the table in the Wallet Registration Fragment
+    fun addTTPsToTable(
+        table: LinearLayout,
+        ttps: List<Address>,
+        context: Context
+    ) {
+        for (ttp in ttps) {
+            table.addView(ttpToTableRow(ttp, context))
+        }
+    }
+
+    fun ttpToTableRow(
+        ttp: Address,
+        context: Context
+    ): LinearLayout {
+        val tableRow = LinearLayout(context)
+        tableRow.layoutParams = rowParams(context)
+        tableRow.orientation = LinearLayout.HORIZONTAL
+
+        val styledContext = ContextThemeWrapper(context, R.style.TableCell)
+
+        val ttpNameField =
+            TextView(styledContext).apply {
+                text = ttp.name
+                layoutParams = layoutParams(1f)
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+
+        val publicKeyField =
+            TextView(styledContext).apply {
+                text = ttp.publicKey.toString()
+                layoutParams = layoutParams(1f)
+            }
+
+        val registerAtTTPButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
+            layoutParams = layoutParams(1f)
+            text = "Register"
+        }
+
+        applyButtonStylingToAction(registerAtTTPButton, context)
+        setTTPRegisterActionButton(registerAtTTPButton, context)
+
+        tableRow.addView(ttpNameField)
+        tableRow.addView(publicKeyField)
+        tableRow.addView(registerAtTTPButton)
         return tableRow
     }
 
@@ -360,6 +410,15 @@ object TableHelpers {
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun setTTPRegisterActionButton(
+        registerAtTTPButton: Button,
+        context: Context
+    ) {
+        registerAtTTPButton.setOnClickListener {
+            //todo
         }
     }
 
