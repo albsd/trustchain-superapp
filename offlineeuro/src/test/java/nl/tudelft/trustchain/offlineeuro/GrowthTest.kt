@@ -20,6 +20,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
+import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.DigitalEuro
@@ -27,6 +28,7 @@ import nl.tudelft.trustchain.offlineeuro.entity.Transaction
 import nl.tudelft.trustchain.offlineeuro.entity.TransactionDetails
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.entity.WalletEntry
+import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 import org.junit.Assert
 import org.junit.Test
@@ -43,6 +45,7 @@ class GrowthTest {
     private val userList = hashMapOf<User, OfflineEuroCommunity>()
     private lateinit var bank: Bank
     private lateinit var bankCommunity: OfflineEuroCommunity
+    private lateinit var ttp: TTP
     private val group: BilinearGroup = BilinearGroup(PairingTypes.F)
     private val crs = CRSGenerator.generateCRSMap(group).first
 
@@ -50,6 +53,7 @@ class GrowthTest {
 
     @Test
     fun testGrowth() {
+        createTTP()
         createBank()
         val user = createTestUser()
         val euro = withdrawDigitalEuro(user, bank.name)
@@ -178,6 +182,17 @@ class GrowthTest {
         return WalletEntry(digitalEuro, t, transactionSignature)
     }
 
+    private fun createTTP() {
+        val addressBookManager = createAddressManager(group)
+        val registeredUserManager = RegisteredUserManager(null, group, createDriver())
+        val community = prepareCommunityMock()
+        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+
+        Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
+        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager)
+        ttp.crs = crs
+    }
+
     private fun createBank() {
         val addressBookManager = createAddressManager(group)
         val depositedEuroManager = DepositedEuroManager(null, group, createDriver())
@@ -186,7 +201,7 @@ class GrowthTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
         bank.crs = crs
         bank.generateKeyPair()
         bankCommunity = community

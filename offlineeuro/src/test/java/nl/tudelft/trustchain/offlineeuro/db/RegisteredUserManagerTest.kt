@@ -3,6 +3,7 @@ package nl.tudelft.trustchain.offlineeuro.db
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import nl.tudelft.offlineeuro.sqldelight.Database
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
+import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -26,8 +27,9 @@ class RegisteredUserManagerTest {
         val name = "Tester"
         val privateKey = group.getRandomZr()
         val publicKey = group.g.powZn(privateKey).immutable
+        val signature = Schnorr.schnorrSignature(privateKey, publicKey.toBytes(), group)
 
-        val registrationResult = registeredUserManager.addRegisteredUser(name, publicKey)
+        val registrationResult = registeredUserManager.addRegisteredUser(name, publicKey, signature)
         Assert.assertTrue("The registration should be successful", registrationResult)
 
         val findByName = registeredUserManager.getRegisteredUserByName(name)!!

@@ -37,7 +37,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
         iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
         ttp = TTP("TTP", group, iPV8CommunicationProtocol, context, onDataChangeCallback = onTTPDataChangeCallback)
 
-        bank = Bank("Bank", group, iPV8CommunicationProtocol, context, runSetup = false, onDataChangeCallback = onBankDataChangeCallBack)
+        bank = Bank("Bank", group, iPV8CommunicationProtocol, context, publicKeyVerifier = ttp, runSetup = false, onDataChangeCallback = onBankDataChangeCallBack)
         user =
             User(
                 "TestUser",
@@ -45,6 +45,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                 context,
                 null,
                 iPV8CommunicationProtocol,
+                ttp,
                 runSetup = false,
                 onDataChangeCallback = onUserDataChangeCallBack
             )

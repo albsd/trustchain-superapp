@@ -24,6 +24,8 @@ enum class TransactionResult(val valid: Boolean, val description: String) {
     INVALID_PROOF_IN_CHAIN(false, "Invalid proof in chain"),
     INVALID_CHAIN_OF_PROOFS(false, "Invalid chaining of proofs"),
     INVALID_PREVIOUS_TRANSACTION_SIGNATURE(false, "Invalid previous transaction signature"),
+    UNREGISTERED_PUBLIC_KEY(false, "Public key not registered with TTP"),
+    INVALID_PUBLIC_KEY_SIGNATURE(false, "Invalid public key signature"),
 }
 
 data class TransactionDetailsBytes(
@@ -49,7 +51,7 @@ data class TransactionDetails(
     val currentTransactionProof: TransactionProof,
     val previousThetaSignature: SchnorrSignature?,
     val theta1Signature: SchnorrSignature,
-    val spenderPublicKey: Element,
+    val spenderPublicKey: Element
 ) {
     fun toTransactionDetailsBytes(): TransactionDetailsBytes {
         return TransactionDetailsBytes(
@@ -101,8 +103,21 @@ object Transaction {
         transaction: TransactionDetails,
         publicKeyBank: Element,
         bilinearGroup: BilinearGroup,
-        crs: CRS
+        crs: CRS,
+        publicKeyVerifier: PublicKeyVerifier,
+        ttpPublicKey: Element
     ): TransactionResult {
+        // Check if the public key is registered and get its signature
+        val ttp = publicKeyVerifier as? TTP ?: return TransactionResult.UNREGISTERED_PUBLIC_KEY
+        val registeredUser = ttp.getRegisteredUsers()
+            .find { it.publicKey == transaction.spenderPublicKey }
+            ?: return TransactionResult.UNREGISTERED_PUBLIC_KEY
+
+        // Verify the TTP's signature on the public key using the provided TTP public key
+        if (!Schnorr.verifySchnorrSignature(registeredUser.signature, ttpPublicKey, bilinearGroup)) {
+            return TransactionResult.INVALID_PUBLIC_KEY_SIGNATURE
+        }
+
         // Verify if the Digital euro is signed
         val digitalEuro = transaction.digitalEuro
         if (!digitalEuro.verifySignature(publicKeyBank, bilinearGroup) ||

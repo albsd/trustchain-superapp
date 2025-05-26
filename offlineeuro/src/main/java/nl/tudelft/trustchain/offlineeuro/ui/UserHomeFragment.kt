@@ -13,11 +13,13 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
+import nl.tudelft.trustchain.offlineeuro.entity.TTP
 
 class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     private lateinit var user: User
     private lateinit var community: OfflineEuroCommunity
     private lateinit var communicationProtocol: IPV8CommunicationProtocol
+    private lateinit var ttp: TTP
 
     override fun onViewCreated(
         view: View,
@@ -42,7 +44,15 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             val addressBookManager = AddressBookManager(context, group)
             communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
             try {
-                user = User(userName, group, context, null, communicationProtocol, onDataChangeCallback = onUserDataChangeCallBack)
+                user = User(
+                    userName,
+                    group,
+                    context,
+                    null,
+                    communicationProtocol,
+                    ttp,  // Pass TTP as publicKeyVerifier
+                    onDataChangeCallback = onUserDataChangeCallBack
+                )
                 communicationProtocol.scopePeers()
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()

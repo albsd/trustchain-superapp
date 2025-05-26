@@ -25,6 +25,7 @@ class BankTest {
     private val ttpGroup = BilinearGroup(PairingTypes.FromFile)
     private val crs = CRSGenerator.generateCRSMap(ttpGroup).first
     private val depositedEuroManager = Mockito.mock(DepositedEuroManager::class.java)
+    private val publicKeyVerifier = Mockito.mock(PublicKeyVerifier::class.java)
 
     @Test
     fun initWithSetupTest() {
@@ -50,7 +51,7 @@ class BankTest {
         whenever(community.registerAtTTP(any(), publicKeyCaptor.capture(), any())).then { }
 
         val bankName = "SomeBank"
-        val bank = Bank(bankName, BilinearGroup(PairingTypes.FromFile), communicationProtocol, null, depositedEuroManager)
+        val bank = Bank(bankName, BilinearGroup(PairingTypes.FromFile), communicationProtocol, null, depositedEuroManager, publicKeyVerifier)
 
         val capturedPKBytes = publicKeyCaptor.firstValue
         val capturedPK = ttpGroup.gElementFromBytes(capturedPKBytes)
@@ -70,7 +71,7 @@ class BankTest {
 
         val bankName = "SomeOtherBank"
         val group = BilinearGroup(PairingTypes.FromFile)
-        val bank = Bank(bankName, group, communicationProtocol, null, depositedEuroManager, false)
+        val bank = Bank(bankName, group, communicationProtocol, null, depositedEuroManager, publicKeyVerifier, false)
 
         verify(community, never()).getGroupDescriptionAndCRS()
         verify(community, never()).registerAtTTP(any(), any(), any())
@@ -123,7 +124,7 @@ class BankTest {
 
         val bankName = "Bank"
         val group = ttpGroup
-        val bank = Bank(bankName, group, communicationProtocol, null, depositedEuroManager, false)
+        val bank = Bank(bankName, group, communicationProtocol, null, depositedEuroManager, publicKeyVerifier, false)
         bank.crs = crs
         return bank
     }

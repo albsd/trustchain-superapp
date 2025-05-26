@@ -210,6 +210,16 @@ class SystemTest {
         expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
         doubleSpend: Boolean = false
     ) {
+        // Register the sender with the TTP if not already registered
+        if (!ttp.isPublicKeyRegistered(sender.publicKey)) {
+            ttp.registerUser(sender.name, sender.publicKey)
+        }
+
+        // Create address messages
+        val senderAddressMessage = AddressMessage(sender.name, Role.User, sender.publicKey.toBytes(), sender.name.toByteArray())
+        val receiverAddressMessage = AddressMessage(receiver.name, Role.User, receiver.publicKey.toBytes(), receiver.name.toByteArray())
+        
+        // Add address messages to both communities to trigger address registration
         val senderCommunity = userList[sender]!!
         val receiverCommunity =
             if (receiver.name == bank.name) {
@@ -217,6 +227,18 @@ class SystemTest {
             } else {
                 userList[receiver]!!
             }
+            
+        // Add address messages to both communities
+        senderCommunity.messageList.add(senderAddressMessage)
+        senderCommunity.messageList.add(receiverAddressMessage)
+        if (receiver is User) {
+            receiverCommunity.messageList.add(senderAddressMessage)
+            receiverCommunity.messageList.add(receiverAddressMessage)
+        }
+        
+        // Wait a bit for address messages to be processed
+        Thread.sleep(100)
+        
         val spenderPeer = Mockito.mock(Peer::class.java)
         val randomizationElementsCaptor = argumentCaptor<RandomizationElementsBytes>()
         val transactionDetailsCaptor = argumentCaptor<TransactionDetailsBytes>()
@@ -297,7 +319,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, bankCommunity)
 
         Mockito.`when`(bankCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
         bank.crs = crs
         addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
         ttp.registerUser(bank.name, bank.publicKey)

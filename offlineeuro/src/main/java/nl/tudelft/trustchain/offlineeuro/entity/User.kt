@@ -3,9 +3,11 @@ package nl.tudelft.trustchain.offlineeuro.entity
 import android.content.Context
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
+import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
+import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import java.util.UUID
 
 class User(
@@ -14,10 +16,12 @@ class User(
     context: Context?,
     private var walletManager: WalletManager? = null,
     communicationProtocol: ICommunicationProtocol,
+    private val publicKeyVerifier: PublicKeyVerifier? = null,
     runSetup: Boolean = true,
     onDataChangeCallback: ((String?) -> Unit)? = null
 ) : Participant(communicationProtocol, name, onDataChangeCallback) {
     val wallet: Wallet
+    private val addressBookManager: AddressBookManager
 
     init {
         communicationProtocol.participant = this
@@ -31,6 +35,7 @@ class User(
         if (walletManager == null) {
             walletManager = WalletManager(context, group)
         }
+        addressBookManager = (communicationProtocol as IPV8CommunicationProtocol).addressBookManager
 
         wallet = Wallet(privateKey, publicKey, walletManager!!)
     }
@@ -85,7 +90,8 @@ class User(
     ): String {
         val usedRandomness = lookUpRandomness(publicKeySender) ?: return "Randomness Not found!"
         removeRandomness(publicKeySender)
-        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs)
+        val ttpPublicKey = communicationProtocol.getPublicKeyOf("TTP", group)
+        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, publicKeyVerifier!!, ttpPublicKey)
 
         if (transactionResult.valid) {
             wallet.addToWallet(transactionDetails, usedRandomness)

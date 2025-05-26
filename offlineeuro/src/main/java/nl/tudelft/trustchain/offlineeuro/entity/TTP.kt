@@ -6,6 +6,7 @@ import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRSGenerator
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
+import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
 
 class TTP(
@@ -15,7 +16,7 @@ class TTP(
     context: Context?,
     private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
     onDataChangeCallback: ((String?) -> Unit)? = null
-) : Participant(communicationProtocol, name, onDataChangeCallback) {
+) : Participant(communicationProtocol, name, onDataChangeCallback), PublicKeyVerifier {
     val crsMap: Map<Element, Element>
 
     init {
@@ -31,7 +32,9 @@ class TTP(
         name: String,
         publicKey: Element
     ): Boolean {
-        val result = registeredUserManager.addRegisteredUser(name, publicKey)
+        // Sign the user's public key with TTP's private key
+        val signature = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
+        val result = registeredUserManager.addRegisteredUser(name, publicKey, signature)
         onDataChangeCallback?.invoke("Registered $name")
         return result
     }
@@ -75,5 +78,9 @@ class TTP(
 
     override fun reset() {
         registeredUserManager.clearAllRegisteredUsers()
+    }
+
+    override fun isPublicKeyRegistered(publicKey: Element): Boolean {
+        return registeredUserManager.getAllRegisteredUsers().any { it.publicKey == publicKey }
     }
 }

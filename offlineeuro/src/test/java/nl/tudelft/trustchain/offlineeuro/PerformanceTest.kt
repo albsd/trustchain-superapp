@@ -20,6 +20,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
+import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.DigitalEuro
@@ -27,6 +28,7 @@ import nl.tudelft.trustchain.offlineeuro.entity.Transaction
 import nl.tudelft.trustchain.offlineeuro.entity.TransactionDetails
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.entity.WalletEntry
+import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 import org.junit.Assert
 import org.junit.Test
@@ -44,6 +46,7 @@ class PerformanceTest {
     private val userList = hashMapOf<User, OfflineEuroCommunity>()
     private lateinit var bank: Bank
     private lateinit var bankCommunity: OfflineEuroCommunity
+    private lateinit var ttp: TTP
     private val group: BilinearGroup = BilinearGroup(PairingTypes.A)
     private val crsMap = CRSGenerator.generateCRSMap(group)
     private val crs = crsMap.first
@@ -53,6 +56,7 @@ class PerformanceTest {
 
     @Test
     fun testPerformance() {
+        createTTP()
         createBank()
         val user = createTestUser()
         val euro = withdrawDigitalEuro(user, bank.name)
@@ -67,6 +71,7 @@ class PerformanceTest {
         for (i: Int in 0 until numberOfProofs) {
             val privateKey = group.getRandomZr()
             val publicKey = group.g.powZn(privateKey)
+            ttp.registerUser("TestUser${this.i++}", publicKey)
             val randomT = group.getRandomZr()
             val randomizationElements = GrothSahai.tToRandomizationElements(randomT, group, crs)
             val transactionDetails =
@@ -83,7 +88,7 @@ class PerformanceTest {
                 measureTimeMillis {
                     Assert.assertTrue(
                         "The transaction should be valid",
-                        Transaction.validate(transactionDetails, bank.publicKey, group, crs).valid
+                        Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey).valid
                     )
                 }
             println(timeInMillis)
@@ -170,7 +175,7 @@ class PerformanceTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
+        val user = User(userName, group, null, walletManager, communicationProtocol, ttp, runSetup = false)
         user.crs = crs
         userList[user] = community
         user.generateKeyPair()
@@ -188,6 +193,17 @@ class PerformanceTest {
         return WalletEntry(digitalEuro, t, transactionSignature)
     }
 
+    private fun createTTP() {
+        val addressBookManager = createAddressManager(group)
+        val registeredUserManager = RegisteredUserManager(null, group, createDriver())
+        val community = prepareCommunityMock()
+        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+
+        Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
+        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager)
+        ttp.crs = crs
+    }
+
     private fun createBank() {
         val addressBookManager = createAddressManager(group)
         val depositedEuroManager = DepositedEuroManager(null, group, createDriver())
@@ -196,9 +212,8 @@ class PerformanceTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
         bank.crs = crs
-        bank.generateKeyPair()
         bankCommunity = community
     }
 
