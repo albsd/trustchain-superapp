@@ -13,9 +13,8 @@ class TTP(
     group: BilinearGroup,
     communicationProtocol: ICommunicationProtocol,
     context: Context?,
-    private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
-    onDataChangeCallback: ((String?) -> Unit)? = null
-) : Participant(communicationProtocol, name, onDataChangeCallback) {
+    private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group)
+) : Participant(communicationProtocol, name) {
     val crsMap: Map<Element, Element>
 
     init {
@@ -32,7 +31,7 @@ class TTP(
         publicKey: Element
     ): Boolean {
         val result = registeredUserManager.addRegisteredUser(name, publicKey)
-        onDataChangeCallback?.invoke("Registered $name")
+        emitEvent("Registered $name")
         return result
     }
 
@@ -65,10 +64,10 @@ class TTP(
         val secondPK = getUserFromProof(secondProof)
 
         return if (firstPK != null && firstPK == secondPK) {
-            onDataChangeCallback?.invoke("Found proof that  ${firstPK.name} committed fraud!")
+            emitEvent("Found proof that  ${firstPK.name} committed fraud!")
             "Double spending detected. Double spender is ${firstPK.name} with PK: ${firstPK.publicKey}"
         } else {
-            onDataChangeCallback?.invoke("Invalid fraud request received!")
+            emitEvent("Invalid fraud request received!")
             "No double spending detected"
         }
     }

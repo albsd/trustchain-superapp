@@ -38,7 +38,6 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 context,
                 null,
                 communicationProtocol,
-                onDataChangeCallback = null,
                 runSetup = false
             )
             //communicationProtocol.scopePeers()
@@ -47,4 +46,6 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
         }
     }
+
+
 }

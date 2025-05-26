@@ -32,6 +32,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
 
         if (ParticipantHolder.user != null) {
             user = ParticipantHolder.user!!
+            user.addCallback(onUserDataChangeCallBack)
             communicationProtocol = user.communicationProtocol as IPV8CommunicationProtocol
             community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
             val userName: String = user.name
