@@ -1,10 +1,14 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -43,10 +47,22 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
             ParticipantHolder.user = user
             user.addCallback(onDataChangeCallback)
-            communicationProtocol.scopePeers()
+            lifecycleScope.launch {
+                while(true) {
+                    refresh()
+                    delay(1000)
+                }
+            }
+            refresh()
         } catch (e: Exception) {
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun refresh() {
+        communicationProtocol.scopePeers()
+        onDataChangeCallback(null)
+        Log.i("Peers", "Found ${communicationProtocol.addressBookManager.getAllAddresses().size} peers")
     }
 
     private val onDataChangeCallback: (String?) -> Unit = { message ->
