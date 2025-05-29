@@ -59,6 +59,10 @@ object MessageID {
 
     const val FRAUD_CONTROL_REQUEST = 22
     const val FRAUD_CONTROL_REPLY = 23
+
+    const val VERIFICATION_REQUEST_TTP = 24
+    const val VERIFICATION_COMPLETE_TTP = 25
+    const val REGISTRATION_COMPLETE_TTP = 26
 }
 
 class OfflineEuroCommunity(
@@ -94,6 +98,10 @@ class OfflineEuroCommunity(
 
         messageHandlers[MessageID.FRAUD_CONTROL_REQUEST] = ::onFraudControlRequestPacket
         messageHandlers[MessageID.FRAUD_CONTROL_REPLY] = ::onFraudControlReplyPacket
+
+        messageHandlers[MessageID.VERIFICATION_REQUEST_TTP] = ::onVerificationRequest
+        messageHandlers[MessageID.VERIFICATION_COMPLETE_TTP] = ::onVerificationComplete
+        messageHandlers[MessageID.REGISTRATION_COMPLETE_TTP] = ::onRegistrationComplete
     }
 
     fun getGroupDescriptionAndCRS() {
@@ -173,6 +181,18 @@ class OfflineEuroCommunity(
     fun onGetRegisterAtTTPPacket(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationPayload)
         onGetRegisterAtTTP(peer, payload)
+    }
+
+    fun onVerificationRequest(packet: Packet) {
+
+    }
+
+    fun onVerificationComplete(packet: Packet) {
+
+    }
+
+    fun onRegistrationComplete(packet: Packet) {
+
     }
 
     fun onGetRegisterAtTTP(

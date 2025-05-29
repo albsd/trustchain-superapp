@@ -15,7 +15,10 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMess
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -245,6 +248,18 @@ class IPV8CommunicationProtocol(
         ttp.registerUser(message.userName, publicKey)
     }
 
+    private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
+
+    }
+
+    private fun handleVerificationCompleteMessage(message: TTPVerificationCompleteMessage) {
+
+    }
+
+    private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
+
+    }
+
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {
         val role = getParticipantRole()
 
@@ -272,6 +287,9 @@ class IPV8CommunicationProtocol(
             is TransactionRandomizationElementsRequestMessage -> handleTransactionRandomizationElementsRequest(message)
             is TransactionMessage -> handleTransactionMessage(message)
             is TTPRegistrationMessage -> handleRegistrationMessage(message)
+            is TTPVerificationRequestMessage -> handleVerificationRequestMessage(message)
+            is TTPVerificationCompleteMessage -> handleVerificationCompleteMessage(message)
+            is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
             else -> throw Exception("Unsupported message type")
         }
