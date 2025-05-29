@@ -106,13 +106,11 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
             put("type", "vp_token")
             put("nonce", nonce)
             put("request_uri_method", "get")
-// TODO: see if maybe there is a way to redirect
-//            put("wallet_response_redirect_uri_template", "https://appurl.io/ACns8QEcLZ?response_code={RESPONSE_CODE}")
             put("presentation_definition", JSONObject().apply {
-                put("id", "albertino")
+                put("id", "c5bd22ef-860f-43ef-a795-e9ea8a474351")
                 put("input_descriptors", JSONArray().apply {
                     put(JSONObject().apply {
-                        put("id", "crocodillio")
+                        put("id", "0434db89-f7a3-46de-8bd5-1e6faaa740d2")
                         put("name", "Person Identification Data (PID)")
                         put("purpose", "")
                         put("format", JSONObject().apply {
@@ -123,27 +121,28 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
                         })
                         put("constraints", JSONObject().apply {
                             put("fields", JSONArray().apply {
-                                put(JSONObject().apply {
-                                    put("path", JSONArray(listOf("\$.vct")))
-                                    put("filter", JSONObject().apply {
+                                val requiredPaths = listOf(
+                                    "\$.vct" to JSONObject().apply {
                                         put("type", "string")
-                                        put("const", "urn:eu.europa.ec.eudi:pid:1")
+                                        put("const", "urn:eudi:pid:1")
+                                    },
+                                    "\$.family_name" to null,
+                                    "\$.given_name" to null,
+                                )
+
+                                requiredPaths.forEach { (path, filter) ->
+                                    put(JSONObject().apply {
+                                        put("path", JSONArray(listOf(path)))
+                                        filter?.let { put("filter", it) }
+                                        put("intent_to_retain", true)
                                     })
-                                })
-                                put(JSONObject().apply {
-                                    put("path", JSONArray(listOf("\$.family_name")))
-                                    put("intent_to_retain", false)
-                                })
-                                put(JSONObject().apply {
-                                    put("path", JSONArray(listOf("\$.given_name")))
-                                    put("intent_to_retain", false)
-                                })
+                                }
                             })
                         })
                     })
                 })
             })
-        }.toString()
+        }.toString();
     }
 
     private suspend fun makeNetworkRequest(body: String): Map<String, String> = withContext(Dispatchers.IO) {
