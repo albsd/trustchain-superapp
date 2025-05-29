@@ -182,6 +182,17 @@ class OfflineEuroCommunity(
         send(ttpPeer, registerPacket)
     }
 
+    /**
+     * Sends a verification request message to a peer after initiating a presentation flow.
+     *
+     * The message contains the required information (client ID, request URI, and method)
+     * that the peer (usually a user's wallet) will use to fulfill the Verifiable Presentation request.
+     *
+     * @param clientId The unique client identifier associated with the VP session.
+     * @param requestUri The URI at which the presentation request can be fetched.
+     * @param requestUriMethod The method to use.
+     * @param peer The peer to which the message is sent.
+     */
     fun sendVerificationRequest(clientId: String, requestUri: String,
                                 requestUriMethod: String, peer: Peer) {
         val verificationRequestPacket =
@@ -197,6 +208,15 @@ class OfflineEuroCommunity(
         send(peer, verificationRequestPacket)
     }
 
+    /**
+     * Sends a registration completion message to the peer indicating whether verification was successful.
+     *
+     * This is typically used after the Verifiable Presentation has been validated and the user's status
+     * has been confirmed as "Completed" or "Failed".
+     *
+     * @param message The result message, e.g., "Completed" or "Failed".
+     * @param peer The peer to which the message is sent.
+     */
     fun sendRegistrationCompleteMessage(message: String, peer: Peer) {
         val registrationCompletePacket =
             serializePacket(

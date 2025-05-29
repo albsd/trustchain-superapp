@@ -34,6 +34,15 @@ class TTP(
         generateKeyPair()
     }
 
+    /**
+     * Creates a JSON-formatted request body string for initiating a Verifiable Presentation (VP) flow.
+     *
+     * This includes a randomly generated nonce, presentation definition ID, and input descriptor ID.
+     * The resulting JSON follows the expected structure for a `vp_token` request,
+     * including algorithm preferences and input constraints for EUDI PID attributes.
+     *
+     * @return A stringified JSON object representing the VP request body.
+     */
     private fun createPostBody(): String {
         val nonce = UUID.randomUUID().toString();
         val presentationDefinitionId = UUID.randomUUID().toString();
@@ -81,6 +90,15 @@ class TTP(
         }.toString();
     }
 
+    /**
+     * Sends an HTTP POST request to the EUDI Verifier backend to initiate a presentation flow.
+     *
+     * The method builds a request using the body from [createPostBody],
+     * sends it using OkHttp, and extracts key fields from the server response.
+     *
+     * @return A map containing the keys `"transaction_id"`, `"client_id"`, `"request_uri"`, and `"request_uri_method"`.
+     * @throws Exception if the HTTP response is unsuccessful or the body is null.
+     */
     private fun requestPresentationEudi(): Map<String, String> {
         val requestBody = createPostBody()
         val request = Request.Builder()
@@ -99,6 +117,17 @@ class TTP(
         }
     }
 
+    /**
+     * Registers a new user with the verifier backend by first requesting a presentation and then storing the user.
+     * The user is not marked as verified yet.
+     *
+     * It triggers the [requestPresentationEudi] call, retrieves the `transaction_id`, and
+     * attempts to register the user in the local database via [registeredUserManager].
+     *
+     * @param name The display name of the user.
+     * @param publicKey The cryptographic public key of the user.
+     * @return A map with verifier session data if registration succeeds, or null if any part fails.
+     */
     fun registerUser(
         name: String,
         publicKey: Element
@@ -115,6 +144,15 @@ class TTP(
         }
     }
 
+    /**
+     * Verifies the status of a user's presentation session with the verifier backend.
+     *
+     * This checks whether the user has submitted a valid presentation by issuing a GET request
+     * to the verifier endpoint using the provided `transactionId`.
+     *
+     * @param transactionId The identifier for the verifier presentation session.
+     * @return `true` if the user submitted a valid presentation; `false` otherwise.
+     */
     private fun verifyUserWallet(transactionId: String): Boolean {
         val request = Request.Builder()
             .url("https://verifier-backend.eudiw.dev/ui/presentations/$transactionId")
@@ -125,6 +163,16 @@ class TTP(
         }
     }
 
+    /**
+     * Verifies a registered user by checking if they have completed the required wallet presentation.
+     *
+     * Retrieves the stored transaction ID for the given public key, then uses [verifyUserWallet]
+     * to confirm their participation. If valid, marks the user as verified and triggers a UI callback.
+     *
+     * @param name The name of the user to verify.
+     * @param publicKey The public key used to look up the registered user.
+     * @return `true` if the user is verified successfully; `false` otherwise.
+     */
     fun verifyUser(
         name: String,
         publicKey: Element

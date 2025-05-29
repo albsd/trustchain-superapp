@@ -238,6 +238,17 @@ class IPV8CommunicationProtocol(
         community.sendTransactionResult(transactionResult, requestingPeer)
     }
 
+    /**
+     * Handles a TTP registration message from a peer by attempting to register the user.
+     *
+     * This method:
+     * - Casts the current participant to `TTP`
+     * - Reconstructs the user's public key from their byte representation
+     * - Calls [TTP.registerUser] to initiate registration and presentation
+     * - Sends a verification request to the user’s peer if successful
+     *
+     * @param message The registration message containing user public key bytes, name, and peer info.
+     */
     private fun handleRegistrationMessage(message: TTPRegistrationMessage) {
         if (participant !is TTP) {
             return
@@ -254,6 +265,17 @@ class IPV8CommunicationProtocol(
         // TODO: implement user-side logic
     }
 
+    /**
+     * Handles a TTP verification completion message from a peer by verifying the user's presentation.
+     *
+     * This method:
+     * - Casts the current participant to `TTP`
+     * - Reconstructs the user's public key from bytes
+     * - Verifies the user using [TTP.verifyUser]
+     * - Sends a registration complete message back to the peer indicating success or failure
+     *
+     * @param message The verification completion message containing user data and peer info.
+     */
     private fun handleVerificationCompleteMessage(message: TTPVerificationCompleteMessage) {
         if (participant !is TTP) {
             return
