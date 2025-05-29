@@ -71,13 +71,14 @@ class TransactionTest {
             Transaction.createTransaction(
                 privateKey,
                 publicKey,
+                ttp.getSignedUserPublicKey(publicKey),
                 walletEntry,
                 randomizationElements,
                 group,
                 crs,
             )
 
-        Assert.assertTrue("The transaction should be valid", Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey).valid)
+        Assert.assertTrue("The transaction should be valid", Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey).valid)
     }
 
     @Test
@@ -101,7 +102,7 @@ class TransactionTest {
                 randomProof.target
             )
         transactionDetails.digitalEuro.proofs[randomProofNr] = newProof
-        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", verificationResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_PROOF_IN_CHAIN.description, verificationResult.description)
     }
@@ -119,7 +120,7 @@ class TransactionTest {
         val invalidEuro = DigitalEuro(firstEuro.serialNumber, firstEuro.firstTheta1, fakeSignature, firstEuro.proofs)
         val invalidWalletEntry = WalletEntry(invalidEuro, walletEntry.t, walletEntry.transactionSignature, walletEntry.timesSpent)
         val invalidSignatureDetails = walletEntryToTransactionDetails(invalidWalletEntry)
-        val invalidSignatureResult = Transaction.validate(invalidSignatureDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val invalidSignatureResult = Transaction.validate(invalidSignatureDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", invalidSignatureResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_BANK_SIGNATURE.description, invalidSignatureResult.description)
 
@@ -127,7 +128,7 @@ class TransactionTest {
         val fakeEuro = DigitalEuro(firstEuro.serialNumber, firstEuro.firstTheta1, secondEuro.signature, firstEuro.proofs)
         val fakeWalletEntry = WalletEntry(fakeEuro, walletEntry.t, walletEntry.transactionSignature, walletEntry.timesSpent)
         val transactionDetails = walletEntryToTransactionDetails(fakeWalletEntry)
-        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", verificationResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_BANK_SIGNATURE.description, verificationResult.description)
 
@@ -135,7 +136,7 @@ class TransactionTest {
         val invalidT = group.getRandomZr()
         val invalidTWalletEntry = WalletEntry(walletEntry.digitalEuro, invalidT, walletEntry.transactionSignature, walletEntry.timesSpent)
         val invalidTDetails = walletEntryToTransactionDetails(invalidTWalletEntry)
-        val invalidTResult = Transaction.validate(invalidTDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val invalidTResult = Transaction.validate(invalidTDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", invalidTResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_TS_RELATION_BANK_SIGNATURE.description, invalidTResult.description)
     }
@@ -153,7 +154,7 @@ class TransactionTest {
         val invalidEuro = DigitalEuro(firstEuro.serialNumber, firstEuro.firstTheta1, fakeSignature, firstEuro.proofs)
         val invalidWalletEntry = WalletEntry(invalidEuro, walletEntry.t, walletEntry.transactionSignature, walletEntry.timesSpent)
         val invalidSignatureDetails = walletEntryToTransactionDetails(invalidWalletEntry)
-        val invalidSignatureResult = Transaction.validate(invalidSignatureDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val invalidSignatureResult = Transaction.validate(invalidSignatureDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", invalidSignatureResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_BANK_SIGNATURE.description, invalidSignatureResult.description)
 
@@ -161,7 +162,7 @@ class TransactionTest {
         val fakeEuro = DigitalEuro(firstEuro.serialNumber, firstEuro.firstTheta1, secondEuro.signature, firstEuro.proofs)
         val fakeWalletEntry = WalletEntry(fakeEuro, walletEntry.t, walletEntry.transactionSignature, walletEntry.timesSpent)
         val transactionDetails = walletEntryToTransactionDetails(fakeWalletEntry)
-        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", verificationResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_BANK_SIGNATURE.description, verificationResult.description)
 
@@ -169,7 +170,7 @@ class TransactionTest {
         val invalidT = group.getRandomZr()
         val invalidTWalletEntry = WalletEntry(walletEntry.digitalEuro, invalidT, walletEntry.transactionSignature, walletEntry.timesSpent)
         val invalidTDetails = walletEntryToTransactionDetails(invalidTWalletEntry)
-        val invalidTResult = Transaction.validate(invalidTDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val invalidTResult = Transaction.validate(invalidTDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", invalidTResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_TS_RELATION_BANK_SIGNATURE.description, invalidTResult.description)
     }
@@ -187,7 +188,7 @@ class TransactionTest {
         val invalidEuro = DigitalEuro(firstEuro.serialNumber, firstEuro.firstTheta1, fakeSignature, firstEuro.proofs)
         val invalidWalletEntry = WalletEntry(invalidEuro, walletEntry.t, walletEntry.transactionSignature, walletEntry.timesSpent)
         val invalidSignatureDetails = walletEntryToTransactionDetails(invalidWalletEntry)
-        val invalidSignatureResult = Transaction.validate(invalidSignatureDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val invalidSignatureResult = Transaction.validate(invalidSignatureDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", invalidSignatureResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_BANK_SIGNATURE.description, invalidSignatureResult.description)
 
@@ -195,7 +196,7 @@ class TransactionTest {
         val fakeEuro = DigitalEuro(firstEuro.serialNumber, firstEuro.firstTheta1, secondEuro.signature, firstEuro.proofs)
         val fakeWalletEntry = WalletEntry(fakeEuro, walletEntry.t, walletEntry.transactionSignature, walletEntry.timesSpent)
         val transactionDetails = walletEntryToTransactionDetails(fakeWalletEntry)
-        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey)
+        val verificationResult = Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey)
         Assert.assertFalse("The transaction should be invalid", verificationResult.valid)
         Assert.assertEquals(TransactionResult.INVALID_BANK_SIGNATURE.description, verificationResult.description)
     }
@@ -210,6 +211,7 @@ class TransactionTest {
         return Transaction.createTransaction(
             privateKey,
             publicKey,
+            ttp.getSignedUserPublicKey(publicKey),
             walletEntry,
             randomizationElements,
             group,
@@ -233,12 +235,13 @@ class TransactionTest {
                 Transaction.createTransaction(
                     privateKey,
                     publicKey,
+                    ttp.getSignedUserPublicKey(publicKey),
                     entry,
                     randomizationElements,
                     group,
                     crs,
                 )
-            Assert.assertTrue("The transaction should be valid", Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey).valid)
+            Assert.assertTrue("The transaction should be valid", Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey).valid)
             entry = detailsToWalletEntry(transactionDetails, randomT)
         }
 
@@ -322,7 +325,14 @@ class TransactionTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
+        val user = User(
+            userName,
+            group,
+            null,
+            walletManager,
+            communicationProtocol,
+            runSetup = false
+        )
         user.crs = ttp.crs
         userList[user] = community
         return user
@@ -360,7 +370,7 @@ class TransactionTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
         bank.crs = crs
         bank.generateKeyPair()
         bankCommunity = community

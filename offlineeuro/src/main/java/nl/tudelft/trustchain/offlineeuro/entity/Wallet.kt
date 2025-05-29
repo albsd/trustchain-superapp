@@ -30,6 +30,12 @@ class Wallet(
     val publicKey: Element,
     private val walletManager: WalletManager
 ) {
+    var signedPublicKey: SchnorrSignature? = null
+
+    fun updateUserSignedPublicKey(signedPublicKey: SchnorrSignature) {
+        this.signedPublicKey = signedPublicKey
+    }
+
     fun addToWallet(
         transactionDetails: TransactionDetails,
         t: Element
@@ -65,7 +71,7 @@ class Wallet(
         val walletEntry = walletManager.getNumberOfWalletEntriesToSpend(1).firstOrNull() ?: return null
         val euro = walletEntry.digitalEuro
         walletManager.incrementTimesSpent(euro)
-        return Transaction.createTransaction(privateKey, publicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+        return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 
     fun doubleSpendEuro(
@@ -77,6 +83,6 @@ class Wallet(
         val euro = walletEntry.digitalEuro
         walletManager.incrementTimesSpent(euro)
 
-        return Transaction.createTransaction(privateKey, publicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+        return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 }

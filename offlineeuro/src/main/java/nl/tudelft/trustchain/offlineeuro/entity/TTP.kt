@@ -7,6 +7,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRSGenerator
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
+import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
 
 class TTP(
@@ -16,7 +17,7 @@ class TTP(
     context: Context?,
     private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
     onDataChangeCallback: ((String?) -> Unit)? = null
-) : Participant(communicationProtocol, name, onDataChangeCallback), PublicKeyVerifier {
+) : Participant(communicationProtocol, name, onDataChangeCallback) {
     val crsMap: Map<Element, Element>
 
     init {
@@ -33,10 +34,19 @@ class TTP(
         publicKey: Element
     ): Boolean {
         // Sign the user's public key with TTP's private key
-        val signature = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
-        val result = registeredUserManager.addRegisteredUser(name, publicKey, signature)
+        val signedPublicKey = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
+        val result = registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey)
         onDataChangeCallback?.invoke("Registered $name")
         return result
+    }
+
+    fun getSignedUserPublicKey(
+        publicKey: Element
+    ): SchnorrSignature {
+        val registeredUser = registeredUserManager.getRegisteredUserByPublicKey(publicKey)
+            ?: throw IllegalArgumentException("User with public key $publicKey is not registered with TTP")
+
+        return registeredUser.signedPublicKey
     }
 
     fun getRegisteredUsers(): List<RegisteredUser> {
@@ -76,11 +86,12 @@ class TTP(
         }
     }
 
+    fun isUserPublicKeyRegistered(publicKey: Element): Boolean {
+        return registeredUserManager.getAllRegisteredUsers().any { it.publicKey == publicKey }
+    }
+
     override fun reset() {
         registeredUserManager.clearAllRegisteredUsers()
     }
 
-    override fun isPublicKeyRegistered(publicKey: Element): Boolean {
-        return registeredUserManager.getAllRegisteredUsers().any { it.publicKey == publicKey }
-    }
 }

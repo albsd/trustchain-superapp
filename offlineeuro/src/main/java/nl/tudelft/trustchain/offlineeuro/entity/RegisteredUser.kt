@@ -7,5 +7,5 @@ data class RegisteredUser(
     val id: Long,
     val name: String,
     val publicKey: Element,
-    val signature: SchnorrSignature
+    val signedPublicKey: SchnorrSignature
 )

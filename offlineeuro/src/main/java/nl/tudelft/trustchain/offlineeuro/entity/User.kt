@@ -16,7 +16,6 @@ class User(
     context: Context?,
     private var walletManager: WalletManager? = null,
     communicationProtocol: ICommunicationProtocol,
-    private val publicKeyVerifier: PublicKeyVerifier? = null,
     runSetup: Boolean = true,
     onDataChangeCallback: ((String?) -> Unit)? = null
 ) : Participant(communicationProtocol, name, onDataChangeCallback) {
@@ -91,7 +90,7 @@ class User(
         val usedRandomness = lookUpRandomness(publicKeySender) ?: return "Randomness Not found!"
         removeRandomness(publicKeySender)
         val ttpPublicKey = communicationProtocol.getPublicKeyOf("TTP", group)
-        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, publicKeyVerifier!!, ttpPublicKey)
+        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, ttpPublicKey)
 
         if (transactionResult.valid) {
             wallet.addToWallet(transactionDetails, usedRandomness)

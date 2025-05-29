@@ -15,7 +15,6 @@ class Bank(
     communicationProtocol: ICommunicationProtocol,
     context: Context?,
     private val depositedEuroManager: DepositedEuroManager = DepositedEuroManager(context, group),
-    private val publicKeyVerifier: PublicKeyVerifier,
     runSetup: Boolean = true,
     onDataChangeCallback: ((String?) -> Unit)? = null
 ) : Participant(communicationProtocol, name, onDataChangeCallback) {
@@ -150,7 +149,7 @@ class Bank(
         publicKeySender: Element
     ): String {
         val ttpPublicKey = communicationProtocol.getPublicKeyOf("TTP", group)
-        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, publicKeyVerifier, ttpPublicKey)
+        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, ttpPublicKey)
         if (transactionResult.valid) {
             val digitalEuro = transactionDetails.digitalEuro
             digitalEuro.proofs.add(transactionDetails.currentTransactionProof.grothSahaiProof)

@@ -3,11 +3,11 @@ CREATE TABLE IF NOT EXISTS RegisteredUsers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     publicKey BLOB UNIQUE NOT NULL,
-    signature BLOB NOT NULL
+    signedPublicKey BLOB NOT NULL
 );
 
 addUser:
-INSERT INTO RegisteredUsers(name, publicKey, signature)
+INSERT INTO RegisteredUsers(name, publicKey, signedPublicKey)
 VALUES (?, ?, ?);
 
 getUserById:

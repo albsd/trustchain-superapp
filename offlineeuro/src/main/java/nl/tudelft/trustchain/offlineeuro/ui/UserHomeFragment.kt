@@ -13,13 +13,11 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
-import nl.tudelft.trustchain.offlineeuro.entity.TTP
 
 class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     private lateinit var user: User
     private lateinit var community: OfflineEuroCommunity
     private lateinit var communicationProtocol: IPV8CommunicationProtocol
-    private lateinit var ttp: TTP
 
     override fun onViewCreated(
         view: View,
@@ -50,7 +48,6 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
                     context,
                     null,
                     communicationProtocol,
-                    ttp,  // Pass TTP as publicKeyVerifier
                     onDataChangeCallback = onUserDataChangeCallBack
                 )
                 communicationProtocol.scopePeers()

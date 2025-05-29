@@ -78,6 +78,7 @@ class PerformanceTest {
                 Transaction.createTransaction(
                     privateKey,
                     publicKey,
+                    ttp.getSignedUserPublicKey(publicKey),
                     entry,
                     randomizationElements,
                     group,
@@ -88,7 +89,7 @@ class PerformanceTest {
                 measureTimeMillis {
                     Assert.assertTrue(
                         "The transaction should be valid",
-                        Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp, ttp.publicKey).valid
+                        Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey).valid
                     )
                 }
             println(timeInMillis)
@@ -175,7 +176,14 @@ class PerformanceTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, ttp, runSetup = false)
+        val user = User(
+            userName,
+            group,
+            null,
+            walletManager,
+            communicationProtocol,
+            runSetup = false
+        )
         user.crs = crs
         userList[user] = community
         user.generateKeyPair()
@@ -212,7 +220,7 @@ class PerformanceTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
         bank.crs = crs
         bankCommunity = community
     }

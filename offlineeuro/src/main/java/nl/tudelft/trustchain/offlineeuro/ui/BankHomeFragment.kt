@@ -16,7 +16,6 @@ class BankHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_bank_home) {
     private lateinit var bank: Bank
     private lateinit var iPV8CommunicationProtocol: IPV8CommunicationProtocol
     private lateinit var community: OfflineEuroCommunity
-    private lateinit var ttp: TTP
 
     override fun onViewCreated(
         view: View,
@@ -40,7 +39,6 @@ class BankHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_bank_home) {
                     iPV8CommunicationProtocol,
                     context,
                     depositedEuroManager,
-                    ttp,
                     onDataChangeCallback = onDataChangeCallBack
                 )
         }

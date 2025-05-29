@@ -86,6 +86,7 @@ class SystemTest {
     @Test
     fun withdrawSpendDepositDoubleSpendDepositTest() {
         val user = createTestUser()
+        user.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user.publicKey))
 
         // Assert that the group descriptions and crs are equal
         Assert.assertEquals("The group descriptions should be equal", bank.group, user.group)
@@ -110,6 +111,7 @@ class SystemTest {
         Assert.assertNull("The walletEntry should not have a previous transaction", walletEntry.transactionSignature)
 
         val user2 = createTestUser()
+        user2.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user2.publicKey))
         addMessageToList(user2, bankAddressMessage)
 
         val user2AddressMessage = AddressMessage(user2.name, Role.User, user2.publicKey.toBytes(), user2.name.toByteArray())
@@ -123,6 +125,7 @@ class SystemTest {
 
         // Prepare double spend
         val user3 = createTestUser()
+        user3.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user3.publicKey))
         addMessageToList(user3, bankAddressMessage)
 
         val user3AddressMessage = AddressMessage(user3.name, Role.User, user3.publicKey.toBytes(), user3.name.toByteArray())
@@ -210,11 +213,6 @@ class SystemTest {
         expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
         doubleSpend: Boolean = false
     ) {
-        // Register the sender with the TTP if not already registered
-        if (!ttp.isPublicKeyRegistered(sender.publicKey)) {
-            ttp.registerUser(sender.name, sender.publicKey)
-        }
-
         // Create address messages
         val senderAddressMessage = AddressMessage(sender.name, Role.User, sender.publicKey.toBytes(), sender.name.toByteArray())
         val receiverAddressMessage = AddressMessage(receiver.name, Role.User, receiver.publicKey.toBytes(), receiver.name.toByteArray())
@@ -292,7 +290,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, ttp, runSetup = false)
+        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
         user.crs = crs
         user.group = group
         userList[user] = community
@@ -321,7 +319,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, bankCommunity)
 
         Mockito.`when`(bankCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
         bank.crs = crs
         addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
         ttp.registerUser(bank.name, bank.publicKey)

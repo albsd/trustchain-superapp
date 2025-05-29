@@ -34,6 +34,7 @@ data class TransactionDetailsBytes(
     val previousThetaSignatureBytes: ByteArray,
     val theta1SignatureBytes: ByteArray,
     val spenderPublicKeyBytes: ByteArray,
+    val spenderSignedPublicKey: ByteArray
 ) {
     fun toTransactionDetails(group: BilinearGroup): TransactionDetails {
         return TransactionDetails(
@@ -41,7 +42,8 @@ data class TransactionDetailsBytes(
             currentTransactionProofBytes.toTransactionProof(group),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(previousThetaSignatureBytes),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(theta1SignatureBytes)!!,
-            group.gElementFromBytes(spenderPublicKeyBytes)
+            group.gElementFromBytes(spenderPublicKeyBytes),
+            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(spenderSignedPublicKey)!!
         )
     }
 }
@@ -51,7 +53,8 @@ data class TransactionDetails(
     val currentTransactionProof: TransactionProof,
     val previousThetaSignature: SchnorrSignature?,
     val theta1Signature: SchnorrSignature,
-    val spenderPublicKey: Element
+    val spenderPublicKey: Element,
+    val spenderSignedPublicKey: SchnorrSignature?
 ) {
     fun toTransactionDetailsBytes(): TransactionDetailsBytes {
         return TransactionDetailsBytes(
@@ -59,7 +62,8 @@ data class TransactionDetails(
             currentTransactionProof.toTransactionProofBytes(),
             SchnorrSignatureSerializer.serializeSchnorrSignature(previousThetaSignature),
             SchnorrSignatureSerializer.serializeSchnorrSignature(theta1Signature),
-            spenderPublicKey.toBytes()
+            spenderPublicKey.toBytes(),
+            SchnorrSignatureSerializer.serializeSchnorrSignature(spenderSignedPublicKey)
         )
     }
 }
@@ -68,6 +72,7 @@ object Transaction {
     fun createTransaction(
         privateKey: Element,
         publicKey: Element,
+        signedPublicKey: SchnorrSignature?,
         walletEntry: WalletEntry,
         randomizationElements: RandomizationElements,
         bilinearGroup: BilinearGroup,
@@ -96,7 +101,7 @@ object Transaction {
         val transactionProofSize = GrothSahaiSerializer.serializeGrothSahaiProof(transactionProof.grothSahaiProof).size
         val theta1Signature = Schnorr.schnorrSignature(r, randomizationElements.group1TInv.toBytes(), bilinearGroup)
         val previousThetaSignature = walletEntry.transactionSignature
-        return TransactionDetails(digitalEuro, transactionProof, previousThetaSignature, theta1Signature, publicKey)
+        return TransactionDetails(digitalEuro, transactionProof, previousThetaSignature, theta1Signature, publicKey, signedPublicKey)
     }
 
     fun validate(
@@ -104,17 +109,13 @@ object Transaction {
         publicKeyBank: Element,
         bilinearGroup: BilinearGroup,
         crs: CRS,
-        publicKeyVerifier: PublicKeyVerifier,
-        ttpPublicKey: Element
+        validationEntityPublicKey: Element
     ): TransactionResult {
-        // Check if the public key is registered and get its signature
-        val ttp = publicKeyVerifier as? TTP ?: return TransactionResult.UNREGISTERED_PUBLIC_KEY
-        val registeredUser = ttp.getRegisteredUsers()
-            .find { it.publicKey == transaction.spenderPublicKey }
-            ?: return TransactionResult.UNREGISTERED_PUBLIC_KEY
+        if (transaction.spenderSignedPublicKey == null)
+            return TransactionResult.UNREGISTERED_PUBLIC_KEY
 
         // Verify the TTP's signature on the public key using the provided TTP public key
-        if (!Schnorr.verifySchnorrSignature(registeredUser.signature, ttpPublicKey, bilinearGroup)) {
+        if (!Schnorr.verifySchnorrSignature(transaction.spenderSignedPublicKey, validationEntityPublicKey, bilinearGroup)) {
             return TransactionResult.INVALID_PUBLIC_KEY_SIGNATURE
         }
 

@@ -68,12 +68,14 @@ class GrowthTest {
         for (i: Int in 0 until numberOfProofs) {
             val privateKey = group.getRandomZr()
             val publicKey = group.g.powZn(privateKey)
+            ttp.registerUser("TestUser{$i++}", publicKey)
             val randomT = group.getRandomZr()
             val randomizationElements = GrothSahai.tToRandomizationElements(randomT, group, crs)
             val transactionDetails =
                 Transaction.createTransaction(
                     privateKey,
                     publicKey,
+                    ttp.getSignedUserPublicKey(publicKey),
                     entry,
                     randomizationElements,
                     group,
@@ -164,7 +166,14 @@ class GrowthTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
+        val user = User(
+            userName,
+            group,
+            null,
+            walletManager,
+            communicationProtocol,
+            runSetup = false
+        )
         user.crs = crs
         userList[user] = community
         user.generateKeyPair()
@@ -201,7 +210,7 @@ class GrowthTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, ttp, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
         bank.crs = crs
         bank.generateKeyPair()
         bankCommunity = community
