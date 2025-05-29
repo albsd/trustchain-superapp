@@ -1,5 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.community.message
 
-class TTPVerificationRequestMessage : ICommunityMessage {
+class TTPVerificationRequestMessage (
+    val verifierLink: String,
+): ICommunityMessage {
     override val messageType = CommunityMessageType.TTPVerificationRequestMessage
 }

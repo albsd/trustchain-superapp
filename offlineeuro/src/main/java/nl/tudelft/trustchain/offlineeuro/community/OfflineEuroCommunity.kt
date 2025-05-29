@@ -29,7 +29,10 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.BilinearGroupCRSPaylo
 import nl.tudelft.trustchain.offlineeuro.community.payload.BlindSignatureRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.ByteArrayPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlRequestPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationCompletePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPVerificationCompletePayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPVerificationRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionDetailsPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionRandomizationElementsPayload
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroupElementsBytes
@@ -184,15 +187,17 @@ class OfflineEuroCommunity(
     }
 
     fun onVerificationRequest(packet: Packet) {
-
+        val (peer, payload) = packet.getAuthPayload(TTPVerificationRequestPayload)
+        // TODO: implement user-side logic
     }
 
     fun onVerificationComplete(packet: Packet) {
-
+        val (peer, payload) = packet.getAuthPayload(TTPVerificationCompletePayload)
     }
 
     fun onRegistrationComplete(packet: Packet) {
-
+        val (peer, payload) = packet.getAuthPayload(TTPRegistrationCompletePayload)
+        // TODO: implement user-side logic
     }
 
     fun onGetRegisterAtTTP(
