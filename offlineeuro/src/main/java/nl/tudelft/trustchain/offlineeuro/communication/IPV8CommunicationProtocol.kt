@@ -242,22 +242,33 @@ class IPV8CommunicationProtocol(
         if (participant !is TTP) {
             return
         }
-
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        ttp.registerUser(message.userName, publicKey)
+        val response = ttp.registerUser(message.userName, publicKey)
+        if (response != null) {
+            community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
+        }
     }
 
     private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
-
+        // TODO: implement user-side logic
     }
 
     private fun handleVerificationCompleteMessage(message: TTPVerificationCompleteMessage) {
-
+        if (participant !is TTP) {
+            return
+        }
+        val ttp = participant as TTP
+        val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        if (ttp.verifyUser(message.userName, publicKey)) {
+            community.sendRegistrationCompleteMessage("Completed", message.peer)
+        } else {
+            community.sendRegistrationCompleteMessage("Failed", message.peer)
+        }
     }
 
     private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
-
+        // TODO: implement user-side logic
     }
 
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {

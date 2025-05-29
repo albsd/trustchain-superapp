@@ -6,11 +6,15 @@ import nl.tudelft.ipv8.messaging.deserializeVarLen
 import nl.tudelft.ipv8.messaging.serializeVarLen
 
 class TTPVerificationRequestPayload (
-    val verifierLink: String,
+    val clientId: String,
+    val requestUri: String,
+    val requestUriMethod: String,
 ): Serializable {
     override fun serialize(): ByteArray {
         var payload = ByteArray(0)
-        payload += serializeVarLen(verifierLink.toByteArray())
+        payload += serializeVarLen(clientId.toByteArray())
+        payload += serializeVarLen(requestUri.toByteArray())
+        payload += serializeVarLen(requestUriMethod.toByteArray())
         return payload
     }
 
@@ -21,12 +25,20 @@ class TTPVerificationRequestPayload (
         ): Pair<TTPVerificationRequestPayload, Int> {
             var localOffset = offset
 
-            val (linkBytes, linkSize) = deserializeVarLen(buffer, localOffset)
-            localOffset += linkSize
+            val (clientIdBytes, clientIdize) = deserializeVarLen(buffer, localOffset)
+            localOffset += clientIdize
+
+            val (requestUriBytes, requestUriSize) = deserializeVarLen(buffer, localOffset)
+            localOffset += requestUriSize
+
+            val (requestUriMethodBytes, requestUriMethodSize) = deserializeVarLen(buffer, localOffset)
+            localOffset += requestUriMethodSize
 
             return Pair(
                 TTPVerificationRequestPayload(
-                    linkBytes.toString(Charsets.UTF_8),
+                    clientIdBytes.toString(Charsets.UTF_8),
+                    requestUriBytes.toString(Charsets.UTF_8),
+                    requestUriMethodBytes.toString(Charsets.UTF_8),
                 ),
                 localOffset - offset
             )

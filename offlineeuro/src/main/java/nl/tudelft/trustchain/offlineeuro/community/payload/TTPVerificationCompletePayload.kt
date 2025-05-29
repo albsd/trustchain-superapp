@@ -6,13 +6,11 @@ import nl.tudelft.ipv8.messaging.deserializeVarLen
 import nl.tudelft.ipv8.messaging.serializeVarLen
 
 class TTPVerificationCompletePayload (
-    val status: String,
     val userName: String,
     val publicKey: ByteArray,
 ): Serializable {
     override fun serialize(): ByteArray {
         var payload = ByteArray(0)
-        payload += serializeVarLen(status.toByteArray())
         payload += serializeVarLen(userName.toByteArray())
         payload += serializeVarLen(publicKey)
         return payload
@@ -25,9 +23,6 @@ class TTPVerificationCompletePayload (
         ): Pair<TTPVerificationCompletePayload, Int> {
             var localOffset = offset
 
-            val (statusBytes, statusSize) = deserializeVarLen(buffer, localOffset)
-            localOffset += statusSize
-
             val (nameBytes, nameSize) = deserializeVarLen(buffer, localOffset)
             localOffset += nameSize
 
@@ -36,7 +31,6 @@ class TTPVerificationCompletePayload (
 
             return Pair(
                 TTPVerificationCompletePayload(
-                    statusBytes.toString(Charsets.UTF_8),
                     nameBytes.toString(Charsets.UTF_8),
                     publicKeyBytes
                 ),

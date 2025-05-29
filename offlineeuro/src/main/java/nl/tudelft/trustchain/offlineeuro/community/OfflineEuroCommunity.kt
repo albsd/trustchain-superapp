@@ -20,6 +20,7 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMe
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -181,6 +182,32 @@ class OfflineEuroCommunity(
         send(ttpPeer, registerPacket)
     }
 
+    fun sendVerificationRequest(clientId: String, requestUri: String,
+                                requestUriMethod: String, peer: Peer) {
+        val verificationRequestPacket =
+            serializePacket(
+                MessageID.VERIFICATION_REQUEST_TTP,
+                TTPVerificationRequestPayload(
+                    clientId,
+                    requestUri,
+                    requestUriMethod
+                )
+            )
+
+        send(peer, verificationRequestPacket)
+    }
+
+    fun sendRegistrationCompleteMessage(message: String, peer: Peer) {
+        val registrationCompletePacket =
+            serializePacket(
+                MessageID.REGISTRATION_COMPLETE_TTP,
+                TTPRegistrationCompletePayload(
+                    message
+                )
+            )
+        send(peer, registrationCompletePacket)
+    }
+
     fun onGetRegisterAtTTPPacket(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationPayload)
         onGetRegisterAtTTP(peer, payload)
@@ -193,6 +220,7 @@ class OfflineEuroCommunity(
 
     fun onVerificationComplete(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPVerificationCompletePayload)
+        onVerifyAtTTP(peer, payload)
     }
 
     fun onRegistrationComplete(packet: Packet) {
@@ -212,7 +240,25 @@ class OfflineEuroCommunity(
             TTPRegistrationMessage(
                 userName,
                 userPKBytes,
-                senderPKBytes
+                senderPKBytes,
+                peer
+            )
+
+        addMessage(message)
+    }
+
+    private fun onVerifyAtTTP(
+        peer: Peer,
+        payload: TTPVerificationCompletePayload
+    ) {
+        val userName = payload.userName
+        val userPKBytes = payload.publicKey
+
+        val message =
+            TTPVerificationCompleteMessage(
+                userName,
+                userPKBytes,
+                peer
             )
 
         addMessage(message)
