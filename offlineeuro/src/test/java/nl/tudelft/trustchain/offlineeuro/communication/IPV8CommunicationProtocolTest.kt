@@ -12,6 +12,10 @@ import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRandomn
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRandomnessRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRequestMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -296,5 +300,86 @@ class IPV8CommunicationProtocolTest {
 
         verify(user, times(1)).onReceivedTransaction(transactionDetails, bankPK, publicKeySender)
         verify(community, times(1)).sendTransactionResult(result, receivingPeer)
+    }
+
+    @Test
+    fun handleVerificationCompleteMessage_successTest() {
+        val group = groupDescription
+        val ttp = Mockito.mock(TTP::class.java)
+        val userName = "UserToVerify"
+        val publicKey = group.generateRandomElementOfG()
+        val peer = Mockito.mock(Peer::class.java)
+
+        `when`(ttp.group).thenReturn(group)
+        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(true)
+        `when`(ttp.publicKey).thenReturn(ttpPK)
+
+        iPV8CommunicationProtocol.participant = ttp
+
+        val message = TTPVerificationCompleteMessage(userName, publicKey.toBytes(), peer)
+        iPV8CommunicationProtocol.messageList.add(message)
+
+        verify(ttp, times(1)).verifyUser(userName, publicKey)
+        verify(community, times(1)).sendRegistrationCompleteMessage("Completed", peer)
+    }
+
+    @Test
+    fun handleVerificationCompleteMessage_failureTest() {
+        val group = groupDescription
+        val ttp = Mockito.mock(TTP::class.java)
+        val userName = "UserToVerify"
+        val publicKey = group.generateRandomElementOfG()
+        val peer = Mockito.mock(Peer::class.java)
+
+        `when`(ttp.group).thenReturn(group)
+        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(false)
+        `when`(ttp.publicKey).thenReturn(ttpPK)
+
+        iPV8CommunicationProtocol.participant = ttp
+
+        val message = TTPVerificationCompleteMessage(userName, publicKey.toBytes(), peer)
+        iPV8CommunicationProtocol.messageList.add(message)
+
+        verify(ttp, times(1)).verifyUser(userName, publicKey)
+        verify(community, times(1)).sendRegistrationCompleteMessage("Failed", peer)
+    }
+
+    @Test
+    fun handleRegistrationMessage_successTest() {
+        val group = groupDescription
+        val ttp = Mockito.mock(TTP::class.java)
+        val userName = "UserRegistering"
+        val publicKey = group.generateRandomElementOfG()
+        val peer = Mockito.mock(Peer::class.java)
+        val responseMap = mapOf(
+            "client_id" to "client123",
+            "request_uri" to "https://example.com/uri",
+            "request_uri_method" to "GET"
+        )
+
+        `when`(ttp.group).thenReturn(group)
+        `when`(ttp.registerUser(userName, publicKey)).thenReturn(responseMap)
+
+        iPV8CommunicationProtocol.participant = ttp
+
+        val message = TTPRegistrationMessage(userName, publicKey.toBytes(), publicKey.toBytes(), peer)
+        iPV8CommunicationProtocol.messageList.add(message)
+
+        verify(ttp, times(1)).registerUser(userName, publicKey)
+        verify(community, times(1)).sendVerificationRequest("client123", "https://example.com/uri", "GET", peer)
+    }
+
+    @Test
+    fun handleRegistrationCompleteMessage_noopTest() {
+        val message = TTPRegistrationCompleteMessage("Completed")
+
+        iPV8CommunicationProtocol.messageList.add(message)
+    }
+
+    @Test
+    fun handleVerificationRequestMessage_noopTest() {
+        val message = TTPVerificationRequestMessage("client_id", "request_uri", "get")
+
+        iPV8CommunicationProtocol.messageList.add(message)
     }
 }
