@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.communication
 
+import android.net.Uri
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.community.message.AddressMessage
@@ -135,6 +136,14 @@ class IPV8CommunicationProtocol(
         return message.result
     }
 
+    override fun completeVerification() {
+        if (getParticipantRole() != Role.User)
+            return
+        val user = participant as User
+        val ttpAddress = addressBookManager.getAddressByName("TTP")
+        community.sendVerificationComplete(user.name, user.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+    }
+
     fun scopePeers() {
         community.scopePeers(participant.name, getParticipantRole(), participant.publicKey.toBytes())
     }
@@ -262,7 +271,17 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
-        // TODO: implement user-side logic
+        if (getParticipantRole() != Role.User) {
+            return
+        }
+        val user = participant as User
+        val deepLink = Uri.parse("eudi-openid4vp://").buildUpon()
+            .appendQueryParameter("client_id", message.clientId)
+            .appendQueryParameter("request_uri", message.requestUri)
+            .appendQueryParameter("request_uri_method", message.requestUriMethod)
+            .build()
+
+        user.authWith(deepLink)
     }
 
     /**
@@ -290,7 +309,11 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
-        // TODO: implement user-side logic
+        if (participant !is User) {
+            return
+        }
+        val user = participant as User
+        user.authStatus(message.status)
     }
 
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {
