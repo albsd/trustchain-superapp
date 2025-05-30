@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.community
 
+import android.util.Log
 import nl.tudelft.ipv8.Overlay
 import nl.tudelft.ipv8.Peer
 import nl.tudelft.ipv8.attestation.trustchain.TrustChainCommunity
@@ -641,6 +642,7 @@ class OfflineEuroCommunity(
         for (peer in getPeers()) {
             send(peer, addressPacket)
         }
+        Log.i("peers", "Send my role to ${getPeers().size} peers...")
     }
 
     private fun onScopePeersPacket(packet: Packet) {

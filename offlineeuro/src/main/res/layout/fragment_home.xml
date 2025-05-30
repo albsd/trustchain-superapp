@@ -5,52 +5,53 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:id="@+id/fragment_user_home">
+    android:id="@+id/fragment_home">
 
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick the role you want to have:"
+            android:textSize="25dp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:id="@+id/missingInfoLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:gravity="center"
-            >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="25dp"
-                android:text="Pick the role you want to have:"
-                android:textStyle="bold"/>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="TTP"
-                android:id="@+id/JoinAsTTP"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <Button
+                android:id="@+id/JoinAsTTP"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Bank"
-                android:id="@+id/JoinAsBankButton"/>
+                android:text="TTP" />
+
             <Button
+                android:id="@+id/JoinAsBankButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="User"
-                android:id="@+id/JoinAsUserButton"/>
+                android:text="Bank" />
+
             <Button
+                android:id="@+id/JoinAsUserButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="All Roles"
-                android:id="@+id/JoinAsAllRolesButton"/>
+                android:text="User" />
+
+            <Button
+                android:id="@+id/JoinAsAllRolesButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="All Roles" />
         </LinearLayout>
-        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

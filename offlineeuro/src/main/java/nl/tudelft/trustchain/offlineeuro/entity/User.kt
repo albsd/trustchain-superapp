@@ -15,9 +15,8 @@ class User(
     context: Context?,
     private var walletManager: WalletManager? = null,
     communicationProtocol: ICommunicationProtocol,
-    runSetup: Boolean = true,
-    onDataChangeCallback: ((String?) -> Unit)? = null
-) : Participant(communicationProtocol, name, onDataChangeCallback) {
+    runSetup: Boolean = true
+) : Participant(communicationProtocol, name) {
     val wallet: Wallet
     var authManager: EUDIAuthManager? = null
 
@@ -44,7 +43,7 @@ class User(
                 ?: throw Exception("No euro to spend")
 
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails)
-        onDataChangeCallback?.invoke(result)
+        emitEvent(result)
         return result
     }
 
@@ -52,7 +51,7 @@ class User(
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs)
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)
-        onDataChangeCallback?.invoke(result)
+        emitEvent(result)
         return result
     }
 
@@ -72,7 +71,7 @@ class User(
         val signature = Schnorr.unblindSignature(blindedChallenge, blindSignature)
         val digitalEuro = DigitalEuro(serialNumber, initialTheta, signature, arrayListOf())
         wallet.addToWallet(digitalEuro, firstT)
-        onDataChangeCallback?.invoke("Withdrawn ${digitalEuro.serialNumber} successfully!")
+        emitEvent("Withdrawn ${digitalEuro.serialNumber} successfully!")
         return digitalEuro
     }
 
@@ -99,10 +98,10 @@ class User(
 
         if (transactionResult.valid) {
             wallet.addToWallet(transactionDetails, usedRandomness)
-            onDataChangeCallback?.invoke("Received an euro from $publicKeySender")
+            emitEvent("Received an euro from $publicKeySender")
             return transactionResult.description
         }
-        onDataChangeCallback?.invoke(transactionResult.description)
+        emitEvent(transactionResult.description)
         return transactionResult.description
     }
 

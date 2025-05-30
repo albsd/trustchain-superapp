@@ -3,15 +3,16 @@ package nl.tudelft.trustchain.offlineeuro.ui
 import android.content.Context
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.entity.User
+import nl.tudelft.trustchain.offlineeuro.enums.Role
 
 object CallbackLibrary {
+
     fun bankCallback(
         context: Context,
         message: String?,
@@ -42,7 +43,7 @@ object CallbackLibrary {
         view: View,
         ttp: TTP
     ) {
-        val table = view.findViewById<LinearLayout>(R.id.tpp_home_registered_user_list) ?: return
+        val table = view.findViewById<LinearLayout>(R.id.ttp_home_registered_user_list) ?: return
         val users = ttp.getRegisteredUsers()
         TableHelpers.removeAllButFirstRow(table)
         TableHelpers.addRegisteredUsersToTable(table, users)
@@ -53,16 +54,13 @@ object CallbackLibrary {
         message: String?,
         view: View,
         communicationProtocol: IPV8CommunicationProtocol,
-        user: User
+        user: User,
+        updateAllAddresses: (View) -> Unit
     ) {
         if (message != null) {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
-        val balanceField = view.findViewById<TextView>(R.id.user_home_balance)
-        balanceField.text = user.getBalance().toString()
-        val addressList = view.findViewById<LinearLayout>(R.id.user_home_addresslist)
-        val addresses = communicationProtocol.addressBookManager.getAllAddresses()
-        TableHelpers.addAddressesToTable(addressList, addresses, user, context)
+        updateAllAddresses(view)
         view.refreshDrawableState()
     }
 }
