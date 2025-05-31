@@ -31,13 +31,17 @@ class RegisteredUserManager(
             id: Long,
             name: String,
             publicKey: ByteArray,
-            signature: ByteArray
+            signature: ByteArray,
+            transactionId: String,
+            isVerified: Long
         ->
         RegisteredUser(
             id,
             name,
             bilinearGroup.pairing.g1.newElementFromBytes(publicKey).immutable,
-            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signature)!!
+            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signature)!!,
+            transactionId,
+            isVerified
         )
     }
 
@@ -58,12 +62,15 @@ class RegisteredUserManager(
     fun addRegisteredUser(
         userName: String,
         publicKey: Element,
-        signature: SchnorrSignature
+        signedPublicKey: SchnorrSignature,
+        transactionId: String
     ): Boolean {
         queries.addUser(
             userName,
             publicKey.toBytes(),
-            SchnorrSignatureSerializer.serializeSchnorrSignature(signature)
+            SchnorrSignatureSerializer.serializeSchnorrSignature(signedPublicKey),
+            transactionId,
+            0 // not verified
         )
         return true
     }
@@ -92,6 +99,17 @@ class RegisteredUserManager(
 
     fun getAllRegisteredUsers(): List<RegisteredUser> {
         return queries.getAllRegisteredUsers(registeredUserMapper).executeAsList()
+    }
+
+    /**
+     * Mark the user identified by the publicKey as verified.
+     *
+     * @param publicKey the public key of the [RegisteredUser]
+     * @return true iff verifying the user is successful.
+     */
+    fun verifyUserByPublicKey(publicKey: Element): Boolean {
+        queries.verifyUserByPublicKey(publicKey.toBytes())
+        return true;
     }
 
     /**

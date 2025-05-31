@@ -15,7 +15,10 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMess
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -235,15 +238,59 @@ class IPV8CommunicationProtocol(
         community.sendTransactionResult(transactionResult, requestingPeer)
     }
 
+    /**
+     * Handles a TTP registration message from a peer by attempting to register the user.
+     *
+     * This method:
+     * - Casts the current participant to `TTP`
+     * - Reconstructs the user's public key from their byte representation
+     * - Calls [TTP.registerUser] to initiate registration and presentation
+     * - Sends a verification request to the user’s peer if successful
+     *
+     * @param message The registration message containing user public key bytes, name, and peer info.
+     */
     private fun handleRegistrationMessage(message: TTPRegistrationMessage) {
         if (participant !is TTP) {
             return
         }
-
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        ttp.registerUser(message.userName, publicKey)
+        val response = ttp.registerUser(message.userName, publicKey)
+        if (response != null) {
+            community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
+        }
+    }
 
+    private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
+        // TODO: implement user-side logic
+    }
+
+    /**
+     * Handles a TTP verification completion message from a peer by verifying the user's presentation.
+     *
+     * This method:
+     * - Casts the current participant to `TTP`
+     * - Reconstructs the user's public key from bytes
+     * - Verifies the user using [TTP.verifyUser]
+     * - Sends a registration complete message back to the peer indicating success or failure
+     *
+     * @param message The verification completion message containing user data and peer info.
+     */
+    private fun handleVerificationCompleteMessage(message: TTPVerificationCompleteMessage) {
+        if (participant !is TTP) {
+            return
+        }
+        val ttp = participant as TTP
+        val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        if (ttp.verifyUser(message.userName, publicKey)) {
+            community.sendRegistrationCompleteMessage("Completed", message.peer)
+        } else {
+            community.sendRegistrationCompleteMessage("Failed", message.peer)
+        }
+    }
+
+    private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
+        // TODO: implement user-side logic
     }
 
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {
@@ -273,6 +320,9 @@ class IPV8CommunicationProtocol(
             is TransactionRandomizationElementsRequestMessage -> handleTransactionRandomizationElementsRequest(message)
             is TransactionMessage -> handleTransactionMessage(message)
             is TTPRegistrationMessage -> handleRegistrationMessage(message)
+            is TTPVerificationRequestMessage -> handleVerificationRequestMessage(message)
+            is TTPVerificationCompleteMessage -> handleVerificationCompleteMessage(message)
+            is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
             else -> throw Exception("Unsupported message type")
         }
