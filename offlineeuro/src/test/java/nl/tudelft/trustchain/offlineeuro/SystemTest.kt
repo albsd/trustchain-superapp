@@ -30,6 +30,7 @@ import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.DigitalEuro
+import nl.tudelft.trustchain.offlineeuro.entity.EUDIAuthManager
 import nl.tudelft.trustchain.offlineeuro.entity.Participant
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.entity.TransactionDetailsBytes
@@ -133,6 +134,21 @@ class SystemTest {
 
         // Deposit double spend Euro
         spendEuro(user3, bank, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
+    }
+
+    @Test
+    fun testAuth() {
+        createTTP()
+        var eudiAuthManager = EUDIAuthManager({_ -> }, {}, {}, ttp.communicationProtocol)
+        val walletManager = WalletManager(null, group, createDriver())
+        var user = User("myuser", group, null, walletManager, ttp.communicationProtocol, false)
+        user.authManager = eudiAuthManager
+
+        val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
+        communication.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
+        communication.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, "SomeTTPPubKey".toByteArray()))
+
+        user.registerAtTTP()
     }
 
     @Test
