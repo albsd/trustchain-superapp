@@ -77,6 +77,16 @@ class User(
         return walletManager!!.getWalletEntriesToSpend().count()
     }
 
+    fun getTokens(): List<WalletEntry> {
+        return walletManager!!.getWalletEntriesToSpend()
+    }
+
+    // only for demo purposes
+    fun generateNewEuroDemo() {
+        val walletEntry = wallet.generateWalletEntry()
+        walletManager!!.insertWalletEntry(walletEntry)
+    }
+
     override fun onReceivedTransaction(
         transactionDetails: TransactionDetails,
         publicKeyBank: Element,

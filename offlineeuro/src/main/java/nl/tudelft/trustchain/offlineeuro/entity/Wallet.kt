@@ -1,11 +1,14 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
 import it.unisa.dia.gas.jpbc.Element
+import nl.tudelft.ipv8.attestation.wallet.cryptography.bonehexact.generateRandomBigInteger
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
 import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
+import java.math.BigInteger
+import java.util.UUID
 
 data class WalletEntry(
     val digitalEuro: DigitalEuro,
@@ -66,6 +69,31 @@ class Wallet(
         val euro = walletEntry.digitalEuro
         walletManager.incrementTimesSpent(euro)
         return Transaction.createTransaction(privateKey, publicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+    }
+
+    // ONLY FOR DEMO PURPOSES
+    private fun generateRandomSignature(): SchnorrSignature {
+        val upperBound = BigInteger("6666666")
+        return SchnorrSignature(
+            generateRandomBigInteger(upperBound),
+            generateRandomBigInteger(upperBound),
+            UUID.randomUUID().toString().toByteArray()
+        )
+    }
+
+    // ONLY FOR DEMO PURPOSES
+    fun generateWalletEntry(): WalletEntry {
+        val group = BilinearGroup()
+        val signature = generateRandomSignature()
+        val randomDigitalEuro =
+            DigitalEuro(
+                UUID.randomUUID().toString(),
+                group.generateRandomElementOfG(),
+                generateRandomSignature(),
+                arrayListOf()
+            )
+
+        return WalletEntry(randomDigitalEuro, group.getRandomZr(), signature)
     }
 
     fun doubleSpendEuro(
