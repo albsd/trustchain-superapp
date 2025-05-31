@@ -4,7 +4,9 @@ import android.content.Context
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
+import nl.tudelft.trustchain.offlineeuro.cryptography.PedersenCommitment
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
+import nl.tudelft.trustchain.offlineeuro.db.BankCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
 import java.math.BigInteger
 import kotlin.math.min
@@ -15,12 +17,14 @@ class Bank(
     communicationProtocol: ICommunicationProtocol,
     context: Context?,
     private val depositedEuroManager: DepositedEuroManager = DepositedEuroManager(context, group),
+    private val commitmentManager: BankCommitmentManager = BankCommitmentManager(context, group),
     runSetup: Boolean = true,
     onDataChangeCallback: ((String?) -> Unit)? = null
 ) : Participant(communicationProtocol, name, onDataChangeCallback) {
     private val depositedEuros: ArrayList<DigitalEuro> = arrayListOf()
     val withdrawUserRandomness: HashMap<Element, Element> = hashMapOf()
     val depositedEuroLogger: ArrayList<Pair<String, Boolean>> = arrayListOf()
+    private val userCommitments: MutableMap<Element, PedersenCommitment> = mutableMapOf()
 
     init {
         communicationProtocol.participant = this
@@ -54,6 +58,32 @@ class Bank(
         onDataChangeCallback?.invoke("A token was withdrawn by $userPublicKey")
         // <Subtract balance here>
         return Schnorr.signBlindedChallenge(k, challenge, privateKey)
+    }
+
+    /**
+     * Stores a user's commitment in the database
+     */
+    fun storeUserCommitment(userPublicKey: Element, commitment: Element) {
+        commitmentManager.storeCommitment(userPublicKey, commitment)
+    }
+
+    /**
+     * Verifies a revealed commitment against the stored commitment
+     */
+    fun verifyRevealedCommitment(
+        userPublicKey: Element,
+        plaintextJwt: String,
+        nonce: Element
+    ): Boolean {
+        val storedCommitment = commitmentManager.getCommitmentByPublicKey(userPublicKey) ?: return false
+        val message = group.pairing.zr.newElementFromBytes(plaintextJwt.toByteArray())
+
+        // Reconstruct the commitment
+        val g = group.g
+        val h = group.h
+        val expectedCommitment = g.powZn(message).mul(h.powZn(nonce))
+
+        return storedCommitment == expectedCommitment
     }
 
     private fun lookUp(userPublicKey: Element): Element? {
@@ -163,6 +193,7 @@ class Bank(
         randomizationElementMap.clear()
         withdrawUserRandomness.clear()
         depositedEuroManager.clearDepositedEuros()
+        commitmentManager.clearAllCommitments()
         setUp()
     }
 }

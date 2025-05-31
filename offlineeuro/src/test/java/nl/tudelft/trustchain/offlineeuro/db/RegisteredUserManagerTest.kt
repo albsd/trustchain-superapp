@@ -50,9 +50,10 @@ class RegisteredUserManagerTest {
         val name = "Verifier"
         val privateKey = group.getRandomZr()
         val publicKey = group.g.powZn(privateKey).immutable
+        val signedPublicKey = Schnorr.schnorrSignature(privateKey, publicKey.toBytes(), group)
         val transactionId = "txn_456"
 
-        registeredUserManager.addRegisteredUser(name, publicKey, transactionId)
+        registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId)
 
         // Initially should not be verified
         val userBeforeVerify = registeredUserManager.getRegisteredUserByName(name)!!
@@ -83,9 +84,10 @@ class RegisteredUserManagerTest {
         val name = "InvisibleUser"
         val privateKey = group.getRandomZr()
         val publicKey = group.g.powZn(privateKey).immutable
+        val signedPublicKey = Schnorr.schnorrSignature(privateKey, publicKey.toBytes(), group)
         val transactionId = "txn_invisible"
 
-        registeredUserManager.addRegisteredUser(name, publicKey, transactionId)
+        registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId)
 
         val allVerified = registeredUserManager.getAllRegisteredUsers()
         Assert.assertTrue("Unverified users should not appear in verified list", allVerified.isEmpty())

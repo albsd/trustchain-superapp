@@ -6,9 +6,11 @@ import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRSGenerator
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
+import nl.tudelft.trustchain.offlineeuro.cryptography.PedersenCommitment
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
+import nl.tudelft.trustchain.offlineeuro.db.TtpCommitmentManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -23,6 +25,7 @@ class TTP(
     communicationProtocol: ICommunicationProtocol,
     context: Context?,
     private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
+    private val commitmentManager: TtpCommitmentManager = TtpCommitmentManager(context, group),
     onDataChangeCallback: ((String?) -> Unit)? = null
 ) : Participant(communicationProtocol, name, onDataChangeCallback) {
     val crsMap: Map<Element, Element>
@@ -196,6 +199,13 @@ class TTP(
         }
     }
 
+    /**
+     * Retrieves the public key of an user with the TTP's signature on it.
+     *
+     * @param publicKey the unsigned public key of an user
+     * @return the signed version of the public key
+     * @throws IllegalArgumentException if the given public key is not registered
+     */
     fun getSignedUserPublicKey(
         publicKey: Element
     ): SchnorrSignature {
@@ -207,6 +217,27 @@ class TTP(
 
     fun getRegisteredUsers(): List<RegisteredUser> {
         return registeredUserManager.getAllRegisteredUsers()
+    }
+
+    /**
+     * Generates and stores a Pedersen commitment for a user's JWT token
+     */
+    fun generateAndStoreJwtCommitment(userPublicKey: Element, jwtToken: String): Element {
+        val nonce = group.getRandomZr()
+        val message = group.pairing.zr.newElementFromBytes(jwtToken.toByteArray())
+        val commitment = PedersenCommitment.createCommitment(group, message, nonce)
+
+        // Store the JWT and nonce in TTP's database
+        commitmentManager.storeCommitment(userPublicKey, jwtToken, nonce)
+
+        return commitment
+    }
+
+    /**
+     * Reveals the JWT and nonce for a given user's public key
+     */
+    fun revealCommitment(userPublicKey: Element): Pair<String, Element>? {
+        return commitmentManager.getCommitmentByPublicKey(userPublicKey)
     }
 
     override fun onReceivedTransaction(
@@ -248,6 +279,7 @@ class TTP(
 
     override fun reset() {
         registeredUserManager.clearAllRegisteredUsers()
+        commitmentManager.clearAllCommitments()
     }
 
 }
