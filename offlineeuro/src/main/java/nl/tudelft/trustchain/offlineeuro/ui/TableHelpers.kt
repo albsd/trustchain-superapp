@@ -172,16 +172,18 @@ object TableHelpers {
     fun addTTPsToTable(
         table: LinearLayout,
         ttps: List<Address>,
-        context: Context
+        context: Context,
+        user: User
     ) {
         for (ttp in ttps) {
-            table.addView(ttpToTableRow(ttp, context))
+            table.addView(ttpToTableRow(ttp, context, user))
         }
     }
 
     fun ttpToTableRow(
         ttp: Address,
-        context: Context
+        context: Context,
+        user: User
     ): LinearLayout {
         val tableRow = LinearLayout(context)
         tableRow.layoutParams = rowParams(context)
@@ -208,7 +210,7 @@ object TableHelpers {
         }
 
         applyButtonStylingToAction(registerAtTTPButton, context)
-        setTTPRegisterActionButton(registerAtTTPButton, context)
+        setTTPRegisterActionButton(registerAtTTPButton, context, user)
 
         tableRow.addView(ttpNameField)
         tableRow.addView(publicKeyField)
@@ -415,10 +417,11 @@ object TableHelpers {
 
     private fun setTTPRegisterActionButton(
         registerAtTTPButton: Button,
-        context: Context
+        context: Context,
+        user: User
     ) {
         registerAtTTPButton.setOnClickListener {
-            //todo
+            user.setUp()
         }
     }
 

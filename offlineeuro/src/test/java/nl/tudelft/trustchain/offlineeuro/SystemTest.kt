@@ -1,7 +1,11 @@
 package nl.tudelft.trustchain.offlineeuro
 
+import android.net.Uri
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import io.mockk.every
+import io.mockk.slot
 import nl.tudelft.ipv8.Peer
+import nl.tudelft.ipv8.messaging.Packet
 import nl.tudelft.offlineeuro.sqldelight.Database
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -13,10 +17,12 @@ import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRequest
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionResultMessage
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
@@ -44,8 +50,10 @@ import org.mockito.Mockito
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import java.math.BigInteger
 
@@ -137,18 +145,26 @@ class SystemTest {
     }
 
     @Test
-    fun testAuth() {
-        createTTP()
-        var eudiAuthManager = EUDIAuthManager({_ -> }, {}, {}, ttp.communicationProtocol)
+    fun testEUDIAuth() {
+        val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
         val walletManager = WalletManager(null, group, createDriver())
         var user = User("myuser", group, null, walletManager, ttp.communicationProtocol, false)
+        val peerPK = "SomeTTPPubKey".toByteArray()
+
+        // setup auth manager
+        var eudiAuthManager = EUDIAuthManager({_ -> }, {}, {}, ttp.communicationProtocol)
         user.authManager = eudiAuthManager
 
-        val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
-        communication.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
-        communication.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, "SomeTTPPubKey".toByteArray()))
+        communication.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, peerPK))
+        communication.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, peerPK))
+
+        ttpCommunity.addMessage(TTPRegistrationMessage(user.name, user.publicKey.toBytes(), peerPK, peer=Mockito.mock(Peer::class.java)))
+        communication.participant = ttp
 
         user.registerAtTTP()
+
+        // Assertions
+        verify(ttpCommunity, times(1)).registerAtTTP(user.name, user.publicKey.toBytes(), peerPK)
     }
 
     @Test

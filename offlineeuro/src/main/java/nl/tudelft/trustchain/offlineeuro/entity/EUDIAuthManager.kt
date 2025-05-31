@@ -17,6 +17,7 @@ class EUDIAuthManager(
     }
 
     fun afterUserReturns() {
+        status = "Waiting TTP verification"
         communicationProtocol.completeVerification()
     }
 
@@ -29,7 +30,11 @@ class EUDIAuthManager(
     }
 
     fun isPending() : Boolean {
-        return (status == "Started")
+        return (status == "Waiting TTP verification")
+    }
+
+    fun isNotStarted() : Boolean {
+        return (status == "Not started")
     }
 
     fun isTerminated() : Boolean {
