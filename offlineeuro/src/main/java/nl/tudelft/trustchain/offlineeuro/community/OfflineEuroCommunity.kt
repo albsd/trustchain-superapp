@@ -20,6 +20,7 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMe
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -29,7 +30,10 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.BilinearGroupCRSPaylo
 import nl.tudelft.trustchain.offlineeuro.community.payload.BlindSignatureRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.ByteArrayPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlRequestPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationCompletePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPVerificationCompletePayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPVerificationRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionDetailsPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionRandomizationElementsPayload
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroupElementsBytes
@@ -59,6 +63,10 @@ object MessageID {
 
     const val FRAUD_CONTROL_REQUEST = 22
     const val FRAUD_CONTROL_REPLY = 23
+
+    const val VERIFICATION_REQUEST_TTP = 24
+    const val VERIFICATION_COMPLETE_TTP = 25
+    const val REGISTRATION_COMPLETE_TTP = 26
 }
 
 class OfflineEuroCommunity(
@@ -94,6 +102,10 @@ class OfflineEuroCommunity(
 
         messageHandlers[MessageID.FRAUD_CONTROL_REQUEST] = ::onFraudControlRequestPacket
         messageHandlers[MessageID.FRAUD_CONTROL_REPLY] = ::onFraudControlReplyPacket
+
+        messageHandlers[MessageID.VERIFICATION_REQUEST_TTP] = ::onVerificationRequest
+        messageHandlers[MessageID.VERIFICATION_COMPLETE_TTP] = ::onVerificationComplete
+        messageHandlers[MessageID.REGISTRATION_COMPLETE_TTP] = ::onRegistrationComplete
     }
 
     fun getGroupDescriptionAndCRS() {
@@ -170,9 +182,70 @@ class OfflineEuroCommunity(
         send(ttpPeer, registerPacket)
     }
 
+    /**
+     * Sends a verification request message to a peer after initiating a presentation flow.
+     *
+     * The message contains the required information (client ID, request URI, and method)
+     * that the peer (usually a user's wallet) will use to fulfill the Verifiable Presentation request.
+     *
+     * @param clientId The unique client identifier associated with the VP session.
+     * @param requestUri The URI at which the presentation request can be fetched.
+     * @param requestUriMethod The method to use.
+     * @param peer The peer to which the message is sent.
+     */
+    fun sendVerificationRequest(clientId: String, requestUri: String,
+                                requestUriMethod: String, peer: Peer) {
+        val verificationRequestPacket =
+            serializePacket(
+                MessageID.VERIFICATION_REQUEST_TTP,
+                TTPVerificationRequestPayload(
+                    clientId,
+                    requestUri,
+                    requestUriMethod
+                )
+            )
+
+        send(peer, verificationRequestPacket)
+    }
+
+    /**
+     * Sends a registration completion message to the peer indicating whether verification was successful.
+     *
+     * This is typically used after the Verifiable Presentation has been validated and the user's status
+     * has been confirmed as "Completed" or "Failed".
+     *
+     * @param message The result message, e.g., "Completed" or "Failed".
+     * @param peer The peer to which the message is sent.
+     */
+    fun sendRegistrationCompleteMessage(message: String, peer: Peer) {
+        val registrationCompletePacket =
+            serializePacket(
+                MessageID.REGISTRATION_COMPLETE_TTP,
+                TTPRegistrationCompletePayload(
+                    message
+                )
+            )
+        send(peer, registrationCompletePacket)
+    }
+
     fun onGetRegisterAtTTPPacket(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationPayload)
         onGetRegisterAtTTP(peer, payload)
+    }
+
+    fun onVerificationRequest(packet: Packet) {
+        val (peer, payload) = packet.getAuthPayload(TTPVerificationRequestPayload)
+        // TODO: implement user-side logic
+    }
+
+    fun onVerificationComplete(packet: Packet) {
+        val (peer, payload) = packet.getAuthPayload(TTPVerificationCompletePayload)
+        onVerifyAtTTP(peer, payload)
+    }
+
+    fun onRegistrationComplete(packet: Packet) {
+        val (peer, payload) = packet.getAuthPayload(TTPRegistrationCompletePayload)
+        // TODO: implement user-side logic
     }
 
     fun onGetRegisterAtTTP(
@@ -187,7 +260,25 @@ class OfflineEuroCommunity(
             TTPRegistrationMessage(
                 userName,
                 userPKBytes,
-                senderPKBytes
+                senderPKBytes,
+                peer
+            )
+
+        addMessage(message)
+    }
+
+    private fun onVerifyAtTTP(
+        peer: Peer,
+        payload: TTPVerificationCompletePayload
+    ) {
+        val userName = payload.userName
+        val userPKBytes = payload.publicKey
+
+        val message =
+            TTPVerificationCompleteMessage(
+                userName,
+                userPKBytes,
+                peer
             )
 
         addMessage(message)

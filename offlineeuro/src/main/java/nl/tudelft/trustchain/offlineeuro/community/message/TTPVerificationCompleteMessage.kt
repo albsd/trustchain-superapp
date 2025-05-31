@@ -2,11 +2,10 @@ package nl.tudelft.trustchain.offlineeuro.community.message
 
 import nl.tudelft.ipv8.Peer
 
-class TTPRegistrationMessage(
+class TTPVerificationCompleteMessage (
     val userName: String,
     val userPKBytes: ByteArray,
-    val peerPublicKeyBytes: ByteArray,
     val peer: Peer
-) : ICommunityMessage {
-    override val messageType = CommunityMessageType.TTPRegistrationMessage
+): ICommunityMessage {
+    override val messageType = CommunityMessageType.TTPVerificationCompleteMessage
 }

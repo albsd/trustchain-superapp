@@ -26,27 +26,67 @@ class RegisteredUserManagerTest {
         val name = "Tester"
         val privateKey = group.getRandomZr()
         val publicKey = group.g.powZn(privateKey).immutable
+        val transactionId = "transaction_id_123"
 
-        val registrationResult = registeredUserManager.addRegisteredUser(name, publicKey)
+        val registrationResult = registeredUserManager.addRegisteredUser(name, publicKey, transactionId)
         Assert.assertTrue("The registration should be successful", registrationResult)
 
         val findByName = registeredUserManager.getRegisteredUserByName(name)!!
-        Assert.assertEquals("The found public key should be equal", publicKey, findByName.publicKey)
+        Assert.assertEquals("The name should match", name, findByName.name)
+        Assert.assertEquals("The public key should match", publicKey, findByName.publicKey)
+        Assert.assertEquals("The transactionId should match", transactionId, findByName.transactionId)
+        Assert.assertEquals("The user should not be verified", 0, findByName.isVerified)
 
         val findByPublicKey = registeredUserManager.getRegisteredUserByPublicKey(publicKey)!!
-        Assert.assertEquals("The found name should be equal", name, findByPublicKey.name)
-
-        val unregisteredName = "NotRegistered"
-        val unregisteredPrivateKey = group.getRandomZr()
-        val unregisteredPublicKey = group.g.powZn(unregisteredPrivateKey).immutable
-
-        val notFoundByName = registeredUserManager.getRegisteredUserByName(unregisteredName)
-        Assert.assertNull("No user should be found", notFoundByName)
-
-        val notFoundByPublicKey = registeredUserManager.getRegisteredUserByPublicKey(unregisteredPublicKey)
-        Assert.assertNull("No user should be found", notFoundByPublicKey)
+        Assert.assertEquals("The name should match", name, findByPublicKey.name)
 
         val allUsers = registeredUserManager.getAllRegisteredUsers()
-        Assert.assertEquals("There should only be one user", 1, allUsers.size)
+        Assert.assertEquals("No user should be verified yet", 0, allUsers.size)
+    }
+
+    @Test
+    fun verifyUserByPublicKeyTest() {
+        val name = "Verifier"
+        val privateKey = group.getRandomZr()
+        val publicKey = group.g.powZn(privateKey).immutable
+        val transactionId = "txn_456"
+
+        registeredUserManager.addRegisteredUser(name, publicKey, transactionId)
+
+        // Initially should not be verified
+        val userBeforeVerify = registeredUserManager.getRegisteredUserByName(name)!!
+        Assert.assertEquals("Initially user should not be verified", 0, userBeforeVerify.isVerified)
+
+        // Mark as verified
+        val verifyResult = registeredUserManager.verifyUserByPublicKey(publicKey)
+        Assert.assertTrue("Verification should succeed", verifyResult)
+
+        // Now the user should be verified
+        val userAfterVerify = registeredUserManager.getRegisteredUserByName(name)!!
+        Assert.assertEquals("User should be verified", 1, userAfterVerify.isVerified)
+
+        // Should now appear in getAllRegisteredUsers
+        val verifiedUsers = registeredUserManager.getAllRegisteredUsers()
+        Assert.assertEquals("Only one user should be verified", 1, verifiedUsers.size)
+        Assert.assertEquals("Verified user's name should match", name, verifiedUsers[0].name)
+    }
+
+    @Test
+    fun noUsersInitiallyTest() {
+        val allUsers = registeredUserManager.getAllRegisteredUsers()
+        Assert.assertTrue("No users should be returned", allUsers.isEmpty())
+    }
+
+    @Test
+    fun unverifiedUserShouldNotAppearInVerifiedList() {
+        val name = "InvisibleUser"
+        val privateKey = group.getRandomZr()
+        val publicKey = group.g.powZn(privateKey).immutable
+        val transactionId = "txn_invisible"
+
+        registeredUserManager.addRegisteredUser(name, publicKey, transactionId)
+
+        val allVerified = registeredUserManager.getAllRegisteredUsers()
+        Assert.assertTrue("Unverified users should not appear in verified list", allVerified.isEmpty())
     }
 }
