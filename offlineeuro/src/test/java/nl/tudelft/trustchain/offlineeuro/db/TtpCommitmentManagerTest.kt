@@ -1,83 +1,89 @@
 package nl.tudelft.trustchain.offlineeuro.db
 
-import android.content.Context
-import app.cash.sqldelight.db.SqlDriver
-import io.mockk.every
-import io.mockk.mockk
-import it.unisa.dia.gas.jpbc.Element
-import it.unisa.dia.gas.jpbc.Pairing
+import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import nl.tudelft.offlineeuro.sqldelight.Database
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import java.util.*
 
 class TtpCommitmentManagerTest {
+    private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).apply {
+        Database.Schema.create(this)
+    }
 
-    private lateinit var mockContext: Context
-    private lateinit var mockDriver: SqlDriver
-    private lateinit var mockPairing: Pairing
-    private lateinit var mockGroup: BilinearGroup
-    private lateinit var database: Database
-    private lateinit var manager: TtpCommitmentManager
+    private val group = BilinearGroup()
+    private val manager = TtpCommitmentManager(null, group, driver)
 
     @Before
     fun setUp() {
-        mockContext = mockk(relaxed = true)
-        mockDriver = mockk(relaxed = true)
-        mockPairing = mockk(relaxed = true)
-        mockGroup = mockk(relaxed = true)
-
-        every { mockGroup.pairing } returns mockPairing
-        database = Database(mockDriver)
-        manager = TtpCommitmentManager(mockContext, mockGroup, mockDriver)
+        manager.clearAllCommitments()
     }
 
     @Test
     fun `store and retrieve commitment`() {
-        // Mock elements
-        val mockPublicKey = mockk<Element>()
-        val mockNonce = mockk<Element>()
+        val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val jwtToken = "test.jwt.token"
-        val publicKeyBytes = "publicKey".toByteArray()
-        val nonceBytes = "nonce".toByteArray()
+        val nonce = group.getRandomZr()
 
-        every { mockPublicKey.toBytes() } returns publicKeyBytes
-        every { mockNonce.toBytes() } returns nonceBytes
-        every { mockPairing.zr.newElementFromBytes(nonceBytes) } returns mockNonce
+        manager.storeCommitment(userPublicKey, jwtToken, nonce)
+        val (retrievedJwt, retrievedNonce) = manager.getCommitmentByPublicKey(userPublicKey)!!
 
-        // Test storage
-        manager.storeCommitment(mockPublicKey, jwtToken, mockNonce)
-
-        // Test retrieval
-        val result = manager.getCommitmentByPublicKey(mockPublicKey)
-        assertNotNull(result)
-        assertEquals(jwtToken, result!!.first)
-        assertEquals(mockNonce, result.second)
+        assertEquals("JWT token should match", jwtToken, retrievedJwt)
+        assertEquals("Nonce should match", nonce, retrievedNonce)
     }
 
     @Test
     fun `get non-existent commitment returns null`() {
-        val mockPublicKey = mockk<Element>()
-        every { mockPublicKey.toBytes() } returns "nonexistent".toByteArray()
+        val unknownPublicKey = group.g.powZn(group.getRandomZr()).immutable
+        val result = manager.getCommitmentByPublicKey(unknownPublicKey)
+        assertNull("Should return null for unknown public key", result)
+    }
 
-        val result = manager.getCommitmentByPublicKey(mockPublicKey)
-        assertNull(result)
+    @Test
+    fun `overwrite existing commitment`() {
+        val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
+
+        val jwtToken1 = "first.jwt.token"
+        val nonce1 = group.getRandomZr()
+
+        val jwtToken2 = "second.jwt.token"
+        val nonce2 = group.getRandomZr()
+
+        manager.storeCommitment(userPublicKey, jwtToken1, nonce1)
+        manager.storeCommitment(userPublicKey, jwtToken2, nonce2)
+
+        val (retrievedJwt, retrievedNonce) = manager.getCommitmentByPublicKey(userPublicKey)!!
+        assertEquals("Should return the most recent JWT", jwtToken2, retrievedJwt)
+        assertEquals("Should return the most recent nonce", nonce2, retrievedNonce)
     }
 
     @Test
     fun `clear all commitments`() {
-        val mockPublicKey = mockk<Element>()
-        val mockNonce = mockk<Element>()
-        every { mockPublicKey.toBytes() } returns "key".toByteArray()
-        every { mockNonce.toBytes() } returns "nonce".toByteArray()
-        every { mockPairing.zr.newElementFromBytes(any()) } returns mockNonce
+        val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
+        val jwtToken = "test.jwt.token"
+        val nonce = group.getRandomZr()
 
-        manager.storeCommitment(mockPublicKey, "token", mockNonce)
+        manager.storeCommitment(userPublicKey, jwtToken, nonce)
+        assertNotNull(manager.getCommitmentByPublicKey(userPublicKey))
+
         manager.clearAllCommitments()
+        assertNull(manager.getCommitmentByPublicKey(userPublicKey))
+    }
 
-        val result = manager.getCommitmentByPublicKey(mockPublicKey)
-        assertNull(result)
+    @Test
+    fun `nonce is properly reconstructed from bytes`() {
+        val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
+        val jwtToken = "test.jwt.token"
+        val expectedNonce = group.getRandomZr()
+
+        manager.storeCommitment(userPublicKey, jwtToken, expectedNonce)
+        val (_, retrievedNonce) = manager.getCommitmentByPublicKey(userPublicKey)!!
+
+        assertEquals(
+            "Nonce should be properly reconstructed from bytes",
+            expectedNonce,
+            retrievedNonce
+        )
     }
 }

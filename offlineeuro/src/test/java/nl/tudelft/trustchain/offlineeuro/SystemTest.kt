@@ -24,8 +24,10 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElementsBytes
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.db.BankCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
+import nl.tudelft.trustchain.offlineeuro.db.TtpCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
@@ -301,12 +303,13 @@ class SystemTest {
     private fun createTTP() {
         val addressBookManager = createAddressManager(group)
         val registeredUserManager = RegisteredUserManager(null, group, createDriver())
+        val ttpCommitmentManager = TtpCommitmentManager(null, group, createDriver())
 
         ttpCommunity = prepareCommunityMock()
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, ttpCommunity)
 
         Mockito.`when`(ttpCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager)
+        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager, ttpCommitmentManager)
         crs = ttp.crs
         communicationProtocol.participant = ttp
     }
@@ -314,12 +317,13 @@ class SystemTest {
     private fun createBank() {
         val addressBookManager = createAddressManager(group)
         val depositedEuroManager = DepositedEuroManager(null, group, createDriver())
+        val bankCommitmentManager = BankCommitmentManager(null, group, createDriver())
 
         bankCommunity = prepareCommunityMock()
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, bankCommunity)
 
         Mockito.`when`(bankCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, bankCommitmentManager, runSetup = false)
         bank.crs = crs
         addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
         ttp.registerUser(bank.name, bank.publicKey)
