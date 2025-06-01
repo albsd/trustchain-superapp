@@ -22,7 +22,7 @@ class BankCommitmentManagerTest {
     }
 
     @Test
-    fun `store and retrieve commitment`() {
+    fun storeAndRetrieveCommitment() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val message = group.pairing.zr.newElementFromBytes("test.jwt.token".toByteArray())
         val nonce = group.getRandomZr()
@@ -36,14 +36,14 @@ class BankCommitmentManagerTest {
     }
 
     @Test
-    fun `get non-existent commitment returns null`() {
+    fun getNonExistentCommitmentReturnsNull() {
         val unknownPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val result = manager.getCommitmentByPublicKey(unknownPublicKey)
         assertNull("Commitment should be null for unknown public key", result)
     }
 
     @Test
-    fun `overwrite existing commitment`() {
+    fun overwriteExistingCommitment() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
 
         val message1 = group.pairing.zr.newElementFromBytes("first.jwt.token".toByteArray())
@@ -62,7 +62,7 @@ class BankCommitmentManagerTest {
     }
 
     @Test
-    fun `clear all commitments`() {
+    fun clearAllCommitments() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val message = group.pairing.zr.newElementFromBytes("test.jwt.token".toByteArray())
         val nonce = group.getRandomZr()
@@ -76,7 +76,7 @@ class BankCommitmentManagerTest {
     }
 
     @Test
-    fun `commitment is properly reconstructed from bytes`() {
+    fun commitmentIsProperlyReconstructedFromBytes() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val message = group.pairing.zr.newElementFromBytes("test.jwt.token".toByteArray())
         val nonce = group.getRandomZr()

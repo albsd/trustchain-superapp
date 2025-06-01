@@ -19,7 +19,7 @@ class Bank(
     private val depositedEuroManager: DepositedEuroManager = DepositedEuroManager(context, group),
     private val commitmentManager: BankCommitmentManager = BankCommitmentManager(context, group),
     runSetup: Boolean = true,
-) : Participant(communicationProtocol, name, onDataChangeCallback) {
+) : Participant(communicationProtocol, name) {
     private val depositedEuros: ArrayList<DigitalEuro> = arrayListOf()
     val withdrawUserRandomness: HashMap<Element, Element> = hashMapOf()
     val depositedEuroLogger: ArrayList<Pair<String, Boolean>> = arrayListOf()

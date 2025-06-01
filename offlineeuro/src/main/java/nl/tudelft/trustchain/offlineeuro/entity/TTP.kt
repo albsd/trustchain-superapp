@@ -26,7 +26,7 @@ class TTP(
     context: Context?,
     private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
     private val commitmentManager: TtpCommitmentManager = TtpCommitmentManager(context, group),
-) : Participant(communicationProtocol, name, onDataChangeCallback) {
+) : Participant(communicationProtocol, name) {
     val crsMap: Map<Element, Element>
 
     init {

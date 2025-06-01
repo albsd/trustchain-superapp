@@ -21,7 +21,7 @@ class TtpCommitmentManagerTest {
     }
 
     @Test
-    fun `store and retrieve commitment`() {
+    fun storeAndRetrieveCommitment() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val jwtToken = "test.jwt.token"
         val nonce = group.getRandomZr()
@@ -34,14 +34,14 @@ class TtpCommitmentManagerTest {
     }
 
     @Test
-    fun `get non-existent commitment returns null`() {
+    fun getNonExistentCommitmentReturnsNull() {
         val unknownPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val result = manager.getCommitmentByPublicKey(unknownPublicKey)
         assertNull("Should return null for unknown public key", result)
     }
 
     @Test
-    fun `overwrite existing commitment`() {
+    fun overwriteExistingCommitment() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
 
         val jwtToken1 = "first.jwt.token"
@@ -59,7 +59,7 @@ class TtpCommitmentManagerTest {
     }
 
     @Test
-    fun `clear all commitments`() {
+    fun clearAllCommitments() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val jwtToken = "test.jwt.token"
         val nonce = group.getRandomZr()
@@ -72,7 +72,7 @@ class TtpCommitmentManagerTest {
     }
 
     @Test
-    fun `nonce is properly reconstructed from bytes`() {
+    fun nonceIsProperlyReconstructedFromBytes() {
         val userPublicKey = group.g.powZn(group.getRandomZr()).immutable
         val jwtToken = "test.jwt.token"
         val expectedNonce = group.getRandomZr()

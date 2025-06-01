@@ -119,7 +119,7 @@ class BankTest {
     }
 
     @Test
-    fun `store user commitment`() {
+    fun storeUserCommitment() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
         val mockCommitment = ttpGroup.generateRandomElementOfG()
@@ -130,7 +130,7 @@ class BankTest {
     }
 
     @Test
-    fun `verify revealed commitment - valid`() {
+    fun verifyRevealedCommitmentValid() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
         val jwtToken = "valid.jwt.token"
@@ -146,7 +146,7 @@ class BankTest {
     }
 
     @Test
-    fun `verify revealed commitment - invalid jwt`() {
+    fun verifyRevealedCommitmentInvalidJwt() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
         val nonce = ttpGroup.getRandomZr()
@@ -160,7 +160,7 @@ class BankTest {
     }
 
     @Test
-    fun `verify revealed commitment - invalid nonce`() {
+    fun verifyRevealedCommitmentInvalidNonce() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
         val jwtToken = "valid.jwt.token"
@@ -175,7 +175,7 @@ class BankTest {
     }
 
     @Test
-    fun `verify revealed commitment - no stored commitment`() {
+    fun verifyRevealedCommitmentNoStoredCommitment() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
 
@@ -191,7 +191,7 @@ class BankTest {
     }
 
     @Test
-    fun `complete commitment flow`() {
+    fun completeCommitmentFlow() {
         // Setup
         val bank = getBank()
         val mockTtp = Mockito.mock(TTP::class.java)
@@ -220,7 +220,7 @@ class BankTest {
     }
 
     @Test
-    fun `verify with empty jwt`() {
+    fun verifyWithEmptyJwt() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
         val nonce = ttpGroup.getRandomZr()
@@ -234,7 +234,7 @@ class BankTest {
     }
 
     @Test
-    fun `verify with zero nonce`() {
+    fun verifyWithZeroNonce() {
         val bank = getBank()
         val userPublicKey = ttpGroup.generateRandomElementOfG()
         val jwtToken = "user.jwt.token"
