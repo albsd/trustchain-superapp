@@ -1,5 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.communication
 
+import android.net.Uri
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.community.message.AddressMessage
@@ -135,6 +137,14 @@ class IPV8CommunicationProtocol(
         return message.result
     }
 
+    override fun completeVerification() {
+        if (getParticipantRole() != Role.User)
+            return
+        val user = participant as User
+        val ttpAddress = addressBookManager.getAddressByName("TTP")
+        community.sendVerificationComplete(user.name, user.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+    }
+
     fun scopePeers() {
         community.scopePeers(participant.name, getParticipantRole(), participant.publicKey.toBytes())
     }
@@ -168,7 +178,7 @@ class IPV8CommunicationProtocol(
         val publicKey = participant.group.gElementFromBytes(message.publicKeyBytes)
         val address = Address(message.name, message.role, publicKey, message.peerPublicKey)
         addressBookManager.insertAddress(address)
-        participant.onDataChangeCallback?.invoke(null)
+        participant.emitEvent(null)
     }
 
     private fun handleGetBilinearGroupAndCRSRequest(message: BilinearGroupCRSRequestMessage) {
@@ -255,14 +265,27 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        Log.i("Registering user", message.userName)
         val response = ttp.registerUser(message.userName, publicKey)
+
         if (response != null) {
+            Log.i("EUDI", "Am trimis presentation request")
             community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
         }
     }
 
     private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
-        // TODO: implement user-side logic
+        if (getParticipantRole() != Role.User) {
+            return
+        }
+        val user = participant as User
+        val deepLink = Uri.parse("eudi-openid4vp://").buildUpon()
+            .appendQueryParameter("client_id", message.clientId)
+            .appendQueryParameter("request_uri", message.requestUri)
+            .appendQueryParameter("request_uri_method", message.requestUriMethod)
+            .build()
+
+        user.authWith(deepLink)
     }
 
     /**
@@ -282,7 +305,9 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        Log.i("verification", "Verifying user ${message.userName}")
         if (ttp.verifyUser(message.userName, publicKey)) {
+            Log.i("verification good", "User: ${message.userName}")
             community.sendRegistrationCompleteMessage("Completed", message.peer)
         } else {
             community.sendRegistrationCompleteMessage("Failed", message.peer)
@@ -290,7 +315,11 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
-        // TODO: implement user-side logic
+        if (participant !is User) {
+            return
+        }
+        val user = participant as User
+        user.authStatus(message.status)
     }
 
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {
@@ -311,6 +340,8 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
+        Log.i("rolul", getParticipantRole().toString())
+        Log.i("hai ca am primit", message.toString())
         when (message) {
             is AddressMessage -> handleAddressMessage(message)
             is AddressRequestMessage -> handleAddressRequestMessage(message)
