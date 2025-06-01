@@ -68,5 +68,8 @@
         <action
             android:id="@+id/nav_null_username"
             app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_walletRegistrationFragment_to_userHomeFragment"
+            app:destination="@id/userHomeFragment" />
     </fragment>
 </navigation>

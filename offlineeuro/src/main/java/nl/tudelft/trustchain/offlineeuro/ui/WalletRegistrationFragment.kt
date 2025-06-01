@@ -44,7 +44,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
         eudiAuthManager = EUDIAuthManager(
             ::openInWallet,
-            {findNavController().navigate(R.id.bankSelectorFragment)},
+            {findNavController().navigate(R.id.action_walletRegistrationFragment_to_userHomeFragment)},
             {Toast.makeText(context, "Could not verify pid", Toast.LENGTH_LONG).show()},
             communicationProtocol
         )
@@ -63,13 +63,12 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
             ParticipantHolder.user = user
             user.addCallback(onDataChangeCallback)
-            lifecycleScope.launch {
-                while(true) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                while (true) {
                     refresh()
                     delay(1000)
                 }
             }
-            refresh()
         } catch (e: Exception) {
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
         }
@@ -108,7 +107,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
     private fun refresh() {
         communicationProtocol.scopePeers()
-        onDataChangeCallback(null)
+        //onDataChangeCallback(null)
         Log.i("Peers", "Found ${communicationProtocol.addressBookManager.getAllAddresses().size} peers")
     }
 
