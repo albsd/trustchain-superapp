@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
+import android.net.Uri
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -17,6 +18,7 @@ class User(
     runSetup: Boolean = true
 ) : Participant(communicationProtocol, name) {
     val wallet: Wallet
+    var authManager: EUDIAuthManager? = null
 
     init {
         communicationProtocol.participant = this
@@ -85,6 +87,14 @@ class User(
     fun generateNewEuroDemo() {
         val walletEntry = wallet.generateWalletEntry()
         walletManager!!.insertWalletEntry(walletEntry)
+    }
+
+    fun authWith(uri: Uri) {
+        authManager?.authWith(uri)
+    }
+
+    fun authStatus(status: String) {
+        authManager?.authStatusUpdate(status)
     }
 
     override fun onReceivedTransaction(

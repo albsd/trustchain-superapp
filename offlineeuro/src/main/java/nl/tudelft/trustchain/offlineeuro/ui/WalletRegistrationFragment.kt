@@ -1,16 +1,25 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.entity.EUDIAuthManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 
@@ -18,6 +27,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
     private lateinit var community: OfflineEuroCommunity
     private lateinit var communicationProtocol: IPV8CommunicationProtocol
     private lateinit var user: User
+    private lateinit var eudiAuthManager: EUDIAuthManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -31,6 +41,14 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
         val group = BilinearGroup(PairingTypes.FromFile, context = context)
         val addressBookManager = AddressBookManager(context, group)
         communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+
+        eudiAuthManager = EUDIAuthManager(
+            ::openInWallet,
+            {findNavController().navigate(R.id.action_walletRegistrationFragment_to_userHomeFragment)},
+            {Toast.makeText(context, "Could not verify pid", Toast.LENGTH_LONG).show()},
+            communicationProtocol
+        )
+
         try {
             user = User(
                 userName,
@@ -41,12 +59,56 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 runSetup = false
             )
 
+            user.authManager = eudiAuthManager
+
             ParticipantHolder.user = user
             user.addCallback(onDataChangeCallback)
-            communicationProtocol.scopePeers()
+            viewLifecycleOwner.lifecycleScope.launch {
+                while (true) {
+                    refresh()
+                    delay(1000)
+                }
+            }
         } catch (e: Exception) {
             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun openInWallet(deepLink: Uri) {
+        requireActivity().runOnUiThread {
+            Log.e("wallet frontend", "am ajuns aici")
+            // When a deep link is ready, the option to open in wallet becomes available
+            val openWalletButton =
+                requireView().findViewById<Button>(R.id.wallet_registration_button)
+            openWalletButton.isEnabled = true
+
+            // Creates an Android intent with the uri
+            openWalletButton.setOnClickListener {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, deepLink).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(requireContext(), "No wallet app found", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if(eudiAuthManager.isPending() || eudiAuthManager.isNotStarted())
+            return
+        eudiAuthManager.afterUserReturns()
+        //todo: make a buffering state
+        Toast.makeText(requireContext(), "Awaiting verification from TTP", Toast.LENGTH_LONG).show()
+    }
+
+    private fun refresh() {
+        communicationProtocol.scopePeers()
+        //onDataChangeCallback(null)
+        Log.i("Peers", "Found ${communicationProtocol.addressBookManager.getAllAddresses().size} peers")
     }
 
     private val onDataChangeCallback: (String?) -> Unit = { message ->
@@ -63,7 +125,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 val ttpAddresses = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.TTP }
                 val ttpTable = view.findViewById<LinearLayout>(R.id.wallet_registration_ttp_list)
                 TableHelpers.removeAllButFirstRow(ttpTable)
-                TableHelpers.addTTPsToTable(ttpTable, ttpAddresses, context)
+                TableHelpers.addTTPsToTable(ttpTable, ttpAddresses, context, user)
             }
         }
     }

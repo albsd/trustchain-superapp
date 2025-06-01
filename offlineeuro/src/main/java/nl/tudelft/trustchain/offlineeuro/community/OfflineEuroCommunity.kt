@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.community
 
+import android.util.Log
 import nl.tudelft.ipv8.Overlay
 import nl.tudelft.ipv8.Peer
 import nl.tudelft.ipv8.attestation.trustchain.TrustChainCommunity
@@ -19,8 +20,10 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMess
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -209,6 +212,22 @@ class OfflineEuroCommunity(
     }
 
     /**
+     * Sends a message meaning that the user has returned from the EUDI wallet.
+     *
+     * @param userName The user's chosen name
+     * @param pkBytes The user's publick key in bytes
+     * @param ttpPublicKey The public key of the TTP
+     */
+    fun sendVerificationComplete(userName: String, pkBytes: ByteArray, ttpPublicKey: ByteArray) {
+        val packet = serializePacket(
+            MessageID.VERIFICATION_COMPLETE_TTP,
+            TTPVerificationCompletePayload(userName, pkBytes)
+        )
+        val ttpPeer = getPeerByPublicKeyBytes(ttpPublicKey) ?: throw Exception("TTP not found")
+        send(ttpPeer, packet)
+    }
+
+    /**
      * Sends a registration completion message to the peer indicating whether verification was successful.
      *
      * This is typically used after the Verifiable Presentation has been validated and the user's status
@@ -235,7 +254,8 @@ class OfflineEuroCommunity(
 
     fun onVerificationRequest(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPVerificationRequestPayload)
-        // TODO: implement user-side logic
+        val msg = TTPVerificationRequestMessage (payload.clientId, payload.requestUri, payload.requestUriMethod)
+        addMessage(msg)
     }
 
     fun onVerificationComplete(packet: Packet) {
@@ -245,7 +265,8 @@ class OfflineEuroCommunity(
 
     fun onRegistrationComplete(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationCompletePayload)
-        // TODO: implement user-side logic
+        val msg = TTPRegistrationCompleteMessage (payload.status)
+        addMessage(msg)
     }
 
     fun onGetRegisterAtTTP(
@@ -621,6 +642,7 @@ class OfflineEuroCommunity(
         for (peer in getPeers()) {
             send(peer, addressPacket)
         }
+        Log.i("peers", "Send my role to ${getPeers().size} peers...")
     }
 
     private fun onScopePeersPacket(packet: Packet) {

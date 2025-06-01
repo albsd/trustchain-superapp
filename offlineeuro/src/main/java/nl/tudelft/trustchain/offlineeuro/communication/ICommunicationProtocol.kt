@@ -51,4 +51,6 @@ interface ICommunicationProtocol {
         name: String,
         group: BilinearGroup
     ): Element
+
+    fun completeVerification(): Unit
 }
