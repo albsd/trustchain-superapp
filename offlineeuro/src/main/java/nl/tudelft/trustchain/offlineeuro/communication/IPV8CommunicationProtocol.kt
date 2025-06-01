@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.communication
 
 import android.net.Uri
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.community.message.AddressMessage
@@ -264,8 +265,11 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        Log.i("Registering user", message.userName)
         val response = ttp.registerUser(message.userName, publicKey)
+
         if (response != null) {
+            Log.i("EUDI", "Am trimis presentation request")
             community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
         }
     }
@@ -301,7 +305,9 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        Log.i("verification", "Verifying user ${message.userName}")
         if (ttp.verifyUser(message.userName, publicKey)) {
+            Log.i("verification good", "User: ${message.userName}")
             community.sendRegistrationCompleteMessage("Completed", message.peer)
         } else {
             community.sendRegistrationCompleteMessage("Failed", message.peer)
@@ -334,6 +340,8 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
+        Log.i("rolul", getParticipantRole().toString())
+        Log.i("hai ca am primit", message.toString())
         when (message) {
             is AddressMessage -> handleAddressMessage(message)
             is AddressRequestMessage -> handleAddressRequestMessage(message)
