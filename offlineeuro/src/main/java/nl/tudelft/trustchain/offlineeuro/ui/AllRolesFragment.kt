@@ -13,6 +13,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
+import nl.tudelft.trustchain.offlineeuro.entity.EUDIAuthManager
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
@@ -24,6 +25,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
     private lateinit var ttp: TTP
     private lateinit var bank: Bank
     private lateinit var user: User
+    private lateinit var userFragment: UserHomeFragment
 
     override fun onViewCreated(
         view: View,
@@ -35,9 +37,11 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
         val group = BilinearGroup(PairingTypes.FromFile, context = context)
         val addressBookManager = AddressBookManager(context, group)
         iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
-        ttp = TTP("TTP", group, iPV8CommunicationProtocol, context, onDataChangeCallback = onTTPDataChangeCallback)
+        ttp = TTP("TTP", group, iPV8CommunicationProtocol, context)
+        ttp.addCallback(onTTPDataChangeCallback)
 
-        bank = Bank("Bank", group, iPV8CommunicationProtocol, context, runSetup = false, onDataChangeCallback = onBankDataChangeCallBack)
+        bank = Bank("Bank", group, iPV8CommunicationProtocol, context, runSetup = false)
+        bank.addCallback(onBankDataChangeCallBack)
         user =
             User(
                 "TestUser",
@@ -46,8 +50,8 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                 null,
                 iPV8CommunicationProtocol,
                 runSetup = false,
-                onDataChangeCallback = onUserDataChangeCallBack
             )
+        user.addCallback(onUserDataChangeCallBack)
 
         bank.group = ttp.group
         bank.crs = ttp.crs
@@ -120,7 +124,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
 
     private fun setUserAsChild() {
         iPV8CommunicationProtocol.participant = user
-        val userFragment = UserHomeFragment()
+        userFragment = UserHomeFragment()
         childFragmentManager.beginTransaction()
             .replace(R.id.parent_fragment_container, userFragment)
             .commit()
@@ -144,7 +148,8 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                     message,
                     requireView(),
                     iPV8CommunicationProtocol,
-                    user
+                    user,
+                    userFragment.updateUI
                 )
             }
         }
@@ -160,7 +165,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
     }
 
     private fun updateUserList(view: View) {
-        val table = view.findViewById<LinearLayout>(R.id.tpp_home_registered_user_list) ?: return
+        val table = view.findViewById<LinearLayout>(R.id.ttp_home_registered_user_list) ?: return
         val users = ttp.getRegisteredUsers()
         TableHelpers.removeAllButFirstRow(table)
         TableHelpers.addRegisteredUsersToTable(table, users)

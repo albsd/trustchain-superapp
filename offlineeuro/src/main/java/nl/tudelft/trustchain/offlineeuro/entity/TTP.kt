@@ -26,7 +26,6 @@ class TTP(
     context: Context?,
     private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
     private val commitmentManager: TtpCommitmentManager = TtpCommitmentManager(context, group),
-    onDataChangeCallback: ((String?) -> Unit)? = null
 ) : Participant(communicationProtocol, name, onDataChangeCallback) {
     val crsMap: Map<Element, Element>
 
@@ -189,7 +188,7 @@ class TTP(
             val transactionId = user.transactionId
             if (verifyUserWallet(transactionId)) {
                 val result = registeredUserManager.verifyUserByPublicKey(publicKey)
-                onDataChangeCallback?.invoke("Registered $name")
+                emitEvent("Registered $name")
                 return result
             } else {
                 return false;
@@ -265,10 +264,10 @@ class TTP(
         val secondPK = getUserFromProof(secondProof)
 
         return if (firstPK != null && firstPK == secondPK) {
-            onDataChangeCallback?.invoke("Found proof that  ${firstPK.name} committed fraud!")
+            emitEvent("Found proof that  ${firstPK.name} committed fraud!")
             "Double spending detected. Double spender is ${firstPK.name} with PK: ${firstPK.publicKey}"
         } else {
-            onDataChangeCallback?.invoke("Invalid fraud request received!")
+            emitEvent("Invalid fraud request received!")
             "No double spending detected"
         }
     }

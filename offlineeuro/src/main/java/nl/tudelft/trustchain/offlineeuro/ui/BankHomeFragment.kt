@@ -38,9 +38,9 @@ class BankHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_bank_home) {
                     group,
                     iPV8CommunicationProtocol,
                     context,
-                    depositedEuroManager,
-                    onDataChangeCallback = onDataChangeCallBack
+                    depositedEuroManager
                 )
+            bank.addCallback(onDataChangeCallBack)
         }
         onDataChangeCallBack(null)
     }
