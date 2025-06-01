@@ -59,6 +59,8 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 runSetup = false
             )
 
+            user.authManager = eudiAuthManager
+
             ParticipantHolder.user = user
             user.addCallback(onDataChangeCallback)
             lifecycleScope.launch {
@@ -74,18 +76,23 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
     }
 
     private fun openInWallet(deepLink: Uri) {
-        // When a deep link is ready, the option to open in wallet becomes available
-        val openWalletButton = requireView().findViewById<Button>(R.id.wallet_registration_button)
-        openWalletButton.isEnabled = true
+        requireActivity().runOnUiThread {
+            Log.e("wallet frontend", "am ajuns aici")
+            // When a deep link is ready, the option to open in wallet becomes available
+            val openWalletButton =
+                requireView().findViewById<Button>(R.id.wallet_registration_button)
+            openWalletButton.isEnabled = true
 
-        // Creates an Android intent with the uri
-        openWalletButton.setOnClickListener{
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW, deepLink).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                })
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(requireContext(), "No wallet app found", Toast.LENGTH_LONG).show()
+            // Creates an Android intent with the uri
+            openWalletButton.setOnClickListener {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, deepLink).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(requireContext(), "No wallet app found", Toast.LENGTH_LONG)
+                        .show()
+                }
             }
         }
     }
