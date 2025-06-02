@@ -76,13 +76,7 @@ class Bank(
     ): Boolean {
         val storedCommitment = commitmentManager.getCommitmentByPublicKey(userPublicKey) ?: return false
         val message = group.pairing.zr.newElementFromBytes(plaintextJwt.toByteArray())
-
-        // Reconstruct the commitment
-        val g = group.g
-        val h = group.h
-        val expectedCommitment = g.powZn(message).mul(h.powZn(nonce))
-
-        return storedCommitment == expectedCommitment
+        return PedersenCommitment.verifyCommitment(group, storedCommitment, message, nonce)
     }
 
     private fun lookUp(userPublicKey: Element): Element? {
