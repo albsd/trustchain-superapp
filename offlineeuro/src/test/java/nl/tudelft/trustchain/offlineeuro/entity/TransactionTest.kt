@@ -34,6 +34,10 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import java.math.BigInteger
 import kotlin.math.floor
+import org.mockito.MockedStatic
+import org.mockito.Mockito.mockStatic
+import android.util.Log
+import org.junit.After
 
 class TransactionTest {
     // Setup the TTP
@@ -47,14 +51,20 @@ class TransactionTest {
     private lateinit var bank: Bank
     private lateinit var bankCommunity: OfflineEuroCommunity
     private var i = 0
+    private lateinit var mockedLog: MockedStatic<Log>
 
     @Before
     fun setup() {
-        // Initiate
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
         createTTP()
         createBank()
     }
 
+    @After
+    fun tearDown() {
+        mockedLog.close()
+    }
     @Test
     fun transactionWithoutProofsTest() {
         val user = createTestUser()
