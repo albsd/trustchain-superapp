@@ -56,6 +56,10 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import java.math.BigInteger
+import org.mockito.MockedStatic
+import org.mockito.Mockito.mockStatic
+import android.util.Log
+import org.junit.After
 
 class SystemTest {
     // Setup the TTP
@@ -67,10 +71,12 @@ class SystemTest {
     private lateinit var bank: Bank
     private lateinit var bankCommunity: OfflineEuroCommunity
     private var i = 0
+    private lateinit var mockedLog: MockedStatic<Log>
 
     @Before
     fun setup() {
-        // Initiate
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
         createTTP()
         createBank()
         val firstProofCaptor = argumentCaptor<ByteArray>()
@@ -92,6 +98,10 @@ class SystemTest {
         }
     }
 
+    @After
+    fun tearDown() {
+        mockedLog.close()
+    }
     @Test
     fun withdrawSpendDepositDoubleSpendDepositTest() {
         val user = createTestUser()

@@ -37,6 +37,11 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import java.math.BigInteger
 import kotlin.system.measureTimeMillis
+import org.mockito.MockedStatic
+import org.mockito.Mockito.mockStatic
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 class PerformanceTest {
     private val registrationNameCaptor = argumentCaptor<String>()
@@ -50,6 +55,18 @@ class PerformanceTest {
     private val exponents = crsMap.second
 
     private var i = 0
+    private lateinit var mockedLog: MockedStatic<Log>
+
+    @Before
+    fun setUp() {
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+    }
+
+    @After
+    fun tearDown() {
+        mockedLog.close()
+    }
 
     @Test
     fun testPerformance() {

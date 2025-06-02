@@ -31,6 +31,11 @@ import nl.tudelft.trustchain.offlineeuro.enums.Role
 import org.junit.Assert
 import org.junit.Test
 import org.mockito.Mockito
+import org.mockito.MockedStatic
+import org.mockito.Mockito.mockStatic
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
@@ -47,6 +52,18 @@ class GrowthTest {
     private val crs = CRSGenerator.generateCRSMap(group).first
 
     private var i = 0
+    private lateinit var mockedLog: MockedStatic<Log>
+
+    @Before
+    fun setUp() {
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+    }
+
+    @After
+    fun tearDown() {
+        mockedLog.close()
+    }
 
     @Test
     fun testGrowth() {
