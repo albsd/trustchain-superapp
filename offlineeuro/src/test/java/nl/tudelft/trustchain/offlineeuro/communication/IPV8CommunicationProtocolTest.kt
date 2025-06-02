@@ -41,6 +41,12 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import java.math.BigInteger
+import org.mockito.MockedStatic
+import android.net.Uri
+import org.mockito.Mockito.mockStatic
+import android.util.Log
+import org.junit.After
+import nl.tudelft.trustchain.offlineeuro.entity.Participant
 
 class IPV8CommunicationProtocolTest {
     private val context = null
@@ -78,8 +84,18 @@ class IPV8CommunicationProtocolTest {
 
     private val iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
+    private lateinit var mockedLog: MockedStatic<Log>
+    private lateinit var mockedUri: MockedStatic<Uri>
+
     @Before
     fun setup() {
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+
+        mockedUri = mockStatic(Uri::class.java)
+        val mockUri = Mockito.mock(Uri::class.java)
+        mockedUri.`when`<Uri> { Uri.parse(any()) }.thenReturn(mockUri)
+
         `when`(community.messageList).thenReturn(iPV8CommunicationProtocol.messageList)
         val ttpAddressMessage = AddressMessage(ttpAddress.name, ttpAddress.type, ttpAddress.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
         `when`(community.getGroupDescriptionAndCRS()).then {
@@ -113,6 +129,12 @@ class IPV8CommunicationProtocolTest {
             val message = TransactionResultMessage(transactionResult)
             community.messageList.add(message)
         }
+    }
+
+    @After
+    fun tearDown() {
+        mockedLog.close()
+        mockedUri.close()
     }
 
     @Test
@@ -372,14 +394,22 @@ class IPV8CommunicationProtocolTest {
     @Test
     fun handleRegistrationCompleteMessage_noopTest() {
         val message = TTPRegistrationCompleteMessage("Completed")
-
+        iPV8CommunicationProtocol.participant = Mockito.mock(User::class.java)
         iPV8CommunicationProtocol.messageList.add(message)
     }
 
     @Test
     fun handleVerificationRequestMessage_noopTest() {
-        val message = TTPVerificationRequestMessage("client_id", "request_uri", "get")
+        val mockUri = Mockito.mock(Uri::class.java)
+        val mockUriBuilder = Mockito.mock(Uri.Builder::class.java)
 
+        `when`(Uri.parse("eudi-openid4vp://")).thenReturn(mockUri)
+        `when`(mockUri.buildUpon()).thenReturn(mockUriBuilder)
+        `when`(mockUriBuilder.appendQueryParameter(any(), any())).thenReturn(mockUriBuilder)
+        `when`(mockUriBuilder.build()).thenReturn(mockUri)
+
+        val message = TTPVerificationRequestMessage("client_id", "request_uri", "get")
+        iPV8CommunicationProtocol.participant = Mockito.mock(User::class.java)
         iPV8CommunicationProtocol.messageList.add(message)
     }
 }

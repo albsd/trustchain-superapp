@@ -21,12 +21,29 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigInteger
+import org.mockito.MockedStatic
+import org.mockito.Mockito.mockStatic
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 class BankTest {
     private val ttpGroup = BilinearGroup(PairingTypes.FromFile)
     private val crs = CRSGenerator.generateCRSMap(ttpGroup).first
     private val depositedEuroManager = Mockito.mock(DepositedEuroManager::class.java)
     private val bankCommitmentManager = Mockito.mock(BankCommitmentManager::class.java)
+    private lateinit var mockedLog: MockedStatic<Log>
+
+    @Before
+    fun setUp() {
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+    }
+
+    @After
+    fun tearDown() {
+        mockedLog.close()
+    }
 
     @Test
     fun initWithSetupTest() {
