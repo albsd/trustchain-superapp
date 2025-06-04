@@ -64,12 +64,12 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         val ttpAddresses  = addresses.filter { it.type == Role.TTP }
 
         // Update bank accounts table
-        val bankAccountsList = view.findViewById<LinearLayout>(R.id.user_home_bankAccountsList)
-        TableHelpers.addAddressesToTable(bankAccountsList, bankAddresses, user, requireContext(), ::showTransactionWindow)
+//        val bankAccountsList = view.findViewById<LinearLayout>(R.id.user_home_bankAccountsList)
+//        TableHelpers.addAddressesToTable(bankAccountsList, bankAddresses, user, requireContext(), ::showTransactionWindow)
 
-        // Update peer table
-        val peerList = view.findViewById<LinearLayout>(R.id.user_home_peerList)
-        TableHelpers.addAddressesToTable(peerList, userAddresses, user, requireContext(), ::showTransactionWindow)
+//        // Update peer table
+//        val peerList = view.findViewById<LinearLayout>(R.id.user_home_peerList)
+//        TableHelpers.addAddressesToTable(peerList, userAddresses, user, requireContext(), ::showTransactionWindow)
 
         // Update TTP table
         val TTPList = view.findViewById<LinearLayout>(R.id.user_home_TTPList)
@@ -101,6 +101,77 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         builder.show()
     }
 
+    // in case we decidce to allow tokens to be more than 1 eur
+    private fun onSendTokenClick(amount: Int) {
+        showUserSelectionWithConfirmation("Send", amount) { selectedUserName ->
+            try {
+                user.sendDigitalEuroTo(selectedUserName)
+                Toast.makeText(requireContext(), "Sent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), e.message ?: "Error sending euro", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // in case we decidce to allow tokens to be more than 1 eur
+    private fun onDoubleSpendTokenClick(amount: Int) {
+        showUserSelectionWithConfirmation("Double Spend", amount) { selectedUserName ->
+            try {
+                user.doubleSpendDigitalEuroTo(selectedUserName)
+                Toast.makeText(requireContext(), "Double spent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), e.message ?: "Error double spending euro", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showUserSelectionWithConfirmation(
+        actionName: String,
+        amount: Int,
+        onConfirmed: (String) -> Unit
+    ) {
+        if (!isAdded) return
+
+        val context = requireContext()
+        val users = listOf("Alice", "Bob", "Charlie", "Dave")
+        var selectedUser: String? = null
+
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle("$actionName $amount € to:")
+
+        builder.setSingleChoiceItems(users.toTypedArray(), -1) { _, which ->
+            selectedUser = users[which]
+        }
+
+        builder.setPositiveButton("Next") { dialog, _ ->
+            if (selectedUser == null) {
+                Toast.makeText(context, "Please select a user", Toast.LENGTH_SHORT).show()
+            } else {
+                dialog.dismiss()
+
+                if (isAdded) {
+                    AlertDialog.Builder(context)
+                        .setTitle("Confirm $actionName")
+                        .setMessage("$actionName $amount € to $selectedUser?")
+                        .setPositiveButton("Confirm") { confirmDialog, _ ->
+                            selectedUser?.let { onConfirmed(it) }
+                            confirmDialog.dismiss()
+                        }
+                        .setNegativeButton("Cancel") { confirmDialog, _ ->
+                            confirmDialog.dismiss()
+                        }
+                        .show()
+                }
+            }
+        }
+
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.dismiss()
+        }
+        builder.setIcon(R.drawable.ic_baseline_euro_symbol_24)
+        builder.show()
+    }
+
     private val onUserDataChangeCallBack: (String?) -> Unit = { message ->
         requireActivity().runOnUiThread {
             val context = requireContext()
@@ -110,12 +181,35 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
                     message,
                     requireView(),
                     communicationProtocol,
-                    user,
-                    ::updateAllAddresses
-                )
+                    user
+                ) { view ->
+                    updateAllAddresses(view)
+
+                    val userBalanceTextView = view.findViewById<TextView>(R.id.user_balance)
+                    userBalanceTextView.text = "Balance: ${user.getBalance()} €"
+
+                    val tokenContainer = view.findViewById<LinearLayout>(R.id.token_container)
+
+                    TableHelpers.updateTokens(
+                        tokenContainer,
+                        user,
+                        context,
+                        onSendClick = { _ ->
+                            onSendTokenClick(1)
+                        },
+                        onDoubleSpendClick = { _ ->
+                            onDoubleSpendTokenClick(1)
+                        },
+                        onDepositClick = { _ ->
+                            user.sendDigitalEuroTo("Bank")
+                            Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             }
         }
     }
+
 
     val updateUI: (View) -> Unit
         get() = { view -> updateAllAddresses(view) }

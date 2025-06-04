@@ -51,6 +51,13 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                 iPV8CommunicationProtocol,
                 runSetup = false,
             )
+
+        // give the user some tokenz
+        user.generateNewEuroDemo()
+        user.generateNewEuroDemo()
+        user.generateNewEuroDemo()
+        user.generateNewEuroDemo()
+
         user.addCallback(onUserDataChangeCallBack)
 
         bank.group = ttp.group

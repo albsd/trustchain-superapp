@@ -17,6 +17,7 @@ import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.RegisteredUser
 import nl.tudelft.trustchain.offlineeuro.entity.User
+import nl.tudelft.trustchain.offlineeuro.entity.WalletEntry
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 
 object TableHelpers {
@@ -414,6 +415,84 @@ object TableHelpers {
             }
         }
     }
+
+    fun updateTokens(
+        tokenContainer: LinearLayout,
+        user: User,
+        context: Context,
+        onSendClick: (Int) -> Unit,
+        onDoubleSpendClick: (Int) -> Unit,
+        onDepositClick: (Int) -> Unit
+    ) {
+        tokenContainer.removeAllViews()
+
+        val tokens: List<WalletEntry> = user.getTokens()
+
+        for (tokenList in tokens) {
+
+            val label = TextView(context).apply {
+                text = "1 €"
+                textSize = 16f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 16.dp(context)
+                }
+            }
+
+            val buttonRow = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            val sendButton = Button(context).apply {
+                text = "SEND"
+                setOnClickListener {
+                    onSendClick(1)
+                }
+            }
+
+            val doubleSpendButton = Button(context).apply {
+                text = "DOUBLE SPEND"
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginStart = 8.dp(context)
+                }
+                setOnClickListener {
+                    onDoubleSpendClick(1)
+                }
+            }
+
+            val depositButton = Button(context).apply {
+                text = "DEPOSIT"
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginStart = 8.dp(context)
+                }
+                setOnClickListener {
+                    onDepositClick(1)
+                }
+            }
+
+            buttonRow.addView(sendButton)
+            buttonRow.addView(doubleSpendButton)
+            buttonRow.addView(depositButton)
+
+            tokenContainer.addView(label)
+            tokenContainer.addView(buttonRow)
+        }
+    }
+
 
     private fun setTTPRegisterActionButton(
         registerAtTTPButton: Button,
