@@ -65,7 +65,8 @@ class TransactionDetailsPayloadTest {
             transactionProof,
             previousSignature,
             generateSignature(),
-            group.generateRandomElementOfG()
+            group.generateRandomElementOfG(),
+            generateSignature()
         )
     }
 

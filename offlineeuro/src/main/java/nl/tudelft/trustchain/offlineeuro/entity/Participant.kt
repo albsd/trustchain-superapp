@@ -33,9 +33,8 @@ abstract class Participant(
         publicKey = group.g.powZn(privateKey)
     }
 
-    fun registerAtTTP() {
-        // TODO NAME OF TTP
-        communicationProtocol.register(name, publicKey, "TTP")
+    fun registerAtTTP(nameTTP: String = "TTP") {
+        communicationProtocol.register(name, publicKey, nameTTP)
     }
 
     fun generateRandomizationElements(receiverPublicKey: Element): RandomizationElements {

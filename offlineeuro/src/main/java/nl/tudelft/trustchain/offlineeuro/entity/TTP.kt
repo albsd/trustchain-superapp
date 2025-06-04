@@ -6,7 +6,11 @@ import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRSGenerator
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
+import nl.tudelft.trustchain.offlineeuro.cryptography.PedersenCommitment
+import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
+import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
+import nl.tudelft.trustchain.offlineeuro.db.TtpCommitmentManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -20,7 +24,8 @@ class TTP(
     group: BilinearGroup,
     communicationProtocol: ICommunicationProtocol,
     context: Context?,
-    private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group)
+    private val registeredUserManager: RegisteredUserManager = RegisteredUserManager(context, group),
+    private val commitmentManager: TtpCommitmentManager = TtpCommitmentManager(context, group),
 ) : Participant(communicationProtocol, name) {
     val crsMap: Map<Element, Element>
 
@@ -132,9 +137,11 @@ class TTP(
         publicKey: Element
     ): Map<String, String>? {
         try {
+            // Sign the user's public key with TTP's private key
+            val signedPublicKey = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
             val response = requestPresentationEudi()
             val transactionId = response["transaction_id"]
-            val result = registeredUserManager.addRegisteredUser(name, publicKey, transactionId!!)
+            val result = registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId!!)
             if (result)
                 return response;
             return null
@@ -191,8 +198,45 @@ class TTP(
         }
     }
 
+    /**
+     * Retrieves the public key of an user with the TTP's signature on it.
+     *
+     * @param publicKey the unsigned public key of an user
+     * @return the signed version of the public key
+     * @throws IllegalArgumentException if the given public key is not registered
+     */
+    fun getSignedUserPublicKey(
+        publicKey: Element
+    ): SchnorrSignature {
+        val registeredUser = registeredUserManager.getRegisteredUserByPublicKey(publicKey)
+            ?: throw IllegalArgumentException("User with public key $publicKey is not registered with TTP")
+
+        return registeredUser.signedPublicKey
+    }
+
     fun getRegisteredUsers(): List<RegisteredUser> {
         return registeredUserManager.getAllRegisteredUsers()
+    }
+
+    /**
+     * Generates and stores a Pedersen commitment for a user's JWT token
+     */
+    fun generateAndStoreJwtCommitment(userPublicKey: Element, jwtToken: String): Element {
+        val nonce = group.getRandomZr()
+        val message = group.pairing.zr.newElementFromBytes(jwtToken.toByteArray())
+        val commitment = PedersenCommitment.createCommitment(group, message, nonce)
+
+        // Store the JWT and nonce in TTP's database
+        commitmentManager.storeCommitment(userPublicKey, jwtToken, nonce)
+
+        return commitment
+    }
+
+    /**
+     * Reveals the JWT and nonce for a given user's public key
+     */
+    fun revealCommitment(userPublicKey: Element): Pair<String, Element>? {
+        return commitmentManager.getCommitmentByPublicKey(userPublicKey)
     }
 
     override fun onReceivedTransaction(
@@ -228,7 +272,13 @@ class TTP(
         }
     }
 
+    fun isUserPublicKeyRegistered(publicKey: Element): Boolean {
+        return registeredUserManager.getAllRegisteredUsers().any { it.publicKey == publicKey }
+    }
+
     override fun reset() {
         registeredUserManager.clearAllRegisteredUsers()
+        commitmentManager.clearAllCommitments()
     }
+
 }

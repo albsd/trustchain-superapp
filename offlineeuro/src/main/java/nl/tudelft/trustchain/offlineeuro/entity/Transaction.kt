@@ -24,6 +24,8 @@ enum class TransactionResult(val valid: Boolean, val description: String) {
     INVALID_PROOF_IN_CHAIN(false, "Invalid proof in chain"),
     INVALID_CHAIN_OF_PROOFS(false, "Invalid chaining of proofs"),
     INVALID_PREVIOUS_TRANSACTION_SIGNATURE(false, "Invalid previous transaction signature"),
+    UNREGISTERED_PUBLIC_KEY(false, "Public key not registered with TTP"),
+    INVALID_PUBLIC_KEY_SIGNATURE(false, "Invalid public key signature"),
 }
 
 data class TransactionDetailsBytes(
@@ -32,6 +34,7 @@ data class TransactionDetailsBytes(
     val previousThetaSignatureBytes: ByteArray,
     val theta1SignatureBytes: ByteArray,
     val spenderPublicKeyBytes: ByteArray,
+    val spenderSignedPublicKey: ByteArray
 ) {
     fun toTransactionDetails(group: BilinearGroup): TransactionDetails {
         return TransactionDetails(
@@ -39,7 +42,8 @@ data class TransactionDetailsBytes(
             currentTransactionProofBytes.toTransactionProof(group),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(previousThetaSignatureBytes),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(theta1SignatureBytes)!!,
-            group.gElementFromBytes(spenderPublicKeyBytes)
+            group.gElementFromBytes(spenderPublicKeyBytes),
+            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(spenderSignedPublicKey)!!
         )
     }
 }
@@ -50,6 +54,7 @@ data class TransactionDetails(
     val previousThetaSignature: SchnorrSignature?,
     val theta1Signature: SchnorrSignature,
     val spenderPublicKey: Element,
+    val spenderSignedPublicKey: SchnorrSignature?
 ) {
     fun toTransactionDetailsBytes(): TransactionDetailsBytes {
         return TransactionDetailsBytes(
@@ -57,7 +62,8 @@ data class TransactionDetails(
             currentTransactionProof.toTransactionProofBytes(),
             SchnorrSignatureSerializer.serializeSchnorrSignature(previousThetaSignature),
             SchnorrSignatureSerializer.serializeSchnorrSignature(theta1Signature),
-            spenderPublicKey.toBytes()
+            spenderPublicKey.toBytes(),
+            SchnorrSignatureSerializer.serializeSchnorrSignature(spenderSignedPublicKey)
         )
     }
 }
@@ -66,6 +72,7 @@ object Transaction {
     fun createTransaction(
         privateKey: Element,
         publicKey: Element,
+        signedPublicKey: SchnorrSignature?,
         walletEntry: WalletEntry,
         randomizationElements: RandomizationElements,
         bilinearGroup: BilinearGroup,
@@ -94,15 +101,24 @@ object Transaction {
         val transactionProofSize = GrothSahaiSerializer.serializeGrothSahaiProof(transactionProof.grothSahaiProof).size
         val theta1Signature = Schnorr.schnorrSignature(r, randomizationElements.group1TInv.toBytes(), bilinearGroup)
         val previousThetaSignature = walletEntry.transactionSignature
-        return TransactionDetails(digitalEuro, transactionProof, previousThetaSignature, theta1Signature, publicKey)
+        return TransactionDetails(digitalEuro, transactionProof, previousThetaSignature, theta1Signature, publicKey, signedPublicKey)
     }
 
     fun validate(
         transaction: TransactionDetails,
         publicKeyBank: Element,
         bilinearGroup: BilinearGroup,
-        crs: CRS
+        crs: CRS,
+        validationEntityPublicKey: Element
     ): TransactionResult {
+        if (transaction.spenderSignedPublicKey == null)
+            return TransactionResult.UNREGISTERED_PUBLIC_KEY
+
+        // Verify the TTP's signature on the public key using the provided TTP public key
+        if (!Schnorr.verifySchnorrSignature(transaction.spenderSignedPublicKey, validationEntityPublicKey, bilinearGroup)) {
+            return TransactionResult.INVALID_PUBLIC_KEY_SIGNATURE
+        }
+
         // Verify if the Digital euro is signed
         val digitalEuro = transaction.digitalEuro
         if (!digitalEuro.verifySignature(publicKeyBank, bilinearGroup) ||

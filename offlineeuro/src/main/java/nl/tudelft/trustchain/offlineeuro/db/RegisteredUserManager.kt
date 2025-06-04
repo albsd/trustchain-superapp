@@ -8,6 +8,8 @@ import nl.tudelft.offlineeuro.sqldelight.Database
 import nl.tudelft.offlineeuro.sqldelight.RegisteredUsersQueries
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.entity.RegisteredUser
+import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
+import nl.tudelft.trustchain.offlineeuro.libraries.SchnorrSignatureSerializer
 
 /**
  * An overlay for the *RegisteredUsers* table.
@@ -29,6 +31,7 @@ class RegisteredUserManager(
             id: Long,
             name: String,
             publicKey: ByteArray,
+            signature: ByteArray,
             transactionId: String,
             isVerified: Long
         ->
@@ -36,6 +39,7 @@ class RegisteredUserManager(
             id,
             name,
             bilinearGroup.pairing.g1.newElementFromBytes(publicKey).immutable,
+            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signature)!!,
             transactionId,
             isVerified
         )
@@ -58,11 +62,13 @@ class RegisteredUserManager(
     fun addRegisteredUser(
         userName: String,
         publicKey: Element,
+        signedPublicKey: SchnorrSignature,
         transactionId: String
     ): Boolean {
         queries.addUser(
             userName,
             publicKey.toBytes(),
+            SchnorrSignatureSerializer.serializeSchnorrSignature(signedPublicKey),
             transactionId,
             0 // not verified
         )

@@ -1,0 +1,20 @@
+-- Bank Commitments Database Schema
+-- Stores the Pedersen commitments received from TTP
+
+createBankCommitmentTable:
+CREATE TABLE IF NOT EXISTS BankCommitments (
+    userPublicKey BLOB PRIMARY KEY NOT NULL,
+    commitment BLOB NOT NULL
+);
+
+insertCommitment:
+INSERT OR REPLACE INTO BankCommitments(userPublicKey, commitment)
+VALUES (?, ?);
+
+getCommitmentByPublicKey:
+SELECT commitment
+FROM BankCommitments
+WHERE userPublicKey = ?;
+
+clearAllCommitments:
+DELETE FROM BankCommitments;

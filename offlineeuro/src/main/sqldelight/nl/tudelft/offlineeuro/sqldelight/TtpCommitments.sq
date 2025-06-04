@@ -1,0 +1,21 @@
+-- TTP Commitments Database Schema
+-- Stores the JWT tokens and nonces for user commitments
+
+createTtpCommitmentTable:
+CREATE TABLE IF NOT EXISTS TtpCommitments (
+    userPublicKey BLOB PRIMARY KEY NOT NULL,
+    jwtToken TEXT NOT NULL,
+    nonce BLOB NOT NULL
+);
+
+insertCommitment:
+INSERT OR REPLACE INTO TtpCommitments(userPublicKey, jwtToken, nonce)
+VALUES (?, ?, ?);
+
+getCommitmentByPublicKey:
+SELECT jwtToken, nonce
+FROM TtpCommitments
+WHERE userPublicKey = ?;
+
+clearAllCommitments:
+DELETE FROM TtpCommitments;

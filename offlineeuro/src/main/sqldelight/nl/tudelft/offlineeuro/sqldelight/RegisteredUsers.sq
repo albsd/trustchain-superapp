@@ -3,13 +3,14 @@ CREATE TABLE IF NOT EXISTS RegisteredUsers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     publicKey BLOB UNIQUE NOT NULL,
+    signedPublicKey BLOB NOT NULL,
     transactionId TEXT NOT NULL,
     isVerified INTEGER NOT NULL
 );
 
 addUser:
-INSERT INTO RegisteredUsers(name, publicKey, transactionId, isVerified)
-VALUES (?, ?, ?, ?);
+INSERT INTO RegisteredUsers(name, publicKey, signedPublicKey, transactionId, isVerified)
+VALUES (?, ?, ?, ?, ?);
 
 getUserById:
 SELECT *
@@ -45,7 +46,6 @@ getAllRegisteredUsers:
 SELECT *
 FROM RegisteredUsers
 WHERE isVerified = 1;
-
 
 clearAllRegisteredUsers:
 DELETE FROM RegisteredUsers;

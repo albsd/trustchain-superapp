@@ -30,8 +30,10 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElementsBytes
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.db.BankCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
+import nl.tudelft.trustchain.offlineeuro.db.TtpCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
@@ -105,6 +107,7 @@ class SystemTest {
     @Test
     fun withdrawSpendDepositDoubleSpendDepositTest() {
         val user = createTestUser()
+        user.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user.publicKey))
 
         // Assert that the group descriptions and crs are equal
         Assert.assertEquals("The group descriptions should be equal", bank.group, user.group)
@@ -129,6 +132,7 @@ class SystemTest {
         Assert.assertNull("The walletEntry should not have a previous transaction", walletEntry.transactionSignature)
 
         val user2 = createTestUser()
+        user2.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user2.publicKey))
         addMessageToList(user2, bankAddressMessage)
 
         val user2AddressMessage = AddressMessage(user2.name, Role.User, user2.publicKey.toBytes(), user2.name.toByteArray())
@@ -142,6 +146,7 @@ class SystemTest {
 
         // Prepare double spend
         val user3 = createTestUser()
+        user3.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user3.publicKey))
         addMessageToList(user3, bankAddressMessage)
 
         val user3AddressMessage = AddressMessage(user3.name, Role.User, user3.publicKey.toBytes(), user3.name.toByteArray())
@@ -252,6 +257,11 @@ class SystemTest {
         expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
         doubleSpend: Boolean = false
     ) {
+        // Create address messages
+        val senderAddressMessage = AddressMessage(sender.name, Role.User, sender.publicKey.toBytes(), sender.name.toByteArray())
+        val receiverAddressMessage = AddressMessage(receiver.name, Role.User, receiver.publicKey.toBytes(), receiver.name.toByteArray())
+
+        // Add address messages to both communities to trigger address registration
         val senderCommunity = userList[sender]!!
         val receiverCommunity =
             if (receiver.name == bank.name) {
@@ -259,6 +269,18 @@ class SystemTest {
             } else {
                 userList[receiver]!!
             }
+
+        // Add address messages to both communities
+        senderCommunity.messageList.add(senderAddressMessage)
+        senderCommunity.messageList.add(receiverAddressMessage)
+        if (receiver is User) {
+            receiverCommunity.messageList.add(senderAddressMessage)
+            receiverCommunity.messageList.add(receiverAddressMessage)
+        }
+
+        // Wait a bit for address messages to be processed
+        Thread.sleep(100)
+
         val spenderPeer = Mockito.mock(Peer::class.java)
         val randomizationElementsCaptor = argumentCaptor<RandomizationElementsBytes>()
         val transactionDetailsCaptor = argumentCaptor<TransactionDetailsBytes>()
@@ -302,6 +324,8 @@ class SystemTest {
     fun createTestUser(): User {
         // Start with a random group
         val addressBookManager = createAddressManager(group)
+        addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
+
         val walletManager = WalletManager(null, group, createDriver())
 
         // Add the community for later access
@@ -321,12 +345,13 @@ class SystemTest {
     private fun createTTP() {
         val addressBookManager = createAddressManager(group)
         val registeredUserManager = RegisteredUserManager(null, group, createDriver())
+        val ttpCommitmentManager = TtpCommitmentManager(null, group, createDriver())
 
         ttpCommunity = prepareCommunityMock()
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, ttpCommunity)
 
         Mockito.`when`(ttpCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager)
+        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager, ttpCommitmentManager)
         crs = ttp.crs
         communicationProtocol.participant = ttp
     }
@@ -334,12 +359,13 @@ class SystemTest {
     private fun createBank() {
         val addressBookManager = createAddressManager(group)
         val depositedEuroManager = DepositedEuroManager(null, group, createDriver())
+        val bankCommitmentManager = BankCommitmentManager(null, group, createDriver())
 
         bankCommunity = prepareCommunityMock()
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, bankCommunity)
 
         Mockito.`when`(bankCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, runSetup = false)
+        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, bankCommitmentManager, runSetup = false)
         bank.crs = crs
         addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
         ttp.registerUser(bank.name, bank.publicKey)

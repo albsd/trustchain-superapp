@@ -33,6 +33,7 @@ class TransactionDetailsPayload(
         payload += serializeVarLen(transactionDetailsBytes.previousThetaSignatureBytes)
         payload += serializeVarLen(transactionDetailsBytes.theta1SignatureBytes)
         payload += serializeVarLen(transactionDetailsBytes.spenderPublicKeyBytes)
+        payload += serializeVarLen(transactionDetailsBytes.spenderSignedPublicKey)
 
         return payload
     }
@@ -87,6 +88,13 @@ class TransactionDetailsPayload(
                 )
             localOffset += spenderPublicKeySize
 
+            val (spenderSignedPublicKeyBytes, spenderSignedPublicKeySize) =
+                deserializeVarLen(
+                    buffer,
+                    localOffset
+                )
+            localOffset += spenderSignedPublicKeySize
+
             val digitalEuroBytes =
                 DigitalEuroBytes(serialNumberBytes, firstTheta1Bytes, signatureBytes, proofBytes)
             val transactionProofBytes =
@@ -98,7 +106,8 @@ class TransactionDetailsPayload(
                     transactionProofBytes,
                     previousThetaSignatureBytes,
                     theta1SignatureBytes,
-                    spenderPublicKeyBytes
+                    spenderPublicKeyBytes,
+                    spenderSignedPublicKeyBytes
                 )
 
             return Pair(
