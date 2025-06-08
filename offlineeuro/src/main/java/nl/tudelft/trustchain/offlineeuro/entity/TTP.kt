@@ -139,7 +139,7 @@ class TTP(
     ): Map<String, String>? {
         try {
             // Sign the user's public key with TTP's private key
-            val signedPublicKey = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
+            val signedPublicKey = signUserPK(userPublicKey = publicKey)
             val response = requestPresentationEudi()
             val transactionId = response["transaction_id"]
             val result = registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId!!)
@@ -149,6 +149,12 @@ class TTP(
         } catch (e: Exception) {
             return null
         }
+    }
+
+    fun signUserPK(
+        userPublicKey: Element
+    ): SchnorrSignature {
+        return Schnorr.schnorrSignature(this.privateKey, userPublicKey.toBytes(), group)
     }
 
     /**

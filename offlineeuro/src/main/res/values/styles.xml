@@ -57,4 +57,12 @@
         <item name="cornerSize">30dp</item>
     </style>
 
+    <style name="AppBottomSheetDialogTheme" parent="Theme.Material3.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomBottomSheetStyle</item>
+    </style>
+
+    <style name="CustomBottomSheetStyle" parent="Widget.Material3.BottomSheet">
+        <item name="android:background">@drawable/rounded_frame</item>
+    </style>
+
 </resources>

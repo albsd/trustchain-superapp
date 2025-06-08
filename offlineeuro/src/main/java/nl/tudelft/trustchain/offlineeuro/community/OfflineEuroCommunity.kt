@@ -217,7 +217,7 @@ class OfflineEuroCommunity(
      * Sends a message meaning that the user has returned from the EUDI wallet.
      *
      * @param userName The user's chosen name
-     * @param pkBytes The user's publick key in bytes
+     * @param pkBytes The user's public key in bytes
      * @param ttpPublicKey The public key of the TTP
      */
     fun sendVerificationComplete(userName: String, pkBytes: ByteArray, ttpPublicKey: ByteArray) {
