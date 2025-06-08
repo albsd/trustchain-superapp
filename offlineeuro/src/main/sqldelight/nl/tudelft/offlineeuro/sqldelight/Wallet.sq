@@ -64,5 +64,15 @@ UPDATE Wallet
 SET timesSpent = timesSpent + 1
 WHERE serialNumber LIKE ? AND firstTheta1 = ? AND signature = ? AND previousProofs = ?;
 
+getWalletEntriesBySerialNumber:
+SELECT *
+FROM Wallet
+WHERE serialNumber = ?;
+
+removeWalletEntriesBySerialNumber:
+DELETE FROM Wallet
+WHERE serialNumber = ?;
+
+
 clearWalletTable:
 DELETE FROM Wallet;

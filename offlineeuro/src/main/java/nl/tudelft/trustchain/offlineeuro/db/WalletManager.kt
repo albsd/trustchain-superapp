@@ -86,6 +86,14 @@ class WalletManager(
         return queries.getWalletEntriesToDoubleSpend(walletEntryMapper).executeAsList()
     }
 
+    fun getWalletEntriesBySerialNumber(sn: String): List<WalletEntry> {
+        return queries.getWalletEntriesBySerialNumber(sn, walletEntryMapper).executeAsList()
+    }
+
+    fun removeWalletEntriesBySerialNumber(sn: String): Unit {
+        return queries.removeWalletEntriesBySerialNumber(sn)
+    }
+
     fun incrementTimesSpent(digitalEuro: DigitalEuro) {
         queries.incrementTimesSpent(
             digitalEuro.serialNumber,
