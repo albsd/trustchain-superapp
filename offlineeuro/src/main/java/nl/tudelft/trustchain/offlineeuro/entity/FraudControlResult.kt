@@ -10,10 +10,6 @@ class FraudControlResult(
     val userPK: Element?
 ) {
 
-    fun isFraud() : Boolean {
-        return isFraud;
-    }
-
     override fun toString() : String {
         if(!isFraud)
             return "No double spending detected"

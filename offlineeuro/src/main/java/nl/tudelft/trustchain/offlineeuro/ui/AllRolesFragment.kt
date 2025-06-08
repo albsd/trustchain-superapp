@@ -73,6 +73,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
 
         iPV8CommunicationProtocol.participant = ttp
 
+        // This will silently fail
         ttp.registerUser(user.name, user.publicKey)
         ttp.registerUser(bank.name, bank.publicKey)
 

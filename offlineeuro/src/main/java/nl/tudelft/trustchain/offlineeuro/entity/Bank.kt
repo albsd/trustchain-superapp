@@ -141,7 +141,7 @@ class Bank(
                 val dsResult =
                     communicationProtocol.requestFraudControl(euroProof, depositProof, "TTP")
 
-                if (!dsResult.isFraud()) {
+                if (!dsResult.isFraud) {
                     // Double spender detected
                     depositedEuroLogger.add(Pair(euro.serialNumber, true))
                     // <Increase user balance here and penalize the fraudulent User>
@@ -167,7 +167,7 @@ class Bank(
     }
 
     private fun revealDoubleSpender(fraud: FraudControlResult) {
-        if (fraud.isFraud())
+        if (fraud.isFraud)
             verifyRevealedCommitment(fraud.userPK!!, fraud.jwt!!, fraud.nonce!!);
     }
 
