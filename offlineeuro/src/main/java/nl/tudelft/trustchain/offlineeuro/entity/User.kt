@@ -82,7 +82,7 @@ class User(
 
     fun retrieveScopedUsers(): List<String> {
         val addresses = addressBookManager.getAllAddresses()
-        val usernames = addresses.filter { it.type == Role.User && it.name != name}.map { name }
+        val usernames = addresses.filter { it.type == Role.User && it.name != name}.map { it.name }
         return usernames
     }
 

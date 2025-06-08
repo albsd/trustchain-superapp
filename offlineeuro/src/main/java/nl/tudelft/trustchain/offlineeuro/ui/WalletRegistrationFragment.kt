@@ -44,8 +44,16 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
         eudiAuthManager = EUDIAuthManager(
             ::openInWallet,
-            {findNavController().navigate(R.id.action_walletRegistrationFragment_to_userHomeFragment)},
-            {Toast.makeText(context, "Could not verify pid", Toast.LENGTH_LONG).show()},
+            {
+                requireActivity().runOnUiThread {
+                    findNavController().navigate(R.id.action_walletRegistrationFragment_to_userHomeFragment)
+                }
+            },
+            {
+                requireActivity().runOnUiThread {
+                    Toast.makeText(requireContext(), "Could not verify pid", Toast.LENGTH_LONG).show()
+                }
+            },
             communicationProtocol
         )
 
@@ -115,7 +123,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
         if (this::user.isInitialized) {
             requireActivity().runOnUiThread {
                 val context = requireContext()
-                val view = requireView()
+                val view = this.view ?: return@runOnUiThread
 
                 if (message != null) {
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()

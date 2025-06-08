@@ -52,7 +52,12 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             communicationProtocol.scopePeers()
         }
         view.findViewById<Button>(R.id.withdraw_button).setOnClickListener {
-            user.withdrawDigitalEuro("Bank");
+            val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
+            if (bank.isEmpty()) {
+                Toast.makeText(context, "Could not find bank. Try again later...", Toast.LENGTH_SHORT).show()
+            } else {
+                user.withdrawDigitalEuro("Bank");
+            }
         }
 
         updateAllAddresses(view)
@@ -182,6 +187,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     }
 
     private val onUserDataChangeCallBack: (String?) -> Unit = { message ->
+        enableWithdraw();
         requireActivity().runOnUiThread {
             val context = requireContext()
             if (this::user.isInitialized) {
@@ -212,6 +218,15 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         }
     }
 
+    private fun enableWithdraw() {
+        val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
+        val withdrawButton = requireView().findViewById<Button>(R.id.withdraw_button)
+        if (bank.isEmpty()) {
+            withdrawButton.isEnabled = false
+        } else {
+            withdrawButton.isEnabled = true
+        }
+    }
 
     val updateUI: (View) -> Unit
         get() = { view -> updateAllAddresses(view) }
