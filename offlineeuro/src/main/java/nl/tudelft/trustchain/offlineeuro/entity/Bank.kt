@@ -112,9 +112,7 @@ class Bank(
         if (duplicateEuros.isEmpty()) {
             depositedEuroLogger.add(Pair(euro.serialNumber, false))
             depositedEuroManager.insertDigitalEuro(euro)
-            onDataChangeCallbacks.forEach { callback ->
-                callback("An euro was deposited successfully by $publicKeyUser")
-            }
+            emitEvent("An euro was deposited successfully by $publicKeyUser")
             return "Deposit was successful!"
         }
 
@@ -143,12 +141,16 @@ class Bank(
                 val dsResult =
                     communicationProtocol.requestFraudControl(euroProof, depositProof, "TTP")
 
-                if (dsResult != "") {
+                if (!dsResult.isFraud()) {
+                    // Double spender detected
                     depositedEuroLogger.add(Pair(euro.serialNumber, true))
                     // <Increase user balance here and penalize the fraudulent User>
                     depositedEuroManager.insertDigitalEuro(euro)
-                    emitEvent(dsResult)
-                    return dsResult
+                    emitEvent(dsResult.toString())
+
+                    // PK and name of the double spender can be extracted from dsResult
+                    revealDoubleSpender(dsResult)
+                    return dsResult.toString()
                 }
             } catch (e: Exception) {
                 depositedEuroLogger.add(Pair(euro.serialNumber, true))
@@ -162,6 +164,11 @@ class Bank(
         depositedEuroManager.insertDigitalEuro(euro)
         emitEvent("Noticed double spending but could not find a proof")
         return "Detected double spending but could not blame anyone"
+    }
+
+    private fun revealDoubleSpender(fraud: FraudControlResult) {
+        if (fraud.isFraud())
+            verifyRevealedCommitment(fraud.userPK!!, fraud.jwt!!, fraud.nonce!!);
     }
 
     fun getDepositedTokens(): List<DigitalEuro> {

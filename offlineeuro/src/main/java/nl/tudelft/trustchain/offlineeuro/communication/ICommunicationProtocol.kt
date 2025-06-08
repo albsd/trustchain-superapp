@@ -4,7 +4,9 @@ import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
+import nl.tudelft.trustchain.offlineeuro.entity.FraudControlResult
 import nl.tudelft.trustchain.offlineeuro.entity.Participant
+import nl.tudelft.trustchain.offlineeuro.entity.RegisteredUser
 import nl.tudelft.trustchain.offlineeuro.entity.TransactionDetails
 import java.math.BigInteger
 
@@ -45,7 +47,7 @@ interface ICommunicationProtocol {
         firstProof: GrothSahaiProof,
         secondProof: GrothSahaiProof,
         nameTTP: String
-    ): String
+    ): FraudControlResult
 
     fun getPublicKeyOf(
         name: String,
