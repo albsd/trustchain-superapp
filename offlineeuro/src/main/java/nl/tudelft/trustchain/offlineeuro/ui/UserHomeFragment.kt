@@ -133,7 +133,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         if (!isAdded) return
 
         val context = requireContext()
-        val users = listOf("Alice", "Bob", "Charlie", "Dave")
+        val users = user.retrieveScopedUsers()
         var selectedUser: String? = null
 
         val builder = AlertDialog.Builder(context)

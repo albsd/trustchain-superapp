@@ -9,6 +9,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.enums.Role
 import java.util.UUID
 
 class User(
@@ -77,6 +78,12 @@ class User(
         wallet.addToWallet(digitalEuro, firstT)
         emitEvent("Withdrawn ${digitalEuro.serialNumber} successfully!")
         return digitalEuro
+    }
+
+    fun retrieveScopedUsers(): List<String> {
+        val addresses = addressBookManager.getAllAddresses()
+        val usernames = addresses.filter { it.type == Role.User && it.name != name}.map { name }
+        return usernames
     }
 
     fun getBalance(): Int {
