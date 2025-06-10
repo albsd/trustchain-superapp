@@ -159,7 +159,7 @@ class SystemTest {
         val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
         val walletManager = WalletManager(null, group, createDriver())
         val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
-        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol)
+        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol, runSetup = false)
         val peerPK = "SomeTTPPubKey".toByteArray()
 
         // setup auth manager
