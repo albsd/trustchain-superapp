@@ -30,6 +30,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
+import nl.tudelft.trustchain.offlineeuro.entity.DualRole
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
 import nl.tudelft.trustchain.offlineeuro.entity.Participant
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
@@ -138,11 +139,20 @@ class IPV8CommunicationProtocol(
     }
 
     override fun completeVerification() {
-        if (getParticipantRole() != Role.User)
-            return
-        val user = participant as User
-        val ttpAddress = addressBookManager.getAddressByName("TTP")
-        community.sendVerificationComplete(user.name, user.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+        val ttpAddress = when (participant) {
+            is User -> addressBookManager.getAddressByName("TTP")
+            is DualRole -> addressBookManager.getAddressByName((participant as DualRole).userName)
+            else -> return
+        }
+
+        val name = when (participant) {
+            is User -> (participant as User).name
+            is DualRole -> (participant as DualRole).name
+            else -> return
+        }
+
+        val publicKeyBytes = participant.publicKey.toBytes()
+        community.sendVerificationComplete(name, publicKeyBytes, ttpAddress.peerPublicKey!!)
     }
 
     fun scopePeers() {
@@ -182,7 +192,7 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleGetBilinearGroupAndCRSRequest(message: BilinearGroupCRSRequestMessage) {
-        if (participant !is TTP) {
+        if (participant !is TTP && participant !is DualRole) {
             return
         } else {
             val groupBytes = participant.group.toGroupElementBytes()
@@ -260,32 +270,39 @@ class IPV8CommunicationProtocol(
      * @param message The registration message containing user public key bytes, name, and peer info.
      */
     private fun handleRegistrationMessage(message: TTPRegistrationMessage) {
-        if (participant !is TTP) {
-            return
-        }
-        val ttp = participant as TTP
-        val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+        if (participant !is TTP && participant !is DualRole) return
+
+        val publicKey = participant.group.gElementFromBytes(message.userPKBytes)
         Log.i("Registering user", message.userName)
-        val response = ttp.registerUser(message.userName, publicKey)
+        val response = when (participant) {
+            is TTP -> (participant as TTP).registerUser(message.userName, publicKey)
+            is DualRole -> (participant as DualRole).registerUser(message.userName, publicKey)
+            else -> null
+        }
 
         if (response != null) {
             Log.i("EUDI", "Am trimis presentation request")
             community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
+        } else {
+            Log.i("EUDI", "bro a picat cv ca-i null response-ul pe registerUser =)")
         }
     }
 
     private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
-        if (getParticipantRole() != Role.User) {
-            return
-        }
-        val user = participant as User
+        val role = getParticipantRole()
+        if (role != Role.User && role != Role.DualRole) return
+
         val deepLink = Uri.parse("eudi-openid4vp://").buildUpon()
             .appendQueryParameter("client_id", message.clientId)
             .appendQueryParameter("request_uri", message.requestUri)
             .appendQueryParameter("request_uri_method", message.requestUriMethod)
             .build()
 
-        user.authWith(deepLink)
+        when (participant) {
+            is User -> (participant as User).authWith(deepLink)
+            is DualRole -> (participant as DualRole).authWith(deepLink)
+            else -> return
+        }
     }
 
     /**
@@ -300,13 +317,21 @@ class IPV8CommunicationProtocol(
      * @param message The verification completion message containing user data and peer info.
      */
     private fun handleVerificationCompleteMessage(message: TTPVerificationCompleteMessage) {
-        if (participant !is TTP) {
-            return
+        val publicKey = when (participant) {
+            is TTP -> (participant as TTP).group.gElementFromBytes(message.userPKBytes)
+            is DualRole -> (participant as DualRole).group.gElementFromBytes(message.userPKBytes)
+            else -> return
         }
-        val ttp = participant as TTP
-        val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
+
         Log.i("verification", "Verifying user ${message.userName}")
-        if (ttp.verifyUser(message.userName, publicKey)) {
+
+        val verificationSuccess = when (participant) {
+            is TTP -> (participant as TTP).verifyUser(message.userName, publicKey)
+            is DualRole -> (participant as DualRole).verifyUser(message.userName, publicKey)
+            else -> return
+        }
+
+        if (verificationSuccess) {
             Log.i("verification good", "User: ${message.userName}")
             community.sendRegistrationCompleteMessage("Completed", message.peer)
         } else {
@@ -315,11 +340,11 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
-        if (participant !is User) {
-            return
+        when (participant) {
+            is User -> (participant as User).authStatus(message.status)
+            is DualRole -> (participant as DualRole).authStatus(message.status)
+            else -> return
         }
-        val user = participant as User
-        user.authStatus(message.status)
     }
 
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {
@@ -329,14 +354,18 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleFraudControlRequestMessage(message: FraudControlRequestMessage) {
-        if (getParticipantRole() != Role.TTP) {
-            return
-        }
-        val ttp = participant as TTP
         val firstProof = GrothSahaiSerializer.deserializeProofBytes(message.firstProofBytes, participant.group)
         val secondProof = GrothSahaiSerializer.deserializeProofBytes(message.secondProofBytes, participant.group)
-        val result = ttp.getUserFromProofs(firstProof, secondProof)
-        community.sendFraudControlReply(result, message.requestingPeer)
+
+        val result = when (participant) {
+            is TTP -> (participant as TTP).getUserFromProofs(firstProof, secondProof)
+            is DualRole -> (participant as DualRole).getUserFromProofs(firstProof, secondProof)
+            else -> return
+        }
+
+        result?.let {
+            community.sendFraudControlReply(result, message.requestingPeer)
+        }
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
@@ -357,7 +386,6 @@ class IPV8CommunicationProtocol(
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
             else -> throw Exception("Unsupported message type")
         }
-        return
     }
 
     private fun getParticipantRole(): Role {
@@ -365,6 +393,7 @@ class IPV8CommunicationProtocol(
             is User -> Role.User
             is TTP -> Role.TTP
             is Bank -> Role.Bank
+            is DualRole -> Role.DualRole
             else -> throw Exception("Unknown role")
         }
     }

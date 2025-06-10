@@ -3,7 +3,8 @@ package nl.tudelft.trustchain.offlineeuro.enums
 enum class Role {
     TTP,
     Bank,
-    User;
+    User,
+    DualRole;
 
     companion object {
         fun fromLong(value: Long): Role {

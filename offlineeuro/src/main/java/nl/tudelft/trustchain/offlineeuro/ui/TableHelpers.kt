@@ -234,6 +234,10 @@ object TableHelpers {
                 Role.Bank -> addressToBankAccountsTableRow(address, context, user)                     // Add row to Bank Accounts table
                 Role.User -> addressToPeerTransactionsTableRow(address, context, user, onSendClick)   // Add row to Peer Transactions table
                 Role.TTP -> addressToTTPTableRow(address, context, user)                             // Add row to TTP table
+                Role.DualRole -> {
+                    addressToPeerTransactionsTableRow(address, context, user, onSendClick)
+                    addressToTTPTableRow(address, context, user)
+                }
             }
             table.addView(row)
         }

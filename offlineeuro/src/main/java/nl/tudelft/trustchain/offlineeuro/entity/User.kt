@@ -17,7 +17,8 @@ class User(
     context: Context?,
     private var walletManager: WalletManager? = null,
     communicationProtocol: ICommunicationProtocol,
-    runSetup: Boolean = true
+    runSetup: Boolean = true,
+    nameTTP: String = "DualUser"
 ) : Participant(communicationProtocol, name) {
     val wallet: Wallet
     private val addressBookManager: AddressBookManager
@@ -28,7 +29,7 @@ class User(
         this.group = group
 
         if (runSetup) {
-            setUp()
+            setUp(nameTTP)
         } else {
             generateKeyPair()
         }

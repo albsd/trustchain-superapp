@@ -52,6 +52,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="All Roles" />
+
+            <Switch
+                android:id="@+id/mockTTPSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Mock TTP"
+                android:textSize="18sp"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:thumbTint="@color/blue"
+                android:trackTint="@color/black"
+            />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
