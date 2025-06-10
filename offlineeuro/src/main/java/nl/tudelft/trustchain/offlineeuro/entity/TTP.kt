@@ -159,13 +159,16 @@ class TTP(
      * @param transactionId The identifier for the verifier presentation session.
      * @return `true` if the user submitted a valid presentation; `false` otherwise.
      */
-    private fun verifyUserWallet(transactionId: String): Boolean {
+    private fun verifyUserWallet(transactionId: String): String {
         val request = Request.Builder()
             .url("https://verifier-backend.eudiw.dev/ui/presentations/$transactionId")
             .get()
             .build()
         OkHttpClient().newCall(request).execute().use { response ->
-            return response.isSuccessful && response.body?.string() != null
+            if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
+            val json = response.body?.string() ?: throw Exception("Empty response")
+            val dcSdJwtString = JSONObject(json).getString("vp_token")
+            return dcSdJwtString
         }
     }
 
@@ -182,20 +185,13 @@ class TTP(
     fun verifyUser(
         name: String,
         publicKey: Element
-    ): Boolean {
-        try {
-            val user = registeredUserManager.getRegisteredUserByPublicKey(publicKey) ?: return false;
-            val transactionId = user.transactionId
-            if (verifyUserWallet(transactionId)) {
-                val result = registeredUserManager.verifyUserByPublicKey(publicKey)
-                emitEvent("Registered $name")
-                return result
-            } else {
-                return false;
-            }
-        } catch (e: Exception) {
-            return false
-        }
+    ): String? {
+        val user = registeredUserManager.getRegisteredUserByPublicKey(publicKey)
+        val transactionId = user?.transactionId
+        val dcSdJwtString = transactionId?.let { verifyUserWallet(it) }
+        val result = registeredUserManager.verifyUserByPublicKey(publicKey)
+        emitEvent("Registered $name")
+        return dcSdJwtString
     }
 
     /**

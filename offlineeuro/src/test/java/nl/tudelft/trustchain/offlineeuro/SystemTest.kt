@@ -1,11 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro
 
-import android.net.Uri
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import io.mockk.every
-import io.mockk.slot
 import nl.tudelft.ipv8.Peer
-import nl.tudelft.ipv8.messaging.Packet
 import nl.tudelft.offlineeuro.sqldelight.Database
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -22,7 +18,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionResultMessage
-import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
@@ -52,7 +47,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
@@ -61,6 +55,7 @@ import java.math.BigInteger
 import org.mockito.MockedStatic
 import org.mockito.Mockito.mockStatic
 import android.util.Log
+import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
 import org.junit.After
 
 class SystemTest {
@@ -163,7 +158,8 @@ class SystemTest {
     fun testEUDIAuth() {
         val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
         val walletManager = WalletManager(null, group, createDriver())
-        var user = User("myuser", group, null, walletManager, ttp.communicationProtocol, false)
+        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
+        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol)
         val peerPK = "SomeTTPPubKey".toByteArray()
 
         // setup auth manager
@@ -327,6 +323,7 @@ class SystemTest {
         addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
 
         val walletManager = WalletManager(null, group, createDriver())
+        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
 
         // Add the community for later access
         val userName = "User${userList.size}"
@@ -334,7 +331,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
+        val user = User(userName, group, null, walletManager, signedPublicKeyManager, communicationProtocol, runSetup = false)
         user.crs = crs
         user.group = group
         userList[user] = community

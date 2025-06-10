@@ -17,8 +17,10 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMess
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPCommitmentMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
+import nl.tudelft.trustchain.offlineeuro.community.message.TTPSignedPublicKeyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
@@ -28,6 +30,7 @@ import nl.tudelft.trustchain.offlineeuro.community.message.TransactionResultMess
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
+import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
@@ -255,7 +258,7 @@ class IPV8CommunicationProtocol(
      * - Casts the current participant to `TTP`
      * - Reconstructs the user's public key from their byte representation
      * - Calls [TTP.registerUser] to initiate registration and presentation
-     * - Sends a verification request to the user’s peer if successful
+     * - Sends a verification request to the user's peer if successful
      *
      * @param message The registration message containing user public key bytes, name, and peer info.
      */
@@ -267,6 +270,8 @@ class IPV8CommunicationProtocol(
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
         Log.i("Registering user", message.userName)
         val response = ttp.registerUser(message.userName, publicKey)
+        val signedPublicKey = ttp.getSignedUserPublicKey(publicKey)
+        community.sendSignedPublicKey(signedPublicKey.toBytes(), message.peer)
 
         if (response != null) {
             Log.i("EUDI", "Am trimis presentation request")
@@ -306,10 +311,16 @@ class IPV8CommunicationProtocol(
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
         Log.i("verification", "Verifying user ${message.userName}")
-        if (ttp.verifyUser(message.userName, publicKey)) {
+
+        try {
+            val dcSdJwt = ttp.verifyUser(message.userName, publicKey)
             Log.i("verification good", "User: ${message.userName}")
+            val commitment = dcSdJwt?.let { ttp.generateAndStoreJwtCommitment(publicKey, it) }
+            if (commitment != null) {
+                community.sendTTPCommitmentToBank(commitment.toBytes(), message.peer)
+            }
             community.sendRegistrationCompleteMessage("Completed", message.peer)
-        } else {
+        } catch (e: Exception) {
             community.sendRegistrationCompleteMessage("Failed", message.peer)
         }
     }
@@ -339,6 +350,24 @@ class IPV8CommunicationProtocol(
         community.sendFraudControlReply(result, message.requestingPeer)
     }
 
+    private fun handleTTPCommitmentMessage(message: TTPCommitmentMessage) {
+        if (participant !is Bank) {
+            return
+        }
+        val bank = participant as Bank
+        val commitment = bank.group.gElementFromBytes(message.commitmentBytes)
+
+        bank.storeUserCommitment(bank.publicKey, commitment)
+    }
+
+    private fun handleSignedPublicKeyMessage(message: TTPSignedPublicKeyMessage) {
+        if (participant !is User) {
+            return
+        }
+        val user = participant as User
+        user.storeSignedPublicKey(SchnorrSignature.fromBytes(message.signedPublicKeyBytes))
+    }
+
     private fun handleRequestMessage(message: ICommunityMessage) {
         Log.i("rolul", getParticipantRole().toString())
         Log.i("hai ca am primit", message.toString())
@@ -355,6 +384,8 @@ class IPV8CommunicationProtocol(
             is TTPVerificationCompleteMessage -> handleVerificationCompleteMessage(message)
             is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
+            is TTPCommitmentMessage -> handleTTPCommitmentMessage(message)
+            is TTPSignedPublicKeyMessage -> handleSignedPublicKeyMessage(message)
             else -> throw Exception("Unsupported message type")
         }
         return
