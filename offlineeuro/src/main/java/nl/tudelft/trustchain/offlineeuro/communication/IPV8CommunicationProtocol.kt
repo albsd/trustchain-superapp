@@ -322,7 +322,7 @@ class IPV8CommunicationProtocol(
                 community.sendTTPCommitmentToBank(commitment.toBytes(), message.peer)
             }
             val signedPK = ttp.getSignedUserPublicKey(publicKey)
-            community.sendRegistrationCompleteMessage("Completed", signedPK.toBytes(), message.peer)
+            community.sendRegistrationCompleteMessage("Completed", signedPK.toBytesWithLength(), message.peer)
         } catch (e: Exception) {
             community.sendRegistrationCompleteMessage("Failed", ByteArray(0), message.peer)
         }

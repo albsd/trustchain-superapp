@@ -48,7 +48,7 @@ class SchnorrTest {
         val elementToSign = g.powZn(group.getRandomZr())
 
         val originalSignature = Schnorr.schnorrSignature(privateKey, elementToSign.toBytes(), group)
-        val serializedBytes = originalSignature.toBytes()
+        val serializedBytes = originalSignature.toBytesWithLength()
         val deserializedSignature = SchnorrSignature.fromBytes(serializedBytes)
 
         Assert.assertEquals("Signatures should be equal after serialization", originalSignature, deserializedSignature)

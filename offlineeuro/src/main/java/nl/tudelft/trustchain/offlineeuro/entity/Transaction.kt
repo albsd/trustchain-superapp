@@ -257,7 +257,8 @@ object Transaction {
         val previousTargetToBytes = previousProof.target.toCanonicalRepresentation()
         val previousTargetAsPower = bilinearGroup.pairing.zr.newElementFromBytes(previousTargetToBytes)
         val expectedTarget = bilinearGroup.pair(g, h).powZn(previousTargetAsPower)
-
+        Log.i("comparing", expectedTarget.toString())
+        Log.i("comparing", currentProof.target.toString())
         if (expectedTarget != currentProof.target) {
             return false
         }
