@@ -134,10 +134,10 @@ class SystemTest {
         addMessageToList(user, user2AddressMessage)
 
         // First Spend
-        spendEuro(user, user2)
+        spendEuro(user, user2, digitalEuro.serialNumber, doubleSpend = true)
 
         // Deposit
-        spendEuro(user2, bank, "Deposit was successful!")
+        spendEuro(user2, bank, digitalEuro.serialNumber, "Deposit was successful!")
 
         // Prepare double spend
         val user3 = createTestUser()
@@ -148,10 +148,10 @@ class SystemTest {
         addMessageToList(user, user3AddressMessage)
 
         // Double Spend
-        spendEuro(user, user3, doubleSpend = true)
+        spendEuro(user, user3, digitalEuro.serialNumber, doubleSpend = false)
 
         // Deposit double spend Euro
-        spendEuro(user3, bank, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
+        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
     }
 
     @Test
@@ -250,6 +250,7 @@ class SystemTest {
     private fun spendEuro(
         sender: User,
         receiver: Participant,
+        tokenSerialNumber: String,
         expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
         doubleSpend: Boolean = false
     ) {
@@ -310,9 +311,9 @@ class SystemTest {
 
         val transactionResult =
             if (doubleSpend) {
-                sender.doubleSpendDigitalEuroTo(receiver.name)
+                sender.doubleSpendDigitalEuroTo(receiver.name, tokenSerialNumber)
             } else {
-                sender.sendDigitalEuroTo(receiver.name)
+                sender.sendDigitalEuroTo(receiver.name, tokenSerialNumber)
             }
         Assert.assertEquals(expectedResult, transactionResult)
     }
