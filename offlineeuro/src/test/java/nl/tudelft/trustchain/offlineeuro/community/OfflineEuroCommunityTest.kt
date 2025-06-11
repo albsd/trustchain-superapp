@@ -41,15 +41,15 @@ class OfflineEuroCommunityTest {
         Assert.assertEquals(peer, message.peer)
     }
 
-    @Test
-    fun testTTPSignedPublicKeyMessage() {
-        val signedPublicKeyBytes = "test_signed_key".toByteArray()
-        val message = TTPSignedPublicKeyMessage(signedPublicKeyBytes, peer)
-
-        Assert.assertEquals(CommunityMessageType.TTPSignedPublicKeyMessage, message.messageType)
-        Assert.assertArrayEquals(signedPublicKeyBytes, message.signedPublicKeyBytes)
-        Assert.assertEquals(peer, message.peer)
-    }
+//    @Test
+//    fun testTTPSignedPublicKeyMessage() {
+//        val signedPublicKeyBytes = "test_signed_key".toByteArray()
+//        val message = TTPSignedPublicKeyMessage(signedPublicKeyBytes, peer)
+//
+//        Assert.assertEquals(CommunityMessageType.TTPSignedPublicKeyMessage, message.messageType)
+//        Assert.assertArrayEquals(signedPublicKeyBytes, message.signedPublicKeyBytes)
+//        Assert.assertEquals(peer, message.peer)
+//    }
 
     @Test
     fun testTTPVerificationCompleteMessage() {

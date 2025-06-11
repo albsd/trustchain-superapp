@@ -23,7 +23,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPCommitmentMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPSignedPublicKeyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
@@ -75,7 +74,6 @@ object MessageID {
     const val VERIFICATION_COMPLETE_TTP = 25
     const val REGISTRATION_COMPLETE_TTP = 26
     const val COMMITMENT_SENT_TTP = 27
-    const val SIGNED_PUBLIC_KEY_TTP = 28
 }
 
 class OfflineEuroCommunity(
@@ -116,7 +114,6 @@ class OfflineEuroCommunity(
         messageHandlers[MessageID.VERIFICATION_COMPLETE_TTP] = ::onVerificationComplete
         messageHandlers[MessageID.REGISTRATION_COMPLETE_TTP] = ::onRegistrationComplete
         messageHandlers[MessageID.COMMITMENT_SENT_TTP] = ::onCommitmentSent
-        messageHandlers[MessageID.SIGNED_PUBLIC_KEY_TTP] = ::onSignedPublicKey
     }
 
     fun getGroupDescriptionAndCRS() {
@@ -244,12 +241,13 @@ class OfflineEuroCommunity(
      * @param message The result message, e.g., "Completed" or "Failed".
      * @param peer The peer to which the message is sent.
      */
-    fun sendRegistrationCompleteMessage(message: String, peer: Peer) {
+    fun sendRegistrationCompleteMessage(message: String, signedPK: ByteArray, peer: Peer) {
         val registrationCompletePacket =
             serializePacket(
                 MessageID.REGISTRATION_COMPLETE_TTP,
                 TTPRegistrationCompletePayload(
-                    message
+                    message,
+                    signedPK
                 )
             )
         send(peer, registrationCompletePacket)
@@ -273,7 +271,7 @@ class OfflineEuroCommunity(
 
     fun onRegistrationComplete(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationCompletePayload)
-        val msg = TTPRegistrationCompleteMessage (payload.status)
+        val msg = TTPRegistrationCompleteMessage (payload.status, payload.signedPK)
         addMessage(msg)
     }
 
@@ -710,17 +708,6 @@ class OfflineEuroCommunity(
     fun onCommitmentSent(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(ByteArrayPayload)
         val message = TTPCommitmentMessage(payload.bytes, peer)
-        addMessage(message)
-    }
-
-    fun sendSignedPublicKey(signedPublicKeyBytes: ByteArray, peer: Peer) {
-        val message = TTPSignedPublicKeyMessage(signedPublicKeyBytes, peer)
-        addMessage(message)
-    }
-
-    fun onSignedPublicKey(packet: Packet) {
-        val (peer, payload) = packet.getAuthPayload(ByteArrayPayload)
-        val message = TTPSignedPublicKeyMessage(payload.bytes, peer)
         addMessage(message)
     }
 

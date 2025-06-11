@@ -20,7 +20,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPCommitmentMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPSignedPublicKeyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
@@ -275,8 +274,6 @@ class IPV8CommunicationProtocol(
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
         Log.i("Registering user", message.userName)
         val response = ttp.registerUser(message.userName, publicKey)
-        val signedPublicKey = ttp.getSignedUserPublicKey(publicKey)
-        community.sendSignedPublicKey(signedPublicKey.toBytes(), message.peer)
 
         if (response != null) {
             Log.i("EUDI", "Am trimis presentation request")
@@ -324,9 +321,10 @@ class IPV8CommunicationProtocol(
             if (commitment != null) {
                 community.sendTTPCommitmentToBank(commitment.toBytes(), message.peer)
             }
-            community.sendRegistrationCompleteMessage("Completed", message.peer)
+            val signedPK = ttp.getSignedUserPublicKey(publicKey)
+            community.sendRegistrationCompleteMessage("Completed", signedPK.toBytes(), message.peer)
         } catch (e: Exception) {
-            community.sendRegistrationCompleteMessage("Failed", message.peer)
+            community.sendRegistrationCompleteMessage("Failed", ByteArray(0), message.peer)
         }
     }
 
@@ -335,6 +333,7 @@ class IPV8CommunicationProtocol(
             return
         }
         val user = participant as User
+        user.storeSignedPublicKey(SchnorrSignature.fromBytes(message.signedPK))
         user.authStatus(message.status)
     }
 
@@ -365,14 +364,6 @@ class IPV8CommunicationProtocol(
         bank.storeUserCommitment(bank.publicKey, commitment)
     }
 
-    private fun handleSignedPublicKeyMessage(message: TTPSignedPublicKeyMessage) {
-        if (participant !is User) {
-            return
-        }
-        val user = participant as User
-        user.storeSignedPublicKey(SchnorrSignature.fromBytes(message.signedPublicKeyBytes))
-    }
-
     private fun handleRequestMessage(message: ICommunityMessage) {
         when (message) {
             is AddressMessage -> handleAddressMessage(message)
@@ -388,7 +379,6 @@ class IPV8CommunicationProtocol(
             is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
             is TTPCommitmentMessage -> handleTTPCommitmentMessage(message)
-            is TTPSignedPublicKeyMessage -> handleSignedPublicKeyMessage(message)
             else -> throw Exception("Unsupported message type")
         }
         return
