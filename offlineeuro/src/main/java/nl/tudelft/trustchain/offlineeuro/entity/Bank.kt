@@ -22,7 +22,8 @@ class Bank(
 ) : Participant(communicationProtocol, name) {
     private val depositedEuros: ArrayList<DigitalEuro> = arrayListOf()
     val withdrawUserRandomness: HashMap<Element, Element> = hashMapOf()
-    val depositedEuroLogger: ArrayList<Pair<String, Boolean>> = arrayListOf()
+    val depositedEuroLogger: ArrayList<Pair<String, FraudControlResult>> = arrayListOf()
+    private val userCommitments: MutableMap<Element, PedersenCommitment> = mutableMapOf()
 
     init {
         communicationProtocol.participant = this
@@ -109,11 +110,9 @@ class Bank(
         val duplicateEuros = depositedEuroManager.getDigitalEurosByDescriptor(euro)
 
         if (duplicateEuros.isEmpty()) {
-            depositedEuroLogger.add(Pair(euro.serialNumber, false))
+            depositedEuroLogger.add(Pair(euro.serialNumber, FraudControlResult(false, null, null, null, null)))
             depositedEuroManager.insertDigitalEuro(euro)
-            onDataChangeCallbacks.forEach { callback ->
-                callback("An euro was deposited successfully by $publicKeyUser")
-            }
+            emitEvent("An euro was deposited successfully by $publicKeyUser")
             return "Deposit was successful!"
         }
 
@@ -142,25 +141,37 @@ class Bank(
                 val dsResult =
                     communicationProtocol.requestFraudControl(euroProof, depositProof, "TTP")
 
-                if (dsResult != "") {
-                    depositedEuroLogger.add(Pair(euro.serialNumber, true))
+                if (dsResult.isFraud) {
+                    // Double spender detected
+                    depositedEuroLogger.add(Pair(euro.serialNumber, dsResult))
                     // <Increase user balance here and penalize the fraudulent User>
                     depositedEuroManager.insertDigitalEuro(euro)
-                    emitEvent(dsResult)
-                    return dsResult
+                    emitEvent(dsResult.toString())
+
+                    // PK and name of the double spender can be extracted from dsResult
+                    revealDoubleSpender(dsResult)
+                    return dsResult.toString()
                 }
             } catch (e: Exception) {
-                depositedEuroLogger.add(Pair(euro.serialNumber, true))
+                depositedEuroLogger.add(Pair(euro.serialNumber, FraudControlResult(true, null, null, null, null)))
                 depositedEuroManager.insertDigitalEuro(euro)
                 emitEvent("Noticed double spending but could not reach TTP")
                 return "Found double spending proofs, but TTP is unreachable"
             }
         }
-        depositedEuroLogger.add(Pair(euro.serialNumber, true))
+
+        depositedEuroLogger.add(Pair(euro.serialNumber, FraudControlResult(true, null, null, null, null)))
         // <Increase user balance here>
         depositedEuroManager.insertDigitalEuro(euro)
         emitEvent("Noticed double spending but could not find a proof")
         return "Detected double spending but could not blame anyone"
+    }
+
+    private fun revealDoubleSpender(fraud: FraudControlResult) {
+        if (fraud.isFraud) {
+            if(!verifyRevealedCommitment(fraud.userPK!!, fraud.jwt!!, fraud.nonce!!))
+                throw Exception("The revealed commitment does not match the stored one")
+        }
     }
 
     fun getDepositedTokens(): List<DigitalEuro> {

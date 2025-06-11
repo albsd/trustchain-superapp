@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -138,7 +139,7 @@ class TTP(
     ): Map<String, String>? {
         try {
             // Sign the user's public key with TTP's private key
-            val signedPublicKey = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
+            val signedPublicKey = signUserPK(userPublicKey = publicKey)
             val response = requestPresentationEudi()
             val transactionId = response["transaction_id"]
             val result = registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId!!)
@@ -148,6 +149,12 @@ class TTP(
         } catch (e: Exception) {
             return null
         }
+    }
+
+    fun signUserPK(
+        userPublicKey: Element
+    ): SchnorrSignature {
+        return Schnorr.schnorrSignature(this.privateKey, userPublicKey.toBytes(), group)
     }
 
     /**
@@ -255,16 +262,18 @@ class TTP(
     fun getUserFromProofs(
         firstProof: GrothSahaiProof,
         secondProof: GrothSahaiProof
-    ): String {
+    ): FraudControlResult {
         val firstPK = getUserFromProof(firstProof)
         val secondPK = getUserFromProof(secondProof)
 
         return if (firstPK != null && firstPK == secondPK) {
             emitEvent("Found proof that  ${firstPK.name} committed fraud!")
-            "Double spending detected. Double spender is ${firstPK.name} with PK: ${firstPK.publicKey}"
+
+            val (jwt, nonce) = commitmentManager.getCommitmentByPublicKey(firstPK.publicKey) ?: throw Exception("Expected to find commitment of user ${firstPK.name}")
+            FraudControlResult(true, jwt, nonce, firstPK.name, firstPK.publicKey)
         } else {
             emitEvent("Invalid fraud request received!")
-            "No double spending detected"
+            FraudControlResult(false, null, null, null, null)
         }
     }
 

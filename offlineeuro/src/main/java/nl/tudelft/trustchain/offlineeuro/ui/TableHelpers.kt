@@ -2,6 +2,8 @@ package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.content.Context
 import android.media.Image
+import android.os.Bundle
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.widget.Button
@@ -10,15 +12,18 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.marginTop
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
+import nl.tudelft.trustchain.offlineeuro.entity.FraudControlResult
 import nl.tudelft.trustchain.offlineeuro.entity.RegisteredUser
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.entity.WalletEntry
 import nl.tudelft.trustchain.offlineeuro.enums.Role
+import nl.tudelft.trustchain.offlineeuro.libraries.DcSdJWTDecoder
 
 object TableHelpers {
     fun removeAllButFirstRow(table: LinearLayout) {
@@ -90,7 +95,7 @@ object TableHelpers {
     }
 
     private fun depositedEuroToTableRow(
-        depositedEuro: Pair<String, Boolean>,
+        depositedEuro: Pair<String, FraudControlResult>,
         context: Context
     ): LinearLayout {
         val tableRow = LinearLayout(context)
@@ -103,20 +108,44 @@ object TableHelpers {
             TextView(styledContext).apply {
                 text = depositedEuro.first
                 layoutParams = layoutParams(1f)
-                gravity = Gravity.CENTER_HORIZONTAL
+                gravity = Gravity.CENTER
             }
 
-        val doubleSpendingField =
-            TextView(styledContext).apply {
-                text = depositedEuro.second.toString()
-                layoutParams = layoutParams(1f)
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
+        val doubleSpendingButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
+            text = "Check"
+            layoutParams = layoutParams(1f)
+            gravity = Gravity.CENTER
+        }
+
+        applyButtonStylingToAction(doubleSpendingButton, context)
+        setDoubleSpendingCheckButton(doubleSpendingButton, context, depositedEuro)
 
         tableRow.addView(serialNumberField)
-        tableRow.addView(doubleSpendingField)
+        tableRow.addView(doubleSpendingButton)
 
         return tableRow
+    }
+
+    fun setDoubleSpendingCheckButton(
+        doubleSpendingButton: Button,
+        context: Context,
+        depositedEuro: Pair<String, FraudControlResult>
+    ) {
+        doubleSpendingButton.setOnClickListener {
+            val bottomSheet = IdentityRevealFragment()
+
+            var args = Bundle()
+            args.putBoolean("status", depositedEuro.second.isFraud)
+
+            val claims = depositedEuro.second.jwt?.let { it1 -> DcSdJWTDecoder.decodeSdJwt(it1) }
+
+            args.putString("family_name", claims?.get("family_name"))
+            args.putString("name", claims?.get("given_name"))
+            args.putString("userPK", depositedEuro.second.userPK?.toString())
+            args.putString("country", claims?.get("issuing_country"))
+            bottomSheet.arguments = args
+            bottomSheet.show((context as AppCompatActivity).supportFragmentManager, "DoubleSpendingSheet")
+        }
     }
 
     // Function to add banks to the table in the Bank Selector Fragment

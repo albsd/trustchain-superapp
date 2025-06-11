@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -10,9 +11,13 @@ import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
+import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
+import nl.tudelft.trustchain.offlineeuro.entity.EUDIAuthManager
+import nl.tudelft.trustchain.offlineeuro.entity.FraudControlResult
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
@@ -36,6 +41,9 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
         val group = BilinearGroup(PairingTypes.FromFile, context = context)
         val addressBookManager = AddressBookManager(context, group)
         iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+
+        val registeredUsersManager =  RegisteredUserManager(context, group)
+
         ttp = TTP("TTP", group, iPV8CommunicationProtocol, context)
         ttp.addCallback(onTTPDataChangeCallback)
 
@@ -73,12 +81,23 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
 
         iPV8CommunicationProtocol.participant = ttp
 
-        ttp.registerUser(user.name, user.publicKey)
-        ttp.registerUser(bank.name, bank.publicKey)
+        val signedUserPublicKey = ttp.signUserPK(user.publicKey)
+        registeredUsersManager.addRegisteredUser(user.name, user.publicKey, signedUserPublicKey, "a")
+        registeredUsersManager.verifyUserByPublicKey(user.publicKey)
+
+        val signedBankPublicKey = ttp.signUserPK(bank.publicKey)
+        registeredUsersManager.addRegisteredUser(bank.name, bank.publicKey, signedBankPublicKey, "b")
+        registeredUsersManager.verifyUserByPublicKey(bank.publicKey)
 
         iPV8CommunicationProtocol.addressBookManager.insertAddress(Address(bank.name, Role.Bank, bank.publicKey, null))
         iPV8CommunicationProtocol.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, null))
         iPV8CommunicationProtocol.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, null))
+
+        //demo
+        bank.depositedEuroLogger.add(Pair("some_serial_no", FraudControlResult(true,
+            null,
+            null, null, null)))
+        bank.depositedEuroLogger.add(Pair("some_serial_no", FraudControlResult(false, null, null, null, null)))
 
         prepareButtons(view)
         setTTPAsChild()

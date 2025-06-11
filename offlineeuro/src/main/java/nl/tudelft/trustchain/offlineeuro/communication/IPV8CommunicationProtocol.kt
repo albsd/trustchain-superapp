@@ -34,7 +34,9 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
+import nl.tudelft.trustchain.offlineeuro.entity.FraudControlResult
 import nl.tudelft.trustchain.offlineeuro.entity.Participant
+import nl.tudelft.trustchain.offlineeuro.entity.RegisteredUser
 import nl.tudelft.trustchain.offlineeuro.entity.TTP
 import nl.tudelft.trustchain.offlineeuro.entity.TransactionDetails
 import nl.tudelft.trustchain.offlineeuro.entity.User
@@ -129,7 +131,7 @@ class IPV8CommunicationProtocol(
         firstProof: GrothSahaiProof,
         secondProof: GrothSahaiProof,
         nameTTP: String
-    ): String {
+    ): FraudControlResult {
         val ttpAddress = addressBookManager.getAddressByName(nameTTP)
         community.sendFraudControlRequest(
             GrothSahaiSerializer.serializeGrothSahaiProof(firstProof),
@@ -137,7 +139,10 @@ class IPV8CommunicationProtocol(
             ttpAddress.peerPublicKey!!
         )
         val message = waitForMessage(CommunityMessageType.FraudControlReplyMessage) as FraudControlReplyMessage
-        return message.result
+        val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
+        val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
+
+        return FraudControlResult(message.isFraud, message.jwtPlaintext, nonce, message.userName, userPK)
     }
 
     override fun completeVerification() {
@@ -369,8 +374,6 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
-        Log.i("rolul", getParticipantRole().toString())
-        Log.i("hai ca am primit", message.toString())
         when (message) {
             is AddressMessage -> handleAddressMessage(message)
             is AddressRequestMessage -> handleAddressRequestMessage(message)

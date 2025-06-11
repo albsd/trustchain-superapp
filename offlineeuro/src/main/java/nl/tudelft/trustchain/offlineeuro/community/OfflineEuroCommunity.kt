@@ -34,6 +34,7 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.AddressPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.BilinearGroupCRSPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.BlindSignatureRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.ByteArrayPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlReplyPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationCompletePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
@@ -44,6 +45,7 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionRandomizat
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroupElementsBytes
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRSBytes
 import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElementsBytes
+import nl.tudelft.trustchain.offlineeuro.entity.FraudControlResult
 import nl.tudelft.trustchain.offlineeuro.entity.TransactionDetailsBytes
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 import java.math.BigInteger
@@ -221,7 +223,7 @@ class OfflineEuroCommunity(
      * Sends a message meaning that the user has returned from the EUDI wallet.
      *
      * @param userName The user's chosen name
-     * @param pkBytes The user's publick key in bytes
+     * @param pkBytes The user's public key in bytes
      * @param ttpPublicKey The public key of the TTP
      */
     fun sendVerificationComplete(userName: String, pkBytes: ByteArray, ttpPublicKey: ByteArray) {
@@ -607,27 +609,36 @@ class OfflineEuroCommunity(
     }
 
     fun sendFraudControlReply(
-        result: String,
+        result: FraudControlResult,
         peer: Peer
     ) {
         val packet =
             serializePacket(
                 MessageID.FRAUD_CONTROL_REPLY,
-                ByteArrayPayload(
-                    result.toByteArray()
+                FraudControlReplyPayload(
+                    result.isFraud,
+                    result.jwt,
+                    result.nonce?.toBytes(),
+                    result.userName,
+                    result.userPK?.toBytes()
                 )
             )
         send(peer, packet)
     }
 
     fun onFraudControlReplyPacket(packet: Packet) {
-        val (_, payload) = packet.getAuthPayload(ByteArrayPayload)
+        val (_, payload) = packet.getAuthPayload(FraudControlReplyPayload)
         onFraudControlReply(payload)
     }
 
-    fun onFraudControlReply(payload: ByteArrayPayload) {
-        val fraudControlResult = payload.bytes.toString(Charsets.UTF_8)
-        addMessage(FraudControlReplyMessage(fraudControlResult))
+    fun onFraudControlReply(payload: FraudControlReplyPayload) {
+        addMessage(FraudControlReplyMessage(
+            payload.isFraud,
+            payload.jwtPlaintext,
+            payload.noncePlaintext,
+            payload.userName,
+            payload.pkBytes)
+        )
     }
 
     fun scopePeers(
