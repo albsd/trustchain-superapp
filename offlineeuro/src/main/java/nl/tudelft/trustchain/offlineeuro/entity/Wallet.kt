@@ -70,10 +70,10 @@ class Wallet(
         randomizationElements: RandomizationElements,
         bilinearGroup: BilinearGroup,
         crs: CRS,
-        sn: String
+        tokenSerialNumber: String
     ): TransactionDetails? {
-        val walletEntry = walletManager.getWalletEntriesBySerialNumber(sn).firstOrNull() ?: return null
-        walletManager.removeWalletEntriesBySerialNumber(sn)
+        val walletEntry = walletManager.getWalletEntriesBySerialNumber(tokenSerialNumber).firstOrNull() ?: return null
+        walletManager.removeWalletEntriesBySerialNumber(tokenSerialNumber)
         return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 
@@ -106,9 +106,9 @@ class Wallet(
         randomizationElements: RandomizationElements,
         bilinearGroup: BilinearGroup,
         crs: CRS,
-        sn: String
+        tokenSerialNumber: String
     ): TransactionDetails? {
-        val walletEntry = walletManager.getWalletEntriesBySerialNumber(sn).firstOrNull() ?: return null
+        val walletEntry = walletManager.getWalletEntriesBySerialNumber(tokenSerialNumber).firstOrNull() ?: return null
         return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 }

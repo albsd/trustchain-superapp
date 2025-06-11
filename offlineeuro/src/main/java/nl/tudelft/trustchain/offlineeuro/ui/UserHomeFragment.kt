@@ -109,11 +109,11 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         builder.show()
     }
 
-    // in case we decidce to allow tokens to be more than 1 eur
-    private fun onSendTokenClick(amount: Int, sn: String) {
+    // in case we decide to allow tokens to be more than 1 eur
+    private fun onSendTokenClick(amount: Int, tokenSerialNumber: String) {
         showUserSelectionWithConfirmation("Send", amount) { selectedUserName ->
             try {
-                user.sendDigitalEuroTo(selectedUserName, sn)
+                user.sendDigitalEuroTo(selectedUserName, tokenSerialNumber)
                 Toast.makeText(requireContext(), "Sent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error sending euro", Toast.LENGTH_SHORT).show()
@@ -122,10 +122,10 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     }
 
     // in case we decidce to allow tokens to be more than 1 eur
-    private fun onDoubleSpendTokenClick(amount: Int, sn: String) {
+    private fun onDoubleSpendTokenClick(amount: Int, tokenSerialNumber: String) {
         showUserSelectionWithConfirmation("Double Spend", amount) { selectedUserName ->
             try {
-                user.doubleSpendDigitalEuroTo(selectedUserName, sn)
+                user.doubleSpendDigitalEuroTo(selectedUserName, tokenSerialNumber)
                 Toast.makeText(requireContext(), "Double spent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error double spending euro", Toast.LENGTH_SHORT).show()
@@ -134,8 +134,8 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     }
 
     // in case we decidce to allow tokens to be more than 1 eur
-    private fun onDepositToken(amount: Int, sn: String) {
-        user.sendDigitalEuroTo("Bank", sn)
+    private fun onDepositToken(amount: Int, tokenSerialNumber: String) {
+        user.sendDigitalEuroTo("Bank", tokenSerialNumber)
         Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
     }
 
