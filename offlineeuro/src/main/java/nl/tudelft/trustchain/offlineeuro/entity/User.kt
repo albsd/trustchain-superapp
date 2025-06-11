@@ -41,10 +41,10 @@ class User(
         wallet = Wallet(privateKey, publicKey, walletManager!!)
     }
 
-    fun sendDigitalEuroTo(nameReceiver: String, sn: String): String {
+    fun sendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails =
-            wallet.spendEuro(randomizationElements, group, crs, sn)
+            wallet.spendEuro(randomizationElements, group, crs, tokenSerialNumber)
                 ?: throw Exception("No euro to spend")
 
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails)
@@ -52,9 +52,9 @@ class User(
         return result
     }
 
-    fun doubleSpendDigitalEuroTo(nameReceiver: String, sn: String): String {
+    fun doubleSpendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
-        val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs, sn)
+        val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs, tokenSerialNumber)
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)
         emitEvent(result)
         return result
