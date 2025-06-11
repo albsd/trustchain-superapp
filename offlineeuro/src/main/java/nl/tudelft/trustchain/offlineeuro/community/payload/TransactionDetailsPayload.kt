@@ -88,12 +88,12 @@ class TransactionDetailsPayload(
                 )
             localOffset += spenderPublicKeySize
 
-            val (spenderSignedPublicKeyBytes, spenderSignedPublicKeySize) =
-                deserializeVarLen(
-                    buffer,
-                    localOffset
-                )
-            localOffset += spenderSignedPublicKeySize
+//            val (spenderSignedPublicKeyBytes, spenderSignedPublicKeySize) =
+//                deserializeVarLen(
+//                    buffer,
+//                    localOffset
+//                )
+//            localOffset += spenderSignedPublicKeySize
 
             val digitalEuroBytes =
                 DigitalEuroBytes(serialNumberBytes, firstTheta1Bytes, signatureBytes, proofBytes)
