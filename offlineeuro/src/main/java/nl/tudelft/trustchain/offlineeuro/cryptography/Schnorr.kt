@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.cryptography
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -15,6 +16,8 @@ data class SchnorrSignature(val signature: BigInteger, val encryption: BigIntege
     fun toBytes(): ByteArray {
         val sigBytes = signature.toByteArray()
         val encBytes = encryption.toByteArray()
+        Log.i("schnorr-sig", sigBytes.size.toString());
+        Log.i("schnorr-enc", encBytes.size.toString());
         return byteArrayOf(sigBytes.size.toByte()) + sigBytes +
             byteArrayOf(encBytes.size.toByte()) + encBytes +
             signedMessage
