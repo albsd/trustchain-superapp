@@ -23,7 +23,6 @@ class Bank(
     private val depositedEuros: ArrayList<DigitalEuro> = arrayListOf()
     val withdrawUserRandomness: HashMap<Element, Element> = hashMapOf()
     val depositedEuroLogger: ArrayList<Pair<String, Boolean>> = arrayListOf()
-    private val userCommitments: MutableMap<Element, PedersenCommitment> = mutableMapOf()
 
     init {
         communicationProtocol.participant = this

@@ -1,11 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro
 
-import android.net.Uri
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import io.mockk.every
-import io.mockk.slot
 import nl.tudelft.ipv8.Peer
-import nl.tudelft.ipv8.messaging.Packet
 import nl.tudelft.offlineeuro.sqldelight.Database
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -22,7 +18,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionResultMessage
-import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
 import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
@@ -52,7 +47,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
@@ -61,6 +55,7 @@ import java.math.BigInteger
 import org.mockito.MockedStatic
 import org.mockito.Mockito.mockStatic
 import android.util.Log
+import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
 import org.junit.After
 
 class SystemTest {
@@ -139,10 +134,10 @@ class SystemTest {
         addMessageToList(user, user2AddressMessage)
 
         // First Spend
-        spendEuro(user, user2)
+        spendEuro(user, user2, digitalEuro.serialNumber, doubleSpend = true)
 
         // Deposit
-        spendEuro(user2, bank, "Deposit was successful!")
+        spendEuro(user2, bank, digitalEuro.serialNumber, "Deposit was successful!")
 
         // Prepare double spend
         val user3 = createTestUser()
@@ -153,17 +148,18 @@ class SystemTest {
         addMessageToList(user, user3AddressMessage)
 
         // Double Spend
-        spendEuro(user, user3, doubleSpend = true)
+        spendEuro(user, user3, digitalEuro.serialNumber, doubleSpend = false)
 
         // Deposit double spend Euro
-        spendEuro(user3, bank, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
+        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
     }
 
     @Test
     fun testEUDIAuth() {
         val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
         val walletManager = WalletManager(null, group, createDriver())
-        var user = User("myuser", group, null, walletManager, ttp.communicationProtocol, false)
+        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
+        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol, runSetup = false)
         val peerPK = "SomeTTPPubKey".toByteArray()
 
         // setup auth manager
@@ -254,6 +250,7 @@ class SystemTest {
     private fun spendEuro(
         sender: User,
         receiver: Participant,
+        tokenSerialNumber: String,
         expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
         doubleSpend: Boolean = false
     ) {
@@ -314,9 +311,9 @@ class SystemTest {
 
         val transactionResult =
             if (doubleSpend) {
-                sender.doubleSpendDigitalEuroTo(receiver.name)
+                sender.doubleSpendDigitalEuroTo(receiver.name, tokenSerialNumber)
             } else {
-                sender.sendDigitalEuroTo(receiver.name)
+                sender.sendDigitalEuroTo(receiver.name, tokenSerialNumber)
             }
         Assert.assertEquals(expectedResult, transactionResult)
     }
@@ -327,6 +324,7 @@ class SystemTest {
         addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
 
         val walletManager = WalletManager(null, group, createDriver())
+        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
 
         // Add the community for later access
         val userName = "User${userList.size}"
@@ -334,7 +332,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, communicationProtocol, runSetup = false)
+        val user = User(userName, group, null, walletManager, signedPublicKeyManager, communicationProtocol, runSetup = false)
         user.crs = crs
         user.group = group
         userList[user] = community

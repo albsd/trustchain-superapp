@@ -1,0 +1,20 @@
+-- Signed Public Key Database Schema
+-- Stores the TTP's signature on the user's public key
+
+createSignedPublicKeyTable:
+CREATE TABLE IF NOT EXISTS SignedPublicKey (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    signature BLOB NOT NULL
+);
+
+insertSignedPublicKey:
+INSERT OR REPLACE INTO SignedPublicKey(id, signature)
+VALUES (1, ?);
+
+getSignedPublicKey:
+SELECT signature
+FROM SignedPublicKey
+WHERE id = 1;
+
+clearSignedPublicKey:
+DELETE FROM SignedPublicKey; 

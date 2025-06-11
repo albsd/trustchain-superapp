@@ -39,6 +39,7 @@ import kotlin.math.floor
 import org.mockito.MockedStatic
 import org.mockito.Mockito.mockStatic
 import android.util.Log
+import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
 import org.junit.After
 
 class TransactionTest {
@@ -330,6 +331,7 @@ class TransactionTest {
     fun createTestUser(): User {
         val addressBookManager = createAddressManager(group)
         val walletManager = WalletManager(null, group, createDriver())
+        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
 
         // Add the community for later access
         val userName = "User${userList.size}"
@@ -342,6 +344,7 @@ class TransactionTest {
             group,
             null,
             walletManager,
+            signedPublicKeyManager,
             communicationProtocol,
             runSetup = false
         )
