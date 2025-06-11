@@ -55,6 +55,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 group,
                 context,
                 null,
+                null,
                 communicationProtocol,
                 runSetup = false
             )

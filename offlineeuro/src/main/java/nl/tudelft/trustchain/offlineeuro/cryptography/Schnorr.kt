@@ -13,7 +13,22 @@ data class SchnorrSignature(val signature: BigInteger, val encryption: BigIntege
      * @return The [SchnorrSignature] converted a [ByteArray]
      */
     fun toBytes(): ByteArray {
-        return signature.toByteArray() + encryption.toByteArray() + signedMessage
+        val sigBytes = signature.toByteArray()
+        val encBytes = encryption.toByteArray()
+        return byteArrayOf(sigBytes.size.toByte()) + sigBytes +
+            byteArrayOf(encBytes.size.toByte()) + encBytes +
+            signedMessage
+    }
+
+    companion object {
+        fun fromBytes(bytes: ByteArray): SchnorrSignature {
+            val sigLength = bytes[0].toInt() and 0xFF
+            val sigBytes = bytes.copyOfRange(1, 1 + sigLength)
+            val encLength = bytes[1 + sigLength].toInt() and 0xFF
+            val encBytes = bytes.copyOfRange(2 + sigLength, 2 + sigLength + encLength)
+            val msgBytes = bytes.copyOfRange(2 + sigLength + encLength, bytes.size)
+            return SchnorrSignature(BigInteger(sigBytes), BigInteger(encBytes), msgBytes)
+        }
     }
 
     override fun equals(other: Any?): Boolean {

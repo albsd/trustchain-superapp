@@ -55,6 +55,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                 group,
                 context,
                 null,
+                null,
                 iPV8CommunicationProtocol,
                 runSetup = false,
             )

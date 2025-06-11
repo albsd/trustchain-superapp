@@ -22,6 +22,7 @@ class Bank(
 ) : Participant(communicationProtocol, name) {
     private val depositedEuros: ArrayList<DigitalEuro> = arrayListOf()
     val withdrawUserRandomness: HashMap<Element, Element> = hashMapOf()
+
     val depositedEuroLogger: ArrayList<Pair<String, FraudControlResult>> = arrayListOf()
     private val userCommitments: MutableMap<Element, PedersenCommitment> = mutableMapOf()
 

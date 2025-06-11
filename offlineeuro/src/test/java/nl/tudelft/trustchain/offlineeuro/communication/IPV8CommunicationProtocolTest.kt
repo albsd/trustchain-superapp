@@ -38,6 +38,7 @@ import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import java.math.BigInteger
@@ -45,8 +46,10 @@ import org.mockito.MockedStatic
 import android.net.Uri
 import org.mockito.Mockito.mockStatic
 import android.util.Log
+import nl.tudelft.trustchain.offlineeuro.cryptography.PedersenCommitment
 import org.junit.After
 import nl.tudelft.trustchain.offlineeuro.entity.Participant
+import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 
 class IPV8CommunicationProtocolTest {
     private val context = null
@@ -331,9 +334,12 @@ class IPV8CommunicationProtocolTest {
         val userName = "UserToVerify"
         val publicKey = group.generateRandomElementOfG()
         val peer = Mockito.mock(Peer::class.java)
+        val jwtToken = """
+            eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2Y3QiOiJ1cm46ZXVkaTpwaWQ6MSIsInNhbHQiOiJhYmNkZWYiLCJfc2RfYWxnIjoic2hhLTI1NiJ9.~WyIxMjM0NTYiLCJmYW1pbHlfbmFtZSIsIkRvZSJd~eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyLCJzdWIiOiIxMjM0NTY3ODkwIn0.signature
+        """.trimIndent()
 
         `when`(ttp.group).thenReturn(group)
-        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(true)
+        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(jwtToken)
         `when`(ttp.publicKey).thenReturn(ttpPK)
 
         iPV8CommunicationProtocol.participant = ttp
@@ -343,27 +349,6 @@ class IPV8CommunicationProtocolTest {
 
         verify(ttp, times(1)).verifyUser(userName, publicKey)
         verify(community, times(1)).sendRegistrationCompleteMessage("Completed", peer)
-    }
-
-    @Test
-    fun handleVerificationCompleteMessage_failureTest() {
-        val group = groupDescription
-        val ttp = Mockito.mock(TTP::class.java)
-        val userName = "UserToVerify"
-        val publicKey = group.generateRandomElementOfG()
-        val peer = Mockito.mock(Peer::class.java)
-
-        `when`(ttp.group).thenReturn(group)
-        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(false)
-        `when`(ttp.publicKey).thenReturn(ttpPK)
-
-        iPV8CommunicationProtocol.participant = ttp
-
-        val message = TTPVerificationCompleteMessage(userName, publicKey.toBytes(), peer)
-        iPV8CommunicationProtocol.messageList.add(message)
-
-        verify(ttp, times(1)).verifyUser(userName, publicKey)
-        verify(community, times(1)).sendRegistrationCompleteMessage("Failed", peer)
     }
 
     @Test
@@ -381,6 +366,7 @@ class IPV8CommunicationProtocolTest {
 
         `when`(ttp.group).thenReturn(group)
         `when`(ttp.registerUser(userName, publicKey)).thenReturn(responseMap)
+        `when`(ttp.getSignedUserPublicKey(publicKey)).thenReturn(SchnorrSignature(BigInteger.ONE, BigInteger.ONE, "test".toByteArray()))
 
         iPV8CommunicationProtocol.participant = ttp
 
@@ -388,6 +374,7 @@ class IPV8CommunicationProtocolTest {
         iPV8CommunicationProtocol.messageList.add(message)
 
         verify(ttp, times(1)).registerUser(userName, publicKey)
+        verify(community, times(1)).sendSignedPublicKey(any(), eq(peer))
         verify(community, times(1)).sendVerificationRequest("client123", "https://example.com/uri", "GET", peer)
     }
 

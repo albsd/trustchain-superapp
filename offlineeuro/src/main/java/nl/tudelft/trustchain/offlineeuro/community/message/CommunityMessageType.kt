@@ -13,6 +13,8 @@ enum class CommunityMessageType {
     TTPVerificationRequestMessage,
     TTPVerificationCompleteMessage,
     TTPRegistrationCompleteMessage,
+    TTPCommitmentMessage,
+    TTPSignedPublicKeyMessage,
 
     BlindSignatureRandomnessRequestMessage,
     BlindSignatureRandomnessReplyMessage,

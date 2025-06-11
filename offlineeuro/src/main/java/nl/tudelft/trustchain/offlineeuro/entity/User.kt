@@ -7,8 +7,10 @@ import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
+import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
 import java.util.UUID
 
 class User(
@@ -16,12 +18,17 @@ class User(
     group: BilinearGroup,
     context: Context?,
     private var walletManager: WalletManager? = null,
+    private val signedPublicKeyManager: SignedPublicKeyManager? = SignedPublicKeyManager(context),
     communicationProtocol: ICommunicationProtocol,
     runSetup: Boolean = true
 ) : Participant(communicationProtocol, name) {
     val wallet: Wallet
     private val addressBookManager: AddressBookManager
     var authManager: EUDIAuthManager? = null
+    private var _signedPublicKey: SchnorrSignature? = null
+        get() = field ?: signedPublicKeyManager?.getSignedPublicKey()
+
+    fun getSignedPublicKey(): SchnorrSignature? = _signedPublicKey
 
     init {
         communicationProtocol.participant = this
@@ -123,6 +130,14 @@ class User(
     override fun reset() {
         randomizationElementMap.clear()
         walletManager!!.clearWalletEntries()
+        signedPublicKeyManager?.clearSignedPublicKey()
+        _signedPublicKey = null
         setUp()
+    }
+
+    fun storeSignedPublicKey(signature: SchnorrSignature) {
+        _signedPublicKey = signature
+        signedPublicKeyManager?.storeSignedPublicKey(signature)
+        wallet.updateUserSignedPublicKey(signature)
     }
 }
