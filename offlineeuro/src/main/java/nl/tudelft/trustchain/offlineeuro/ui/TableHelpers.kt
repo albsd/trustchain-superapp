@@ -404,7 +404,7 @@ object TableHelpers {
         depositButton.contentDescription = "deposit"
         depositButton.setOnClickListener {
             try {
-                val depositResult = user.sendDigitalEuroTo(bankName)
+                val depositResult = user.sendDigitalEuroTo(bankName, "")
 
                 Toast.makeText(context, depositResult, Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
@@ -438,7 +438,7 @@ object TableHelpers {
 
         doubleSpendButton.setOnClickListener {
             try {
-                val result = user.doubleSpendDigitalEuroTo(userName)
+                val result = user.doubleSpendDigitalEuroTo(userName, "")
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
@@ -449,9 +449,9 @@ object TableHelpers {
         tokenContainer: LinearLayout,
         user: User,
         context: Context,
-        onSendClick: (Int) -> Unit,
-        onDoubleSpendClick: (Int) -> Unit,
-        onDepositClick: (Int) -> Unit
+        onSendClick: (Int, String) -> Unit,
+        onDoubleSpendClick: (Int, String) -> Unit,
+        onDepositClick: (Int, String) -> Unit
     ) {
         tokenContainer.removeAllViews()
 
@@ -483,7 +483,7 @@ object TableHelpers {
             val sendButton = Button(context).apply {
                 text = "SEND"
                 setOnClickListener {
-                    onSendClick(1)
+                    onSendClick(1, tokenList.digitalEuro.serialNumber)
                 }
             }
 
@@ -496,7 +496,7 @@ object TableHelpers {
                     marginStart = 8.dp(context)
                 }
                 setOnClickListener {
-                    onDoubleSpendClick(1)
+                    onDoubleSpendClick(1, tokenList.digitalEuro.serialNumber)
                 }
             }
 
@@ -509,7 +509,7 @@ object TableHelpers {
                     marginStart = 8.dp(context)
                 }
                 setOnClickListener {
-                    onDepositClick(1)
+                    onDepositClick(1, tokenList.digitalEuro.serialNumber)
                 }
             }
 
