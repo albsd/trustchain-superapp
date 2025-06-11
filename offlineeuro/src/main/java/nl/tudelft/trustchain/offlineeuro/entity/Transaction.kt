@@ -110,7 +110,7 @@ object Transaction {
         publicKeyBank: Element,
         bilinearGroup: BilinearGroup,
         crs: CRS,
-        validationEntityPublicKey: Element
+//        validationEntityPublicKey: Element
     ): TransactionResult {
 //        if (transaction.spenderSignedPublicKey == null)
 //            return TransactionResult.UNREGISTERED_PUBLIC_KEY

@@ -138,10 +138,11 @@ class TTP(
     ): Map<String, String>? {
         try {
             // Sign the user's public key with TTP's private key
-            val signedPublicKey = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
+//            val signedPublicKey = Schnorr.schnorrSignature(this.privateKey, publicKey.toBytes(), group)
             val response = requestPresentationEudi()
             val transactionId = response["transaction_id"]
-            val result = registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId!!)
+//            val result = registeredUserManager.addRegisteredUser(name, publicKey, signedPublicKey, transactionId!!)
+            val result = registeredUserManager.addRegisteredUser(name, publicKey, transactionId!!)
             if (result)
                 return response;
             return null

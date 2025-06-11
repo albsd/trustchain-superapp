@@ -173,8 +173,9 @@ class Bank(
         publicKeyBank: Element,
         publicKeySender: Element
     ): String {
-        val ttpPublicKey = communicationProtocol.getPublicKeyOf("TTP", group)
-        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, ttpPublicKey)
+//        val ttpPublicKey = communicationProtocol.getPublicKeyOf("TTP", group)
+//        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, ttpPublicKey)
+        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs)
         if (transactionResult.valid) {
             val digitalEuro = transactionDetails.digitalEuro
             digitalEuro.proofs.add(transactionDetails.currentTransactionProof.grothSahaiProof)

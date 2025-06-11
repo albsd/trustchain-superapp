@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS RegisteredUsers (
 );
 
 addUser:
-INSERT INTO RegisteredUsers(name, publicKey, signedPublicKey, transactionId, isVerified)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO RegisteredUsers(name, publicKey, transactionId, isVerified)
+VALUES (?, ?, ?, ?);
 
 getUserById:
 SELECT *

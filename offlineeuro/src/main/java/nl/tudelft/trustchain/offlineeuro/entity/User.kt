@@ -116,7 +116,8 @@ class User(
         val usedRandomness = lookUpRandomness(publicKeySender) ?: return "Randomness Not found!"
         removeRandomness(publicKeySender)
         val ttpPublicKey = communicationProtocol.getPublicKeyOf("TTP", group)
-        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, ttpPublicKey)
+//        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs, ttpPublicKey)
+        val transactionResult = Transaction.validate(transactionDetails, publicKeyBank, group, crs)
 
         if (transactionResult.valid) {
             wallet.addToWallet(transactionDetails, usedRandomness)

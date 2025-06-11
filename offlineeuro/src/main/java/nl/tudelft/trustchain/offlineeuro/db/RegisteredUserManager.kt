@@ -31,7 +31,7 @@ class RegisteredUserManager(
             id: Long,
             name: String,
             publicKey: ByteArray,
-            signature: ByteArray,
+//            signature: ByteArray,
             transactionId: String,
             isVerified: Long
         ->
@@ -62,13 +62,13 @@ class RegisteredUserManager(
     fun addRegisteredUser(
         userName: String,
         publicKey: Element,
-        signedPublicKey: SchnorrSignature,
+//        signedPublicKey: SchnorrSignature,
         transactionId: String
     ): Boolean {
         queries.addUser(
             userName,
             publicKey.toBytes(),
-            SchnorrSignatureSerializer.serializeSchnorrSignature(signedPublicKey),
+//            SchnorrSignatureSerializer.serializeSchnorrSignature(signedPublicKey),
             transactionId,
             0 // not verified
         )
