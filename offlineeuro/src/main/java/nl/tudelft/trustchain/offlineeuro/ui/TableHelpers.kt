@@ -3,6 +3,7 @@ package nl.tudelft.trustchain.offlineeuro.ui
 import android.content.Context
 import android.media.Image
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.widget.Button
@@ -22,6 +23,7 @@ import nl.tudelft.trustchain.offlineeuro.entity.RegisteredUser
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.entity.WalletEntry
 import nl.tudelft.trustchain.offlineeuro.enums.Role
+import nl.tudelft.trustchain.offlineeuro.libraries.DcSdJWTDecoder
 
 object TableHelpers {
     fun removeAllButFirstRow(table: LinearLayout) {
@@ -134,10 +136,13 @@ object TableHelpers {
 
             var args = Bundle()
             args.putBoolean("status", depositedEuro.second.isFraud)
-            args.putString("jwt", depositedEuro.second.jwt)
-            args.putString("userName", depositedEuro.second.userName)
-            args.putString("userPK", depositedEuro.second.userPK?.toString())
 
+            val claims = depositedEuro.second.jwt?.let { it1 -> DcSdJWTDecoder.decodeSdJwt(it1) }
+
+            args.putString("family_name", claims?.get("family_name"))
+            args.putString("name", claims?.get("given_name"))
+            args.putString("userPK", depositedEuro.second.userPK?.toString())
+            args.putString("country", claims?.get("issuing_country"))
             bottomSheet.arguments = args
             bottomSheet.show((context as AppCompatActivity).supportFragmentManager, "DoubleSpendingSheet")
         }

@@ -27,10 +27,11 @@ class IdentityRevealFragment : BottomSheetDialogFragment() {
 
         val context = requireContext()
         val isFraud = arguments?.getBoolean("status") ?: false
-        val jwt = arguments?.getString("jwt") ?: "N/A"
+        val familyName = arguments?.getString("family_name") ?: "N/A"
         //todo: replace username and userPK with information from the jwt
-        val userName = arguments?.getString("userName") ?: "N/A"
+        val givenName = arguments?.getString("name") ?: ""
         val userPK = arguments?.getString("userPK") ?: "N/A"
+        val country = arguments?.getString("country") ?: "N/A"
 
         val layout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -59,19 +60,19 @@ class IdentityRevealFragment : BottomSheetDialogFragment() {
 
         if (isFraud) {
             layout.addView(TextView(context).apply {
-                text = "JWT: $jwt"
-                textSize = 14f
-                setPadding(0, 8, 0, 8)
-            })
-
-            layout.addView(TextView(context).apply {
-                text = "Username: $userName"
+                text = "Name: $familyName $givenName"
                 textSize = 14f
                 setPadding(0, 8, 0, 8)
             })
 
             layout.addView(TextView(context).apply {
                 text = "Public Key: $userPK"
+                textSize = 14f
+                setPadding(0, 8, 0, 8)
+            })
+
+            layout.addView(TextView(context).apply {
+                text = "Issuing Country: $country"
                 textSize = 14f
                 setPadding(0, 8, 0, 8)
             })

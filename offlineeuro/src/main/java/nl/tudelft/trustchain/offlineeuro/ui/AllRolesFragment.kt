@@ -94,7 +94,9 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
         iPV8CommunicationProtocol.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, null))
 
         //demo
-        bank.depositedEuroLogger.add(Pair("some_serial_no", FraudControlResult(true, null, null, null, null)))
+        bank.depositedEuroLogger.add(Pair("some_serial_no", FraudControlResult(true,
+            null,
+            null, null, null)))
         bank.depositedEuroLogger.add(Pair("some_serial_no", FraudControlResult(false, null, null, null, null)))
 
         prepareButtons(view)
