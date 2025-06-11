@@ -39,7 +39,7 @@ class RegisteredUserManager(
             id,
             name,
             bilinearGroup.pairing.g1.newElementFromBytes(publicKey).immutable,
-            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signature)!!,
+//            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signature)!!,
             transactionId,
             isVerified
         )

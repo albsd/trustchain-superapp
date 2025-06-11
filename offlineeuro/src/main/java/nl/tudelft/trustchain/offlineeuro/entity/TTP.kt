@@ -205,14 +205,14 @@ class TTP(
      * @return the signed version of the public key
      * @throws IllegalArgumentException if the given public key is not registered
      */
-    fun getSignedUserPublicKey(
-        publicKey: Element
-    ): SchnorrSignature {
-        val registeredUser = registeredUserManager.getRegisteredUserByPublicKey(publicKey)
-            ?: throw IllegalArgumentException("User with public key $publicKey is not registered with TTP")
-
-        return registeredUser.signedPublicKey
-    }
+//    fun getSignedUserPublicKey(
+//        publicKey: Element
+//    ): SchnorrSignature {
+//        val registeredUser = registeredUserManager.getRegisteredUserByPublicKey(publicKey)
+//            ?: throw IllegalArgumentException("User with public key $publicKey is not registered with TTP")
+//
+//        return registeredUser.signedPublicKey
+//    }
 
     fun getRegisteredUsers(): List<RegisteredUser> {
         return registeredUserManager.getAllRegisteredUsers()

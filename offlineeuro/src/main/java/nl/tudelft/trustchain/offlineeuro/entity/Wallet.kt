@@ -33,11 +33,11 @@ class Wallet(
     val publicKey: Element,
     private val walletManager: WalletManager
 ) {
-    var signedPublicKey: SchnorrSignature? = null
+//    var signedPublicKey: SchnorrSignature? = null
 
-    fun updateUserSignedPublicKey(signedPublicKey: SchnorrSignature) {
-        this.signedPublicKey = signedPublicKey
-    }
+//    fun updateUserSignedPublicKey(signedPublicKey: SchnorrSignature) {
+//        this.signedPublicKey = signedPublicKey
+//    }
 
     fun addToWallet(
         transactionDetails: TransactionDetails,
@@ -74,7 +74,8 @@ class Wallet(
     ): TransactionDetails? {
         val walletEntry = walletManager.getWalletEntriesBySerialNumber(sn).firstOrNull() ?: return null
         walletManager.removeWalletEntriesBySerialNumber(sn)
-        return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+//        return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+        return Transaction.createTransaction(privateKey, publicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 
     // ONLY FOR DEMO PURPOSES
@@ -109,6 +110,7 @@ class Wallet(
         sn: String
     ): TransactionDetails? {
         val walletEntry = walletManager.getWalletEntriesBySerialNumber(sn).firstOrNull() ?: return null
-        return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+//        return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
+        return Transaction.createTransaction(privateKey, publicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 }

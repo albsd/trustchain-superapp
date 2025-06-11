@@ -33,7 +33,7 @@ class TransactionDetailsPayload(
         payload += serializeVarLen(transactionDetailsBytes.previousThetaSignatureBytes)
         payload += serializeVarLen(transactionDetailsBytes.theta1SignatureBytes)
         payload += serializeVarLen(transactionDetailsBytes.spenderPublicKeyBytes)
-        payload += serializeVarLen(transactionDetailsBytes.spenderSignedPublicKey)
+//        payload += serializeVarLen(transactionDetailsBytes.spenderSignedPublicKey)
 
         return payload
     }
@@ -107,7 +107,7 @@ class TransactionDetailsPayload(
                     previousThetaSignatureBytes,
                     theta1SignatureBytes,
                     spenderPublicKeyBytes,
-                    spenderSignedPublicKeyBytes
+//                    spenderSignedPublicKeyBytes
                 )
 
             return Pair(
