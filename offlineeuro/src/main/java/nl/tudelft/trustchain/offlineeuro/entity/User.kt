@@ -11,6 +11,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
+import nl.tudelft.trustchain.offlineeuro.enums.Role
 import java.util.UUID
 
 class User(
@@ -47,10 +48,10 @@ class User(
         wallet = Wallet(privateKey, publicKey, walletManager!!)
     }
 
-    fun sendDigitalEuroTo(nameReceiver: String): String {
+    fun sendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails =
-            wallet.spendEuro(randomizationElements, group, crs)
+            wallet.spendEuro(randomizationElements, group, crs, tokenSerialNumber)
                 ?: throw Exception("No euro to spend")
 
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails)
@@ -58,9 +59,9 @@ class User(
         return result
     }
 
-    fun doubleSpendDigitalEuroTo(nameReceiver: String): String {
+    fun doubleSpendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
-        val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs)
+        val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs, tokenSerialNumber)
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)
         emitEvent(result)
         return result
@@ -84,6 +85,12 @@ class User(
         wallet.addToWallet(digitalEuro, firstT)
         emitEvent("Withdrawn ${digitalEuro.serialNumber} successfully!")
         return digitalEuro
+    }
+
+    fun retrieveScopedUsers(): List<String> {
+        val addresses = addressBookManager.getAllAddresses()
+        val usernames = addresses.filter { it.type == Role.User && it.name != name}.map { it.name }
+        return usernames
     }
 
     fun getBalance(): Int {

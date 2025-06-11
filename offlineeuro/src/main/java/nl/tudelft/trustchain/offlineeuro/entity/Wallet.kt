@@ -69,11 +69,11 @@ class Wallet(
     fun spendEuro(
         randomizationElements: RandomizationElements,
         bilinearGroup: BilinearGroup,
-        crs: CRS
+        crs: CRS,
+        sn: String
     ): TransactionDetails? {
-        val walletEntry = walletManager.getNumberOfWalletEntriesToSpend(1).firstOrNull() ?: return null
-        val euro = walletEntry.digitalEuro
-        walletManager.incrementTimesSpent(euro)
+        val walletEntry = walletManager.getWalletEntriesBySerialNumber(sn).firstOrNull() ?: return null
+        walletManager.removeWalletEntriesBySerialNumber(sn)
         return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 
@@ -105,12 +105,10 @@ class Wallet(
     fun doubleSpendEuro(
         randomizationElements: RandomizationElements,
         bilinearGroup: BilinearGroup,
-        crs: CRS
+        crs: CRS,
+        sn: String
     ): TransactionDetails? {
-        val walletEntry = walletManager.getNumberOfWalletEntriesToDoubleSpend(1).firstOrNull() ?: return null
-        val euro = walletEntry.digitalEuro
-        walletManager.incrementTimesSpent(euro)
-
+        val walletEntry = walletManager.getWalletEntriesBySerialNumber(sn).firstOrNull() ?: return null
         return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 }

@@ -51,6 +51,14 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         view.findViewById<Button>(R.id.user_home_sync_addresses).setOnClickListener {
             communicationProtocol.scopePeers()
         }
+        view.findViewById<Button>(R.id.withdraw_button).setOnClickListener {
+            val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
+            if (bank.isEmpty()) {
+                Toast.makeText(context, "Could not find bank. Try again later...", Toast.LENGTH_SHORT).show()
+            } else {
+                user.withdrawDigitalEuro("Bank");
+            }
+        }
 
         updateAllAddresses(view)
         onUserDataChangeCallBack(null)
@@ -85,13 +93,13 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         builder.setTitle("Amount to send:")
 
         // Listener for performing a transaction: sending euro to another peer
-        builder.setPositiveButton("Send") { _, _ ->
-                try {
-                    user.sendDigitalEuroTo(userName)
-                } catch (e: Exception) {
-                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-                }
-        }
+//        builder.setPositiveButton("Send") { _, _ ->
+//                try {
+//                    user.sendDigitalEuroTo(userName)
+//                } catch (e: Exception) {
+//                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+//                }
+//        }
 
         builder.setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
@@ -102,10 +110,10 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     }
 
     // in case we decidce to allow tokens to be more than 1 eur
-    private fun onSendTokenClick(amount: Int) {
+    private fun onSendTokenClick(amount: Int, sn: String) {
         showUserSelectionWithConfirmation("Send", amount) { selectedUserName ->
             try {
-                user.sendDigitalEuroTo(selectedUserName)
+                user.sendDigitalEuroTo(selectedUserName, sn)
                 Toast.makeText(requireContext(), "Sent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error sending euro", Toast.LENGTH_SHORT).show()
@@ -114,15 +122,21 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     }
 
     // in case we decidce to allow tokens to be more than 1 eur
-    private fun onDoubleSpendTokenClick(amount: Int) {
+    private fun onDoubleSpendTokenClick(amount: Int, sn: String) {
         showUserSelectionWithConfirmation("Double Spend", amount) { selectedUserName ->
             try {
-                user.doubleSpendDigitalEuroTo(selectedUserName)
+                user.doubleSpendDigitalEuroTo(selectedUserName, sn)
                 Toast.makeText(requireContext(), "Double spent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error double spending euro", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    // in case we decidce to allow tokens to be more than 1 eur
+    private fun onDepositToken(amount: Int, sn: String) {
+        user.sendDigitalEuroTo("Bank", sn)
+        Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
     }
 
     private fun showUserSelectionWithConfirmation(
@@ -133,7 +147,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         if (!isAdded) return
 
         val context = requireContext()
-        val users = listOf("Alice", "Bob", "Charlie", "Dave")
+        val users = user.retrieveScopedUsers()
         var selectedUser: String? = null
 
         val builder = AlertDialog.Builder(context)
@@ -173,6 +187,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     }
 
     private val onUserDataChangeCallBack: (String?) -> Unit = { message ->
+        enableWithdraw();
         requireActivity().runOnUiThread {
             val context = requireContext()
             if (this::user.isInitialized) {
@@ -194,22 +209,24 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
                         tokenContainer,
                         user,
                         context,
-                        onSendClick = { _ ->
-                            onSendTokenClick(1)
-                        },
-                        onDoubleSpendClick = { _ ->
-                            onDoubleSpendTokenClick(1)
-                        },
-                        onDepositClick = { _ ->
-                            user.sendDigitalEuroTo("Bank")
-                            Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
-                        }
+                        onSendClick = ::onSendTokenClick,
+                        onDoubleSpendClick = ::onDoubleSpendTokenClick,
+                        onDepositClick = ::onDepositToken
                     )
                 }
             }
         }
     }
 
+    private fun enableWithdraw() {
+        val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
+        val withdrawButton = requireView().findViewById<Button>(R.id.withdraw_button)
+        if (bank.isEmpty()) {
+            withdrawButton.isEnabled = false
+        } else {
+            withdrawButton.isEnabled = true
+        }
+    }
 
     val updateUI: (View) -> Unit
         get() = { view -> updateAllAddresses(view) }
