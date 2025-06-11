@@ -19,6 +19,7 @@ import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
+import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.EUDIAuthManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
@@ -59,10 +60,33 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 runSetup = false
             )
 
+            Log.e("dualRole", ParticipantHolder.dualRole.toString())
+            Log.e("dualRole", ParticipantHolder.dualRole?.ttp.toString())
+
+            if (ParticipantHolder.dualRole != null) {
+                ParticipantHolder.dualRole!!.ttp.name = user.name
+                communicationProtocol.addressBookManager.insertAddress(Address(
+                    ParticipantHolder.dualRole!!.ttp.name, Role.TTP, ParticipantHolder.dualRole!!.ttp.publicKey, null)
+                )
+                ParticipantHolder.dualRole!!.user = user
+
+                requireActivity().runOnUiThread {
+                    val context = requireContext()
+                    val view = requireView()
+
+                    // Update TTP addresses for wallet registration
+                    val ttpAddresses = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.TTP }
+                    val ttpTable = view.findViewById<LinearLayout>(R.id.wallet_registration_ttp_list)
+                    TableHelpers.removeAllButFirstRow(ttpTable)
+                    TableHelpers.addTTPsToTable(ttpTable, ttpAddresses, context, user)
+                }
+            }
+
             user.authManager = eudiAuthManager
 
             ParticipantHolder.user = user
             user.addCallback(onDataChangeCallback)
+            ParticipantHolder.dualRole?.addCallback(onDataChangeCallback)
             viewLifecycleOwner.lifecycleScope.launch {
                 while (true) {
                     refresh()
@@ -112,6 +136,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
     }
 
     private val onDataChangeCallback: (String?) -> Unit = { message ->
+        Log.i("salut", "data change callback gen")
         if (this::user.isInitialized) {
             requireActivity().runOnUiThread {
                 val context = requireContext()

@@ -9,7 +9,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
 
 abstract class Participant(
     val communicationProtocol: ICommunicationProtocol,
-    val name: String,
+    var name: String,
     val onDataChangeCallbacks: MutableList<(String?) -> Unit> = mutableListOf<(String?) -> Unit>()
 ) {
     protected lateinit var privateKey: Element

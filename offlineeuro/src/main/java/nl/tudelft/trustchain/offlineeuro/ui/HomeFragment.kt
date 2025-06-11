@@ -18,6 +18,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.DualRole
+import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 
 class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
@@ -43,9 +44,6 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
             if (ParticipantHolder.user == null)
                 showAlertDialog()
             else
-                if (mockTTP) {
-                    runMockTTP()
-                }
                 findNavController().navigate(R.id.action_homeFragment_to_userHomeFragment)
         }
         view.findViewById<Button>(R.id.JoinAsAllRolesButton).setOnClickListener {
@@ -54,7 +52,10 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
 
         val mockTtpSwitch = view.findViewById<Switch>(R.id.mockTTPSwitch)
         mockTtpSwitch.setOnCheckedChangeListener { _, isChecked ->
-            mockTTP = isChecked
+            if (isChecked) {
+                setupDualRole()
+            }
+
             Toast.makeText(
                 requireContext(),
                 if (isChecked) "Local TTP enabled" else "Local TTP disabled",
@@ -63,30 +64,27 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
         }
     }
 
-    private fun runMockTTP() {
-        if (ParticipantHolder.ttp == null && ParticipantHolder.dualRole == null) {
-            val group = BilinearGroup(PairingTypes.FromFile, context = requireContext())
+    private fun setupDualRole() {
+        if (ParticipantHolder.dualRole == null) {
+            val group = BilinearGroup(PairingTypes.FromFile, context = context)
+            val addressBookManager = AddressBookManager(context, group)
             val community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
-            val addressBookManager = AddressBookManager(requireContext(), group)
             val iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
-
-            val dualRole = DualRole(requireContext(), group, iPV8CommunicationProtocol, "LocalDualRole")
-
-            dualRole.addCallback { message ->
-                requireActivity().runOnUiThread {
-                    CallbackLibrary.ttpCallback(requireContext(), message, requireView(), dualRole.getTTP())
-                }
-            }
-
-            ParticipantHolder.dualRole = dualRole
-            iPV8CommunicationProtocol.participant = dualRole
-
-            // Insert address with DualRole role
-            iPV8CommunicationProtocol.addressBookManager.insertAddress(
-                Address(dualRole.name, Role.DualRole, dualRole.publicKey, null)
-            )
+            val dualRole =
+                DualRole(
+                    iPV8CommunicationProtocol,
+                )
 
             Toast.makeText(requireContext(), "Local DualRole started", Toast.LENGTH_SHORT).show()
+
+
+//            dualRole.addCallback { message ->
+//                requireActivity().runOnUiThread {
+//                    CallbackLibrary.ttpCallback(requireContext(), message, requireView(), dualRole.getTTP())
+//                }
+//            }
+
+            ParticipantHolder.dualRole = dualRole
         }
     }
 

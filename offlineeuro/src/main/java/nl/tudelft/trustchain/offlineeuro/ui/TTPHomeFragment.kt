@@ -32,6 +32,11 @@ class TTPHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_ttp_home) {
             ttp = TTP("TTP", group, iPV8CommunicationProtocol, context)
             ttp.addCallback(onDataChangeCallback)
         }
+        if (ParticipantHolder.dualRole != null) {
+            ParticipantHolder.dualRole!!.ttp = ttp
+            ParticipantHolder.dualRole!!.ttp.name = ParticipantHolder.dualRole!!.userName
+
+        }
         onDataChangeCallback(null)
     }
 

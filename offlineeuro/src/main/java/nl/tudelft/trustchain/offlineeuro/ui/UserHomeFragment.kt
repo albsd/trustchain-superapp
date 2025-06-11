@@ -38,6 +38,13 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             val userName: String = user.name
             val welcomeTextView = view.findViewById<TextView>(R.id.user_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName)
+
+            if (ParticipantHolder.dualRole != null) {
+                ParticipantHolder.dualRole!!.userName = user.name
+                ParticipantHolder.dualRole!!.ttp.name = user.name
+                ParticipantHolder.dualRole!!.user = user
+            }
+
         } else {
             Log.e("user_home", "User should have been initialized already before reaching user home fragment!!")
             return findNavController().navigate(R.id.action_userHomeFragment_to_homeFragment)

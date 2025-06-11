@@ -270,6 +270,7 @@ class IPV8CommunicationProtocol(
      * @param message The registration message containing user public key bytes, name, and peer info.
      */
     private fun handleRegistrationMessage(message: TTPRegistrationMessage) {
+        Log.i("AM AJUNS AICI!", "AM AJKUNS!!!!")
         if (participant !is TTP && participant !is DualRole) return
 
         val publicKey = participant.group.gElementFromBytes(message.userPKBytes)
@@ -369,7 +370,8 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
-        Log.i("rolul", getParticipantRole().toString())
+        Log.wtf("rolul???", "HELLO?")
+        Log.wtf("rolul", getParticipantRole().toString())
         Log.i("hai ca am primit", message.toString())
         when (message) {
             is AddressMessage -> handleAddressMessage(message)
@@ -390,10 +392,10 @@ class IPV8CommunicationProtocol(
 
     private fun getParticipantRole(): Role {
         return when (participant) {
+            is DualRole -> Role.DualRole
             is User -> Role.User
             is TTP -> Role.TTP
             is Bank -> Role.Bank
-            is DualRole -> Role.DualRole
             else -> throw Exception("Unknown role")
         }
     }

@@ -9,36 +9,30 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.GrothSahaiProof
 
 
 class DualRole(
-    context: Context,
-    group: BilinearGroup,
     communicationProtocol: ICommunicationProtocol,
     userName: String = "User",
 ) : Participant(communicationProtocol, userName) {
 
-    val userName = userName
+    var userName = userName
 
-    private val user: User = User(
-        name = userName,
-        group = group,
-        context = context,
-        communicationProtocol = communicationProtocol,
-        runSetup = true
-    )
+    lateinit var user: User
 
-    private val ttp: TTP = TTP(
-        name = userName,
-        group = group,
-        communicationProtocol = communicationProtocol,
-        context = context
-    )
+    lateinit var ttp: TTP
 
-    fun getTTP(): TTP {
-        return ttp
-    }
-
-    fun getUser(): User {
-        return user
-    }
+//    var user: User = User(
+//        name = userName,
+//        group = group,
+//        context = context,
+//        communicationProtocol = communicationProtocol,
+//        runSetup = true
+//    )
+//
+//    var ttp: TTP = TTP(
+//        name = userName,
+//        group = group,
+//        communicationProtocol = communicationProtocol,
+//        context = context
+//    )
 
 
     // user
