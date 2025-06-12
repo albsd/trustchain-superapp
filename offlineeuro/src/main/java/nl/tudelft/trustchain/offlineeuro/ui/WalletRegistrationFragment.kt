@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -31,6 +32,22 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+//        activity?.title = "User"
+//        val userName: String? = arguments?.getString("userName")
+//        val welcomeTextView = view.findViewById<TextView>(R.id.user_home_welcome_text)
+//        welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName!!)
+//        community = getIpv8().getOverlay<OfflineEuroCommunity>()!!
+//
+//        val group = BilinearGroup(PairingTypes.FromFile, context = context)
+//        val addressBookManager = AddressBookManager(context, group)
+//        communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+//        try {
+//            user = User(userName, group, context, null, communicationProtocol, onDataChangeCallback = onUserDataChangeCallBack)
+//            communicationProtocol.scopePeers()
+//        } catch (e: Exception) {
+//            Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+//        }
 
         activity?.title = "User"
         var userName: String? = arguments?.getString("userName")

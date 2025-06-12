@@ -427,7 +427,7 @@ object TableHelpers {
         user: User
     ) {
         registerAtTTPButton.setOnClickListener {
-            user.setUp()
+            user.registerAtTTP()
         }
     }
 

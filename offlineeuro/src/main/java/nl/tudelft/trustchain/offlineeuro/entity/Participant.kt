@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -10,7 +11,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
 abstract class Participant(
     val communicationProtocol: ICommunicationProtocol,
     val name: String,
-    val onDataChangeCallback: ((String?) -> Unit)? = null
+    var onDataChangeCallback: ((String?) -> Unit)? = null
 ) {
     protected lateinit var privateKey: Element
     lateinit var publicKey: Element
@@ -34,6 +35,7 @@ abstract class Participant(
     }
 
     fun registerAtTTP() {
+        Log.i("ttp", "registering user at TTP")
         // TODO NAME OF TTP
         communicationProtocol.register(name, publicKey, "TTP")
     }

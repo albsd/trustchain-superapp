@@ -27,6 +27,7 @@ class User(
         if (runSetup) {
             setUp()
         } else {
+//            getGroupDescriptionAndCRS()
             generateKeyPair()
         }
         if (walletManager == null) {

@@ -88,6 +88,6 @@ class HomeFragment : OfflineEuroBaseFragment(R.layout.fragment_home) {
 
     private fun moveToWalletRegistration(userName: String) {
         val bundle = bundleOf("userName" to userName)
-        findNavController().navigate(R.id.nav_home_userhome2, bundle)
+        findNavController().navigate(R.id.nav_wallet_registration, bundle)
     }
 }

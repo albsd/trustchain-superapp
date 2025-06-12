@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -26,12 +27,15 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         super.onViewCreated(view, savedInstanceState)
 
         if (ParticipantHolder.user != null) {
+            Log.i("user is", "not null")
             user = ParticipantHolder.user!!
             communicationProtocol = user.communicationProtocol as IPV8CommunicationProtocol
             val userName: String = user.name
             val welcomeTextView = view.findViewById<TextView>(R.id.user_home_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName)
+            user.onDataChangeCallback = onUserDataChangeCallBack
         } else {
+            Log.i("user is", "null")
             activity?.title = "User"
             val userName: String? = arguments?.getString("userName")
             val welcomeTextView = view.findViewById<TextView>(R.id.user_home_welcome_text)
