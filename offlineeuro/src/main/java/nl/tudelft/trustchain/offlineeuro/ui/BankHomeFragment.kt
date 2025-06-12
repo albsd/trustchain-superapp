@@ -2,6 +2,9 @@ package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -41,6 +44,13 @@ class BankHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_bank_home) {
                     depositedEuroManager
                 )
             bank.addCallback(onDataChangeCallBack)
+        }
+        val communicationProtocol = bank.communicationProtocol as IPV8CommunicationProtocol
+        viewLifecycleOwner.lifecycleScope.launch {
+            while (true) {
+                communicationProtocol.scopePeers()
+                delay(1000)
+            }
         }
         onDataChangeCallBack(null)
     }
