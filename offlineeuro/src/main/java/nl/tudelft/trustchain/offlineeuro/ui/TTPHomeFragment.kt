@@ -2,6 +2,9 @@ package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -31,6 +34,14 @@ class TTPHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_ttp_home) {
             iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
             ttp = TTP("TTP", group, iPV8CommunicationProtocol, context)
             ttp.addCallback(onDataChangeCallback)
+        }
+
+        val communicationProtocol = ttp.communicationProtocol as IPV8CommunicationProtocol
+        viewLifecycleOwner.lifecycleScope.launch {
+            while (true) {
+                communicationProtocol.scopePeers()
+                delay(1000)
+            }
         }
         onDataChangeCallback(null)
     }
