@@ -21,6 +21,9 @@
             android:id="@+id/nav_wallet_registration"
             app:destination="@id/walletRegistrationFragment" />
         <action
+            android:id="@+id/nav_home_userhome2"
+            app:destination="@id/userHomeFragment" />
+        <action
             android:id="@+id/action_homeFragment_to_userHomeFragment"
             app:destination="@id/userHomeFragment" />
     </fragment>
