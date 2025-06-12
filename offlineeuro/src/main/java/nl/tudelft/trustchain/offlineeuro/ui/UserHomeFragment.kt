@@ -52,6 +52,15 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             communicationProtocol.scopePeers()
         }
 
+        view.findViewById<Button>(R.id.withdraw_button).setOnClickListener {
+            val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
+            if (bank.isEmpty()) {
+                Toast.makeText(context, "Could not find bank. Try again later...", Toast.LENGTH_SHORT).show()
+            } else {
+                user.withdrawDigitalEuro("Bank");
+            }
+        }
+
         updateAllAddresses(view)
         onUserDataChangeCallBack(null)
     }
