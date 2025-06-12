@@ -133,7 +133,6 @@ class IPV8CommunicationProtocol(
         nameTTP: String
     ) {
         val ttpAddress = addressBookManager.getAddressByName(nameTTP)
-        Log.i("FRAUD", "sending message to ttp");
         community.sendFraudControlRequest(
             serialNumber,
             GrothSahaiSerializer.serializeGrothSahaiProof(firstProof),
@@ -270,11 +269,9 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        Log.i("Registering user", message.userName)
         val response = ttp.registerUser(message.userName, publicKey)
 
         if (response != null) {
-            Log.i("EUDI", "Am trimis presentation request")
             community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
         }
     }
@@ -310,26 +307,17 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        Log.i("verification", "Verifying user ${message.userName}")
 
         try {
             val dcSdJwt = ttp.verifyUser(message.userName, publicKey)
-            Log.i("verification good", "User: ${message.userName}")
             val commitment = dcSdJwt?.let { ttp.generateAndStoreJwtCommitment(publicKey, it) }
-            Log.i("COMMUNICATION", "commitment decoded")
             if (commitment != null) {
-                Log.i("COMMUNICATION", "extracting bank")
                 val bankAddress = addressBookManager.getAddressByName("Bank")
-                Log.i("COMMUNICATION", "bank extracted")
-                Log.i("COMMUNICATION", "TTP SENT COMMITMENT TO BANK")
                 community.sendTTPCommitmentToBank(commitment.toBytes(), bankAddress.peerPublicKey!!)
             }
             val signedPK = ttp.getSignedUserPublicKey(publicKey)
-            Log.i("COMMUNICATION", "TTP SENT REGISTRATION COMPLETE")
             community.sendRegistrationCompleteMessage("Completed", signedPK.toBytesWithLength(), message.peer)
         } catch (e: Exception) {
-            Log.i("COMMUNICATION", "TTP SENT REGISTRATION FAILED")
-            Log.i("COMMUNICATION", e.message.toString())
             community.sendRegistrationCompleteMessage("Failed", ByteArray(0), message.peer)
         }
     }
@@ -353,13 +341,11 @@ class IPV8CommunicationProtocol(
         if (getParticipantRole() != Role.TTP) {
             return
         }
-        Log.i("FRAUD", "received fraud control request")
         val ttp = participant as TTP
         val serialNumber = message.serialNumber
         val firstProof = GrothSahaiSerializer.deserializeProofBytes(message.firstProofBytes, participant.group)
         val secondProof = GrothSahaiSerializer.deserializeProofBytes(message.secondProofBytes, participant.group)
         val result = ttp.getUserFromProofs(firstProof, secondProof)
-        Log.i("FRAUD", "sending fraud control response")
         community.sendFraudControlReply(serialNumber, result, message.requestingPeer)
     }
 
@@ -368,7 +354,6 @@ class IPV8CommunicationProtocol(
             return
         }
         val bank = participant as Bank
-        Log.i("FRAUD", "received from ttp");
         val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
         val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
 
@@ -381,7 +366,6 @@ class IPV8CommunicationProtocol(
         }
         val bank = participant as Bank
         val commitment = bank.group.gElementFromBytes(message.commitmentBytes)
-        Log.i("COMMUNICATION", "BANK RECEIVED COMMITMENT FROM TTP")
         bank.storeUserCommitment(bank.publicKey, commitment)
     }
 

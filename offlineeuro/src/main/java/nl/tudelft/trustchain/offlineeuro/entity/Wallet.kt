@@ -1,6 +1,5 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
-import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.ipv8.attestation.wallet.cryptography.bonehexact.generateRandomBigInteger
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -75,7 +74,6 @@ class Wallet(
     ): TransactionDetails? {
         val walletEntry = walletManager.getWalletEntriesBySerialNumber(tokenSerialNumber).firstOrNull() ?: return null
         walletManager.removeWalletEntriesBySerialNumber(tokenSerialNumber)
-        signedPublicKey ?: Log.i("wallet", "SIGNEDPUBLICKKEY is null")
         return Transaction.createTransaction(privateKey, publicKey, signedPublicKey, walletEntry, randomizationElements, bilinearGroup, crs)
     }
 

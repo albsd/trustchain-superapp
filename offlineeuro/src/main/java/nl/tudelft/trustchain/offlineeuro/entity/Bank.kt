@@ -136,7 +136,6 @@ class Bank(
         }
 
         if (doubleSpendEuro != null) {
-            Log.i("FRAUD", "detected some fraud");
             val euroProof = euro.proofs[maxFirstDifferenceIndex]
             val depositProof = doubleSpendEuro.proofs[maxFirstDifferenceIndex]
             communicationProtocol.requestFraudControl(euro.serialNumber, euroProof, depositProof, "TTP")

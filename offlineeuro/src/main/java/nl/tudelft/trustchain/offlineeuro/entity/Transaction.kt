@@ -1,6 +1,5 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
-import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
@@ -112,16 +111,13 @@ object Transaction {
         crs: CRS,
         validationEntityPublicKey: Element
     ): TransactionResult {
-        Log.i("validating", "start validating");
         if (transaction.spenderSignedPublicKey == null)
             return TransactionResult.UNREGISTERED_PUBLIC_KEY
-        Log.i("validating", "spender has registered key");
 
         // Verify the TTP's signature on the public key using the provided TTP public key
         if (!Schnorr.verifySchnorrSignature(transaction.spenderSignedPublicKey, validationEntityPublicKey, bilinearGroup)) {
             return TransactionResult.INVALID_PUBLIC_KEY_SIGNATURE
         }
-        Log.i("validating", "spender has valid signed key");
 
         // Verify if the Digital euro is signed
         val digitalEuro = transaction.digitalEuro
@@ -130,7 +126,6 @@ object Transaction {
         ) {
             return TransactionResult.INVALID_BANK_SIGNATURE
         }
-        Log.i("validating", "digital euro is signed");
 
         // Verify if the current transaction signature is correct
         val transactionProof = transaction.currentTransactionProof
@@ -139,13 +134,11 @@ object Transaction {
         if (!Schnorr.verifySchnorrSignature(transactionSignature, transactionProof.grothSahaiProof.c1, bilinearGroup)) {
             return TransactionResult.INVALID_TRANSACTION_SIGNATURE
         }
-        Log.i("validating", "good transaction key");
 
         // Validate if the given Transaction proof is a valid Groth-Sahai proof
         if (!GrothSahai.verifyTransactionProof(transactionProof.grothSahaiProof, bilinearGroup, crs)) {
             return TransactionResult.INVALID_CURRENT_TRANSACTION_PROOF
         }
-        Log.i("validating", "transaction proof is a valid proof");
 
         // Validate that d2 is constructed correctly
         val usedY = transactionProof.usedY
@@ -172,7 +165,6 @@ object Transaction {
         bilinearGroup: BilinearGroup,
         crs: CRS
     ): TransactionResult {
-        Log.i("validating", "moved to validating chain");
         val digitalEuro = currentTransactionDetails.digitalEuro
         val currentProof = currentTransactionDetails.currentTransactionProof
         val previousProofs = digitalEuro.proofs
@@ -198,15 +190,9 @@ object Transaction {
             return TransactionResult.INVALID_TS_RELATION_BANK_SIGNATURE
         }
 
-
-        Log.i("validating", "validates TS Relation");
-
         if (!GrothSahai.verifyTransactionProof(firstProof, bilinearGroup, crs)) {
             return TransactionResult.INVALID_PROOF_IN_CHAIN
         }
-
-
-        Log.i("validating", "correct first proof");
 
         // Verify the remainder of the chain
         var previousProof = firstProof
@@ -216,13 +202,10 @@ object Transaction {
                 return TransactionResult.INVALID_PROOF_IN_CHAIN
             }
 
-            Log.i("validating", "validated transaction proof");
-
             if (!verifyProofChain(previousProof, proof, bilinearGroup)) {
                 return TransactionResult.INVALID_CHAIN_OF_PROOFS
             }
 
-            Log.i("validating", "validated transaction chain");
             previousProof = proof
         }
 
@@ -251,20 +234,14 @@ object Transaction {
         bilinearGroup: BilinearGroup,
     ): Boolean {
 
-        Log.i("validating", "start verify proof chain");
         val g = bilinearGroup.g
         val h = bilinearGroup.h
         val previousTargetToBytes = previousProof.target.toCanonicalRepresentation()
         val previousTargetAsPower = bilinearGroup.pairing.zr.newElementFromBytes(previousTargetToBytes)
         val expectedTarget = bilinearGroup.pair(g, h).powZn(previousTargetAsPower)
-        Log.i("comparing", expectedTarget.toString())
-        Log.i("comparing", currentProof.target.toString())
         if (expectedTarget != currentProof.target) {
             return false
         }
-
-
-        Log.i("validating", "equal targets");
 
         // Check if the relation with t and s is correct
         val previousTheta1 = previousProof.theta1
@@ -283,7 +260,6 @@ object Transaction {
         val expectedPairing = bilinearGroup.pair(g, h)
         val actualPairing = bilinearGroup.pair(theta, s)
 
-        Log.i("validating", "validateTSRelation: ${expectedPairing == actualPairing}");
         return expectedPairing == actualPairing
     }
 }

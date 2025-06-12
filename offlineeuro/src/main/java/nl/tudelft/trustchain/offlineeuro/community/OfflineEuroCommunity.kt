@@ -630,13 +630,11 @@ class OfflineEuroCommunity(
     }
 
     fun onFraudControlReplyPacket(packet: Packet) {
-        Log.i("FRAUD", "RECEIVED FRAUD CONTROL REPLY BACK");
         val (_, payload) = packet.getAuthPayload(FraudControlReplyPayload)
         onFraudControlReply(payload)
     }
 
     fun onFraudControlReply(payload: FraudControlReplyPayload) {
-        Log.i("FRAUD", "ADDING FRAUD CONTROL REPLY BACK");
         addMessage(FraudControlReplyMessage(
             payload.serialNumber,
             payload.isFraud,
