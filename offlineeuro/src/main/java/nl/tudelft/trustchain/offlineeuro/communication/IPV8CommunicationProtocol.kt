@@ -320,11 +320,14 @@ class IPV8CommunicationProtocol(
             val commitment = dcSdJwt?.let { ttp.generateAndStoreJwtCommitment(publicKey, it) }
             if (commitment != null) {
                 val bankAddress = addressBookManager.getAddressByName("Bank")
+                Log.i("COMMUNICATION", "TTP SENT COMMITMENT TO BANK")
                 community.sendTTPCommitmentToBank(commitment.toBytes(), bankAddress.peerPublicKey!!)
             }
             val signedPK = ttp.getSignedUserPublicKey(publicKey)
+            Log.i("COMMUNICATION", "TTP SENT REGISTRATION COMPLETE")
             community.sendRegistrationCompleteMessage("Completed", signedPK.toBytesWithLength(), message.peer)
         } catch (e: Exception) {
+            Log.i("COMMUNICATION", "TTP SENT REGISTRATION FAILED")
             community.sendRegistrationCompleteMessage("Failed", ByteArray(0), message.peer)
         }
     }
@@ -361,7 +364,7 @@ class IPV8CommunicationProtocol(
         }
         val bank = participant as Bank
         val commitment = bank.group.gElementFromBytes(message.commitmentBytes)
-
+        Log.i("COMMUNICATION", "BANK RECEIVED COMMITMENT FROM TTP")
         bank.storeUserCommitment(bank.publicKey, commitment)
     }
 
