@@ -1,7 +1,5 @@
 package nl.tudelft.trustchain.offlineeuro.communication
 
-import android.net.Uri
-import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.community.message.AddressMessage
@@ -19,8 +17,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsRequestMessage
@@ -71,6 +67,11 @@ class IPV8CommunicationProtocol(
     ) {
         val ttpAddress = addressBookManager.getAddressByName(nameTTP)
         community.registerAtTTP(userName, publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+        if (participant !is User) {
+            return
+        }
+        val user = participant as User
+        user.authStatus("Completed")
     }
 
     override fun getBlindSignatureRandomness(
@@ -135,14 +136,6 @@ class IPV8CommunicationProtocol(
         )
         val message = waitForMessage(CommunityMessageType.FraudControlReplyMessage) as FraudControlReplyMessage
         return message.result
-    }
-
-    override fun completeVerification() {
-        if (getParticipantRole() != Role.User)
-            return
-        val user = participant as User
-        val ttpAddress = addressBookManager.getAddressByName("TTP")
-        community.sendVerificationComplete(user.name, user.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
     }
 
     fun scopePeers() {
@@ -248,72 +241,15 @@ class IPV8CommunicationProtocol(
         community.sendTransactionResult(transactionResult, requestingPeer)
     }
 
-    /**
-     * Handles a TTP registration message from a peer by attempting to register the user.
-     *
-     * This method:
-     * - Casts the current participant to `TTP`
-     * - Reconstructs the user's public key from their byte representation
-     * - Calls [TTP.registerUser] to initiate registration and presentation
-     * - Sends a verification request to the user’s peer if successful
-     *
-     * @param message The registration message containing user public key bytes, name, and peer info.
-     */
     private fun handleRegistrationMessage(message: TTPRegistrationMessage) {
         if (participant !is TTP) {
             return
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        Log.i("Registering user", message.userName)
-        val response = ttp.registerUser(message.userName, publicKey)
-
-        if (response != null) {
-            Log.i("EUDI", "Am trimis presentation request")
-            community.sendRegistrationCompleteMessage("Completed", message.peer)
-            ttp.markRegistered(publicKey)
-//            community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
-        }
-    }
-
-    private fun handleVerificationRequestMessage(message: TTPVerificationRequestMessage) {
-        if (getParticipantRole() != Role.User) {
-            return
-        }
-        val user = participant as User
-        val deepLink = Uri.parse("eudi-openid4vp://").buildUpon()
-            .appendQueryParameter("client_id", message.clientId)
-            .appendQueryParameter("request_uri", message.requestUri)
-            .appendQueryParameter("request_uri_method", message.requestUriMethod)
-            .build()
-
-        user.authWith(deepLink)
-    }
-
-    /**
-     * Handles a TTP verification completion message from a peer by verifying the user's presentation.
-     *
-     * This method:
-     * - Casts the current participant to `TTP`
-     * - Reconstructs the user's public key from bytes
-     * - Verifies the user using [TTP.verifyUser]
-     * - Sends a registration complete message back to the peer indicating success or failure
-     *
-     * @param message The verification completion message containing user data and peer info.
-     */
-    private fun handleVerificationCompleteMessage(message: TTPVerificationCompleteMessage) {
-        if (participant !is TTP) {
-            return
-        }
-        val ttp = participant as TTP
-        val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        Log.i("verification", "Verifying user ${message.userName}")
-        if (ttp.verifyUser(message.userName, publicKey)) {
-            Log.i("verification good", "User: ${message.userName}")
-            community.sendRegistrationCompleteMessage("Completed", message.peer)
-        } else {
-            community.sendRegistrationCompleteMessage("Failed", message.peer)
-        }
+        ttp.registerUser(message.userName, publicKey)
+//        community.sendRegistrationCompleteMessage("Completed", message.peer)
+//        ttp.markRegistered(publicKey)
     }
 
     private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
@@ -342,8 +278,6 @@ class IPV8CommunicationProtocol(
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
-        Log.i("rolul", getParticipantRole().toString())
-        Log.i("hai ca am primit", message.toString())
         when (message) {
             is AddressMessage -> handleAddressMessage(message)
             is AddressRequestMessage -> handleAddressRequestMessage(message)
@@ -353,8 +287,6 @@ class IPV8CommunicationProtocol(
             is TransactionRandomizationElementsRequestMessage -> handleTransactionRandomizationElementsRequest(message)
             is TransactionMessage -> handleTransactionMessage(message)
             is TTPRegistrationMessage -> handleRegistrationMessage(message)
-            is TTPVerificationRequestMessage -> handleVerificationRequestMessage(message)
-            is TTPVerificationCompleteMessage -> handleVerificationCompleteMessage(message)
             is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
             else -> throw Exception("Unsupported message type")

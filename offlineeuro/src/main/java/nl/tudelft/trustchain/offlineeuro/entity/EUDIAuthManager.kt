@@ -18,7 +18,7 @@ class EUDIAuthManager(
 
     fun afterUserReturns() {
         status = "Waiting TTP verification"
-        communicationProtocol.completeVerification()
+//        communicationProtocol.completeVerification()
     }
 
     fun authStatusUpdate(newStatus: String) {

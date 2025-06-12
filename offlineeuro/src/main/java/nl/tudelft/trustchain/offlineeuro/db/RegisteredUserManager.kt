@@ -28,16 +28,12 @@ class RegisteredUserManager(
     private val registeredUserMapper = {
             id: Long,
             name: String,
-            publicKey: ByteArray,
-            transactionId: String,
-            isVerified: Long
+            publicKey: ByteArray
         ->
         RegisteredUser(
             id,
             name,
-            bilinearGroup.pairing.g1.newElementFromBytes(publicKey).immutable,
-            transactionId,
-            isVerified
+            bilinearGroup.pairing.g1.newElementFromBytes(publicKey).immutable
         )
     }
 
@@ -57,14 +53,11 @@ class RegisteredUserManager(
      */
     fun addRegisteredUser(
         userName: String,
-        publicKey: Element,
-        transactionId: String
+        publicKey: Element
     ): Boolean {
         queries.addUser(
             userName,
             publicKey.toBytes(),
-            transactionId,
-            0 // not verified
         )
         return true
     }
@@ -93,17 +86,6 @@ class RegisteredUserManager(
 
     fun getAllRegisteredUsers(): List<RegisteredUser> {
         return queries.getAllRegisteredUsers(registeredUserMapper).executeAsList()
-    }
-
-    /**
-     * Mark the user identified by the publicKey as verified.
-     *
-     * @param publicKey the public key of the [RegisteredUser]
-     * @return true iff verifying the user is successful.
-     */
-    fun verifyUserByPublicKey(publicKey: Element): Boolean {
-        queries.verifyUserByPublicKey(publicKey.toBytes())
-        return true;
     }
 
     /**

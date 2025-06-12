@@ -2,14 +2,12 @@ createRegisteredUserTable:
 CREATE TABLE IF NOT EXISTS RegisteredUsers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    publicKey BLOB UNIQUE NOT NULL,
-    transactionId TEXT NOT NULL,
-    isVerified INTEGER NOT NULL
+    publicKey BLOB UNIQUE NOT NULL
 );
 
 addUser:
-INSERT INTO RegisteredUsers(name, publicKey, transactionId, isVerified)
-VALUES (?, ?, ?, ?);
+INSERT INTO RegisteredUsers(name, publicKey)
+VALUES (?, ?);
 
 getUserById:
 SELECT *
@@ -26,26 +24,9 @@ SELECT *
 FROM RegisteredUsers
 WHERE name = ?;
 
-getUserByTransactionId:
-SELECT *
-FROM RegisteredUsers
-WHERE transactionId = ?;
-
-verifyUserByPublicKey:
-UPDATE RegisteredUsers
-SET isVerified = 1
-WHERE publicKey = ?;
-
-getRegisteredUserCount:
-SELECT COUNT(*)
-FROM RegisteredUsers
-WHERE isVerified = 1;
-
 getAllRegisteredUsers:
 SELECT *
-FROM RegisteredUsers
-WHERE isVerified = 1;
-
+FROM RegisteredUsers;
 
 clearAllRegisteredUsers:
 DELETE FROM RegisteredUsers;
