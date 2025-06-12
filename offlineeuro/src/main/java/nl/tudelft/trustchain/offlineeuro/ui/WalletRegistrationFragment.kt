@@ -64,13 +64,13 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 context,
                 null,
                 communicationProtocol,
-                runSetup = false
+                runSetup = false,
+                onDataChangeCallback
             )
 
             user.authManager = eudiAuthManager
 
             ParticipantHolder.user = user
-            user.addCallback(onDataChangeCallback)
             viewLifecycleOwner.lifecycleScope.launch {
                 while (true) {
                     refresh()

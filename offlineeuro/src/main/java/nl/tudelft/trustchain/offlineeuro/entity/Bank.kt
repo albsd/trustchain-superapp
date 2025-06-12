@@ -15,8 +15,9 @@ class Bank(
     communicationProtocol: ICommunicationProtocol,
     context: Context?,
     private val depositedEuroManager: DepositedEuroManager = DepositedEuroManager(context, group),
-    runSetup: Boolean = true
-) : Participant(communicationProtocol, name) {
+    runSetup: Boolean = true,
+    onDataChangeCallback: ((String?) -> Unit)? = null
+) : Participant(communicationProtocol, name, onDataChangeCallback) {
     private val depositedEuros: ArrayList<DigitalEuro> = arrayListOf()
     val withdrawUserRandomness: HashMap<Element, Element> = hashMapOf()
     val depositedEuroLogger: ArrayList<Pair<String, Boolean>> = arrayListOf()
@@ -50,7 +51,7 @@ class Bank(
                 ?: return BigInteger.ZERO
         remove(userPublicKey)
 
-        emitEvent("A token was withdrawn by $userPublicKey")
+        onDataChangeCallback?.invoke("A token was withdrawn by $userPublicKey")
         // <Subtract balance here>
         return Schnorr.signBlindedChallenge(k, challenge, privateKey)
     }
@@ -88,9 +89,7 @@ class Bank(
         if (duplicateEuros.isEmpty()) {
             depositedEuroLogger.add(Pair(euro.serialNumber, false))
             depositedEuroManager.insertDigitalEuro(euro)
-            onDataChangeCallbacks.forEach { callback ->
-                callback("An euro was deposited successfully by $publicKeyUser")
-            }
+            onDataChangeCallback?.invoke("An euro was deposited successfully by $publicKeyUser")
             return "Deposit was successful!"
         }
 
@@ -123,20 +122,20 @@ class Bank(
                     depositedEuroLogger.add(Pair(euro.serialNumber, true))
                     // <Increase user balance here and penalize the fraudulent User>
                     depositedEuroManager.insertDigitalEuro(euro)
-                    emitEvent(dsResult)
+                    onDataChangeCallback?.invoke(dsResult)
                     return dsResult
                 }
             } catch (e: Exception) {
                 depositedEuroLogger.add(Pair(euro.serialNumber, true))
                 depositedEuroManager.insertDigitalEuro(euro)
-                emitEvent("Noticed double spending but could not reach TTP")
+                onDataChangeCallback?.invoke("Noticed double spending but could not reach TTP")
                 return "Found double spending proofs, but TTP is unreachable"
             }
         }
         depositedEuroLogger.add(Pair(euro.serialNumber, true))
         // <Increase user balance here>
         depositedEuroManager.insertDigitalEuro(euro)
-        emitEvent("Noticed double spending but could not find a proof")
+        onDataChangeCallback?.invoke("Noticed double spending but could not find a proof")
         return "Detected double spending but could not blame anyone"
     }
 

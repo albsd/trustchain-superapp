@@ -42,9 +42,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             val addressBookManager = AddressBookManager(context, group)
             communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
             try {
-                user = User(userName, group, context, null, communicationProtocol,
-//                    onDataChangeCallback = onUserDataChangeCallBack
-                )
+                user = User(userName, group, context, null, communicationProtocol, onDataChangeCallback = onUserDataChangeCallBack)
                 communicationProtocol.scopePeers()
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()

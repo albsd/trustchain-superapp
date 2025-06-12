@@ -1,7 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
-import android.net.Uri
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -15,8 +14,9 @@ class User(
     context: Context?,
     private var walletManager: WalletManager? = null,
     communicationProtocol: ICommunicationProtocol,
-    runSetup: Boolean = true
-) : Participant(communicationProtocol, name) {
+    runSetup: Boolean = true,
+    onDataChangeCallback: ((String?) -> Unit)? = null
+) : Participant(communicationProtocol, name, onDataChangeCallback) {
     val wallet: Wallet
     var authManager: EUDIAuthManager? = null
 
@@ -43,7 +43,7 @@ class User(
                 ?: throw Exception("No euro to spend")
 
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails)
-        emitEvent(result)
+        onDataChangeCallback?.invoke(result)
         return result
     }
 
@@ -51,7 +51,7 @@ class User(
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs)
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)
-        emitEvent(result)
+        onDataChangeCallback?.invoke(result)
         return result
     }
 
@@ -71,16 +71,12 @@ class User(
         val signature = Schnorr.unblindSignature(blindedChallenge, blindSignature)
         val digitalEuro = DigitalEuro(serialNumber, initialTheta, signature, arrayListOf())
         wallet.addToWallet(digitalEuro, firstT)
-        emitEvent("Withdrawn ${digitalEuro.serialNumber} successfully!")
+        onDataChangeCallback?.invoke("Withdrawn ${digitalEuro.serialNumber} successfully!")
         return digitalEuro
     }
 
     fun getBalance(): Int {
         return walletManager!!.getWalletEntriesToSpend().count()
-    }
-
-    fun authWith(uri: Uri) {
-        authManager?.authWith(uri)
     }
 
     fun authStatus(status: String) {
@@ -98,10 +94,10 @@ class User(
 
         if (transactionResult.valid) {
             wallet.addToWallet(transactionDetails, usedRandomness)
-            emitEvent("Received an euro from $publicKeySender")
+            onDataChangeCallback?.invoke("Received an euro from $publicKeySender")
             return transactionResult.description
         }
-        emitEvent(transactionResult.description)
+        onDataChangeCallback?.invoke(transactionResult.description)
         return transactionResult.description
     }
 

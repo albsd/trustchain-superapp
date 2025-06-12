@@ -10,7 +10,7 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.RandomizationElements
 abstract class Participant(
     val communicationProtocol: ICommunicationProtocol,
     val name: String,
-    val onDataChangeCallbacks: MutableList<(String?) -> Unit> = mutableListOf<(String?) -> Unit>()
+    val onDataChangeCallback: ((String?) -> Unit)? = null
 ) {
     protected lateinit var privateKey: Element
     lateinit var publicKey: Element
@@ -65,16 +65,6 @@ abstract class Participant(
 //                randomizationElementMap.remove(key)
 //            }
 //        }
-    }
-
-    fun addCallback(callback : (String?) -> Unit): Unit {
-        this.onDataChangeCallbacks.add(callback)
-    }
-
-    fun emitEvent(event: String?) {
-        this.onDataChangeCallbacks.forEach { callback ->
-            callback(event)
-        }
     }
 
     abstract fun onReceivedTransaction(

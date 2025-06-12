@@ -170,7 +170,7 @@ class IPV8CommunicationProtocol(
         val publicKey = participant.group.gElementFromBytes(message.publicKeyBytes)
         val address = Address(message.name, message.role, publicKey, message.peerPublicKey)
         addressBookManager.insertAddress(address)
-        participant.emitEvent(null)
+        participant.onDataChangeCallback?.invoke(null)
     }
 
     private fun handleGetBilinearGroupAndCRSRequest(message: BilinearGroupCRSRequestMessage) {
