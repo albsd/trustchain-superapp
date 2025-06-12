@@ -19,7 +19,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMess
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
@@ -30,7 +29,6 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.BilinearGroupCRSPaylo
 import nl.tudelft.trustchain.offlineeuro.community.payload.BlindSignatureRequestPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.ByteArrayPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlRequestPayload
-import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationCompletePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionDetailsPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TransactionRandomizationElementsPayload
@@ -61,8 +59,6 @@ object MessageID {
 
     const val FRAUD_CONTROL_REQUEST = 22
     const val FRAUD_CONTROL_REPLY = 23
-
-    const val REGISTRATION_COMPLETE_TTP = 26
 }
 
 class OfflineEuroCommunity(
@@ -98,8 +94,6 @@ class OfflineEuroCommunity(
 
         messageHandlers[MessageID.FRAUD_CONTROL_REQUEST] = ::onFraudControlRequestPacket
         messageHandlers[MessageID.FRAUD_CONTROL_REPLY] = ::onFraudControlReplyPacket
-
-        messageHandlers[MessageID.REGISTRATION_COMPLETE_TTP] = ::onRegistrationComplete
     }
 
     fun getGroupDescriptionAndCRS() {
@@ -176,26 +170,9 @@ class OfflineEuroCommunity(
         send(ttpPeer, registerPacket)
     }
 
-    fun sendRegistrationCompleteMessage(message: String, peer: Peer) {
-        val registrationCompletePacket =
-            serializePacket(
-                MessageID.REGISTRATION_COMPLETE_TTP,
-                TTPRegistrationCompletePayload(
-                    message
-                )
-            )
-        send(peer, registrationCompletePacket)
-    }
-
     fun onGetRegisterAtTTPPacket(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationPayload)
         onGetRegisterAtTTP(peer, payload)
-    }
-
-    fun onRegistrationComplete(packet: Packet) {
-        val (peer, payload) = packet.getAuthPayload(TTPRegistrationCompletePayload)
-        val msg = TTPRegistrationCompleteMessage (payload.status)
-        addMessage(msg)
     }
 
     fun onGetRegisterAtTTP(
@@ -215,7 +192,6 @@ class OfflineEuroCommunity(
 
         addMessage(message)
     }
-
 
     fun getBlindSignatureRandomness(
         userPublicKeyBytes: ByteArray,

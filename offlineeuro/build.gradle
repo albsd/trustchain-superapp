@@ -54,7 +54,6 @@ dependencies {
     api project(':common')
 
     // AndroidX
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     api "androidx.constraintlayout:constraintlayout:$constraintlayout_version"
     api "androidx.recyclerview:recyclerview:$recyclerview_version"
     api "com.github.MattSkala:recyclerview-itemadapter:$recyclerview_adapter_version"

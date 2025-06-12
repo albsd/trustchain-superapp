@@ -10,7 +10,6 @@ enum class CommunityMessageType {
     GroupDescriptionCRSReplyMessage,
 
     TTPRegistrationMessage,
-    TTPRegistrationCompleteMessage,
 
     BlindSignatureRandomnessRequestMessage,
     BlindSignatureRandomnessReplyMessage,

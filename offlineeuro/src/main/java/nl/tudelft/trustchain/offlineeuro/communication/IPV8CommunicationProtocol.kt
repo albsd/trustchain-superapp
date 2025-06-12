@@ -15,7 +15,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMess
 import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionRandomizationElementsReplyMessage
@@ -245,19 +244,10 @@ class IPV8CommunicationProtocol(
         if (participant !is TTP) {
             return
         }
+
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
         ttp.registerUser(message.userName, publicKey)
-//        community.sendRegistrationCompleteMessage("Completed", message.peer)
-//        ttp.markRegistered(publicKey)
-    }
-
-    private fun handleRegistrationCompleteMessage(message: TTPRegistrationCompleteMessage) {
-        if (participant !is User) {
-            return
-        }
-        val user = participant as User
-        user.authStatus(message.status)
     }
 
     private fun handleAddressRequestMessage(message: AddressRequestMessage) {
@@ -287,7 +277,6 @@ class IPV8CommunicationProtocol(
             is TransactionRandomizationElementsRequestMessage -> handleTransactionRandomizationElementsRequest(message)
             is TransactionMessage -> handleTransactionMessage(message)
             is TTPRegistrationMessage -> handleRegistrationMessage(message)
-            is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
             else -> throw Exception("Unsupported message type")
         }
