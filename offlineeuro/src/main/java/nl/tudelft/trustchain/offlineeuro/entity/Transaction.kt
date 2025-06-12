@@ -43,7 +43,7 @@ data class TransactionDetailsBytes(
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(previousThetaSignatureBytes),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(theta1SignatureBytes)!!,
             group.gElementFromBytes(spenderPublicKeyBytes),
-            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(spenderSignedPublicKey)!!
+            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(spenderSignedPublicKey)
         )
     }
 }
