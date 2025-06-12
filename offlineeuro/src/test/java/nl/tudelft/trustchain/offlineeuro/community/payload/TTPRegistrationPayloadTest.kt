@@ -11,6 +11,7 @@ class TTPRegistrationPayloadTest {
 
         val serializedPayload = TTPRegistrationPayload(name, publicKeyBytes).serialize()
         val deserializedPayload = TTPRegistrationPayload.deserialize(serializedPayload).first
+
         val deserializedName = deserializedPayload.userName
         val deserializedPublicKey = deserializedPayload.publicKey
 

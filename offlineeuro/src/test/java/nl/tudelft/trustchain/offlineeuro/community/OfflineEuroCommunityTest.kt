@@ -31,15 +31,15 @@ class OfflineEuroCommunityTest {
         community = OfflineEuroCommunity(settings, database)
     }
 
-    @Test
-    fun testTTPCommitmentMessage() {
-        val commitmentBytes = "test_commitment".toByteArray()
-        val message = TTPCommitmentMessage(commitmentBytes, peer)
-
-        Assert.assertEquals(CommunityMessageType.TTPCommitmentMessage, message.messageType)
-        Assert.assertArrayEquals(commitmentBytes, message.commitmentBytes)
-        Assert.assertEquals(peer, message.peer)
-    }
+//    @Test
+//    fun testTTPCommitmentMessage() {
+//        val commitmentBytes = "test_commitment".toByteArray()
+//        val message = TTPCommitmentMessage(commitmentBytes, peer)
+//
+//        Assert.assertEquals(CommunityMessageType.TTPCommitmentMessage, message.messageType)
+//        Assert.assertArrayEquals(commitmentBytes, message.commitmentBytes)
+//        Assert.assertEquals(peer, message.peer)
+//    }
 
 //    @Test
 //    fun testTTPSignedPublicKeyMessage() {

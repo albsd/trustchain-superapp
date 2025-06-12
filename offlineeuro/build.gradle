@@ -55,6 +55,7 @@ dependencies {
     api project(':common')
 
     // AndroidX
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     api "androidx.constraintlayout:constraintlayout:$constraintlayout_version"
     api "androidx.recyclerview:recyclerview:$recyclerview_version"

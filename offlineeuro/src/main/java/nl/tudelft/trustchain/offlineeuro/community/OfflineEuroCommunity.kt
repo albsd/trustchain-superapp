@@ -35,6 +35,7 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.BlindSignatureRequest
 import nl.tudelft.trustchain.offlineeuro.community.payload.ByteArrayPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlReplyPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlRequestPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPCommitmentMessagePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationCompletePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPVerificationCompletePayload
@@ -696,18 +697,21 @@ class OfflineEuroCommunity(
 
     fun sendTTPCommitmentToBank(
         commitmentBytes: ByteArray,
-        bankPeer: Peer
+        bankPublicKeyBytes: ByteArray,
     ) {
-        val message = TTPCommitmentMessage(
-            commitmentBytes,
-            bankPeer
+        val bankPeer = getPeerByPublicKeyBytes(bankPublicKeyBytes) ?: throw Exception("bank not found")
+        val message = serializePacket(
+            MessageID.COMMITMENT_SENT_TTP,
+            TTPCommitmentMessagePayload(
+                commitmentBytes
+            )
         )
-        addMessage(message)
+        send(bankPeer, message)
     }
 
     fun onCommitmentSent(packet: Packet) {
-        val (peer, payload) = packet.getAuthPayload(ByteArrayPayload)
-        val message = TTPCommitmentMessage(payload.bytes, peer)
+        val (peer, payload) = packet.getAuthPayload(TTPCommitmentMessagePayload)
+        val message = TTPCommitmentMessage(payload.commitmentBytes)
         addMessage(message)
     }
 

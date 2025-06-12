@@ -319,7 +319,8 @@ class IPV8CommunicationProtocol(
             Log.i("verification good", "User: ${message.userName}")
             val commitment = dcSdJwt?.let { ttp.generateAndStoreJwtCommitment(publicKey, it) }
             if (commitment != null) {
-                community.sendTTPCommitmentToBank(commitment.toBytes(), message.peer)
+                val bankAddress = addressBookManager.getAddressByName("Bank")
+                community.sendTTPCommitmentToBank(commitment.toBytes(), bankAddress.peerPublicKey!!)
             }
             val signedPK = ttp.getSignedUserPublicKey(publicKey)
             community.sendRegistrationCompleteMessage("Completed", signedPK.toBytesWithLength(), message.peer)

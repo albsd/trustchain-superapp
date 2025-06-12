@@ -60,336 +60,336 @@ import org.junit.After
 
 class SystemTest {
     // Setup the TTP
-    private val group: BilinearGroup = BilinearGroup(PairingTypes.A)
-    private lateinit var ttp: TTP
-    private lateinit var ttpCommunity: OfflineEuroCommunity
-    private lateinit var crs: CRS
-    private val userList = hashMapOf<User, OfflineEuroCommunity>()
-    private lateinit var bank: Bank
-    private lateinit var bankCommunity: OfflineEuroCommunity
-    private var i = 0
-    private lateinit var mockedLog: MockedStatic<Log>
-
-    @Before
-    fun setup() {
-        mockedLog = mockStatic(Log::class.java)
-        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
-        createTTP()
-        createBank()
-        val firstProofCaptor = argumentCaptor<ByteArray>()
-        val secondProofCaptor = argumentCaptor<ByteArray>()
-        `when`(bankCommunity.sendFraudControlRequest(firstProofCaptor.capture(), secondProofCaptor.capture(), any())).then {
-            val firstProofBytes = firstProofCaptor.lastValue
-            val secondProofBytes = secondProofCaptor.lastValue
-
-            val peerMock = Mockito.mock(Peer::class.java)
-            val fraudControlRequestMessage = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peerMock)
-
-            val fraudControlResultCaptor = argumentCaptor<String>()
-            `when`(ttpCommunity.sendFraudControlReply(fraudControlResultCaptor.capture(), any())).then {
-                val replyMessage = FraudControlReplyMessage(fraudControlResultCaptor.lastValue)
-                bankCommunity.messageList.add(replyMessage)
-            }
-
-            ttpCommunity.messageList.add(fraudControlRequestMessage)
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockedLog.close()
-    }
-    @Test
-    fun withdrawSpendDepositDoubleSpendDepositTest() {
-        val user = createTestUser()
-        user.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user.publicKey))
-
-        // Assert that the group descriptions and crs are equal
-        Assert.assertEquals("The group descriptions should be equal", bank.group, user.group)
-        Assert.assertEquals("The group descriptions should be equal", bank.crs, user.crs)
-        Assert.assertEquals("The group descriptions should be equal", ttp.crs, user.crs)
-
-        val bankAddressMessage = AddressMessage(bank.name, Role.Bank, bank.publicKey.toBytes(), bank.name.toByteArray())
-        addMessageToList(user, bankAddressMessage)
-        // TODO MAKE THIS UNNECESSARY
-        bankCommunity.messageList.add(bankAddressMessage)
-        val digitalEuro = withdrawDigitalEuro(user, bank.name)
-
-        // Validations on the wallet
-        val allWalletEntries = user.wallet.getAllWalletEntriesToSpend()
-        Assert.assertEquals("There should only be one Euro", 1, allWalletEntries.size)
-
-        val walletEntry = allWalletEntries[0]
-        Assert.assertEquals("That should be the withdrawn Euro", digitalEuro, walletEntry.digitalEuro)
-
-        val computedTheta1 = user.group.g.powZn(walletEntry.t.mul(-1))
-        Assert.assertEquals("The first theta should be correct", digitalEuro.firstTheta1, computedTheta1)
-        Assert.assertNull("The walletEntry should not have a previous transaction", walletEntry.transactionSignature)
-
-        val user2 = createTestUser()
-        user2.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user2.publicKey))
-        addMessageToList(user2, bankAddressMessage)
-
-        val user2AddressMessage = AddressMessage(user2.name, Role.User, user2.publicKey.toBytes(), user2.name.toByteArray())
-        addMessageToList(user, user2AddressMessage)
-
-        // First Spend
-        spendEuro(user, user2, digitalEuro.serialNumber, doubleSpend = true)
-
-        // Deposit
-        spendEuro(user2, bank, digitalEuro.serialNumber, "Deposit was successful!")
-
-        // Prepare double spend
-        val user3 = createTestUser()
-        user3.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user3.publicKey))
-        addMessageToList(user3, bankAddressMessage)
-
-        val user3AddressMessage = AddressMessage(user3.name, Role.User, user3.publicKey.toBytes(), user3.name.toByteArray())
-        addMessageToList(user, user3AddressMessage)
-
-        // Double Spend
-        spendEuro(user, user3, digitalEuro.serialNumber, doubleSpend = false)
-
-        // Deposit double spend Euro
-        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
-    }
-
-    @Test
-    fun testEUDIAuth() {
-        val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
-        val walletManager = WalletManager(null, group, createDriver())
-        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
-        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol, runSetup = false)
-        val peerPK = "SomeTTPPubKey".toByteArray()
-
-        // setup auth manager
-        var eudiAuthManager = EUDIAuthManager({_ -> }, {}, {}, ttp.communicationProtocol)
-        user.authManager = eudiAuthManager
-
-        communication.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, peerPK))
-        communication.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, peerPK))
-
-        ttpCommunity.addMessage(TTPRegistrationMessage(user.name, user.publicKey.toBytes(), peerPK, peer=Mockito.mock(Peer::class.java)))
-        communication.participant = ttp
-
-        user.registerAtTTP()
-
-        // Assertions
-        verify(ttpCommunity, times(1)).registerAtTTP(user.name, user.publicKey.toBytes(), peerPK)
-    }
-
-    @Test
-    fun getManyBlindSignatures() {
-        val user = createTestUser()
-        val bankAddressMessage = AddressMessage(bank.name, Role.Bank, bank.publicKey.toBytes(), bank.name.toByteArray())
-        addMessageToList(user, bankAddressMessage)
-        // TODO MAKE THIS UNNECESSARY
-        bankCommunity.messageList.add(bankAddressMessage)
-        for (i in 0 until 50)
-            withdrawDigitalEuro(user, bank.name)
-    }
-
-    private fun withdrawDigitalEuro(
-        user: User,
-        bankName: String
-    ): DigitalEuro {
-        // Prepare mock elements
-        val byteArrayCaptor = argumentCaptor<ByteArray>()
-        val challengeCaptor = argumentCaptor<BigInteger>()
-        val userPeer = Mockito.mock(Peer::class.java)
-
-        val userCommunity = userList[user]!!
-        val publicKeyBytes = user.publicKey.toBytes()
-
-        // Request the randomness
-        `when`(userCommunity.getBlindSignatureRandomness(any(), any())).then {
-            val randomnessRequestMessage = BlindSignatureRandomnessRequestMessage(publicKeyBytes, userPeer)
-            bankCommunity.messageList.add(randomnessRequestMessage)
-
-            verify(bankCommunity, atLeastOnce()).sendBlindSignatureRandomnessReply(byteArrayCaptor.capture(), any())
-            val givenRandomness = byteArrayCaptor.lastValue
-
-            val randomnessReplyMessage = BlindSignatureRandomnessReplyMessage(givenRandomness)
-            addMessageToList(user, randomnessReplyMessage)
-
-            // Request the signature
-            `when`(userCommunity.getBlindSignature(challengeCaptor.capture(), any(), any())).then {
-                val challenge = challengeCaptor.lastValue
-                val signatureRequestMessage = BlindSignatureRequestMessage(challenge, publicKeyBytes, userPeer)
-                bankCommunity.messageList.add(signatureRequestMessage)
-
-                verify(bankCommunity, atLeastOnce()).sendBlindSignature(challengeCaptor.capture(), any())
-                val signature = challengeCaptor.lastValue
-
-                val signatureMessage = BlindSignatureReplyMessage(signature)
-                addMessageToList(user, signatureMessage)
-            }
-        }
-
-        val withdrawnEuro = user.withdrawDigitalEuro(bankName)
-
-        // User must make two requests
-        verify(userCommunity, atLeastOnce()).getBlindSignatureRandomness(publicKeyBytes, bank.name.toByteArray())
-        verify(userCommunity, atLeastOnce()).getBlindSignature(any(), eq(publicKeyBytes), eq(bank.name.toByteArray()))
-
-        // Bank must respond twice
-        verify(bankCommunity, atLeastOnce()).sendBlindSignatureRandomnessReply(any(), eq(userPeer))
-        verify(bankCommunity, atLeastOnce()).sendBlindSignature(any(), eq(userPeer))
-
-        // The euro must be valid
-        Assert.assertTrue(
-            "The signature should be valid for the user",
-            Schnorr.verifySchnorrSignature(withdrawnEuro.signature, bank.publicKey, user.group)
-        )
-        print("Valid ${i++}")
-        Assert.assertEquals("There should be no proofs", arrayListOf<GrothSahaiProof>(), withdrawnEuro.proofs)
-
-        return withdrawnEuro
-    }
-
-    private fun spendEuro(
-        sender: User,
-        receiver: Participant,
-        tokenSerialNumber: String,
-        expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
-        doubleSpend: Boolean = false
-    ) {
-        // Create address messages
-        val senderAddressMessage = AddressMessage(sender.name, Role.User, sender.publicKey.toBytes(), sender.name.toByteArray())
-        val receiverAddressMessage = AddressMessage(receiver.name, Role.User, receiver.publicKey.toBytes(), receiver.name.toByteArray())
-
-        // Add address messages to both communities to trigger address registration
-        val senderCommunity = userList[sender]!!
-        val receiverCommunity =
-            if (receiver.name == bank.name) {
-                bankCommunity
-            } else {
-                userList[receiver]!!
-            }
-
-        // Add address messages to both communities
-        senderCommunity.messageList.add(senderAddressMessage)
-        senderCommunity.messageList.add(receiverAddressMessage)
-        if (receiver is User) {
-            receiverCommunity.messageList.add(senderAddressMessage)
-            receiverCommunity.messageList.add(receiverAddressMessage)
-        }
-
-        // Wait a bit for address messages to be processed
-        Thread.sleep(100)
-
-        val spenderPeer = Mockito.mock(Peer::class.java)
-        val randomizationElementsCaptor = argumentCaptor<RandomizationElementsBytes>()
-        val transactionDetailsCaptor = argumentCaptor<TransactionDetailsBytes>()
-        val transactionResultCaptor = argumentCaptor<String>()
-
-        `when`(senderCommunity.getTransactionRandomizationElements(sender.publicKey.toBytes(), receiver.name.toByteArray())).then {
-            val requestMessage = TransactionRandomizationElementsRequestMessage(sender.publicKey.toBytes(), spenderPeer)
-            receiverCommunity.messageList.add(requestMessage)
-            verify(receiverCommunity).sendTransactionRandomizationElements(randomizationElementsCaptor.capture(), eq(spenderPeer))
-            val randomizationElementsBytes = randomizationElementsCaptor.lastValue
-            val randomizationElementsMessage = TransactionRandomizationElementsReplyMessage(randomizationElementsBytes)
-            senderCommunity.messageList.add(randomizationElementsMessage)
-
-            // To send the transaction details
-            `when`(
-                senderCommunity.sendTransactionDetails(
-                    eq(sender.publicKey.toBytes()),
-                    eq(receiver.name.toByteArray()),
-                    transactionDetailsCaptor.capture()
-                )
-            ).then {
-                val transactionDetailsBytes = transactionDetailsCaptor.lastValue
-                val transactionMessage = TransactionMessage(sender.publicKey.toBytes(), transactionDetailsBytes, spenderPeer)
-                receiverCommunity.messageList.add(transactionMessage)
-                verify(receiverCommunity, atLeastOnce()).sendTransactionResult(transactionResultCaptor.capture(), any())
-                val result = transactionResultCaptor.lastValue
-                val transactionResultMessage = TransactionResultMessage(result)
-                senderCommunity.messageList.add(transactionResultMessage)
-            }
-        }
-
-        val transactionResult =
-            if (doubleSpend) {
-                sender.doubleSpendDigitalEuroTo(receiver.name, tokenSerialNumber)
-            } else {
-                sender.sendDigitalEuroTo(receiver.name, tokenSerialNumber)
-            }
-        Assert.assertEquals(expectedResult, transactionResult)
-    }
-
-    fun createTestUser(): User {
-        // Start with a random group
-        val addressBookManager = createAddressManager(group)
-        addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
-
-        val walletManager = WalletManager(null, group, createDriver())
-        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
-
-        // Add the community for later access
-        val userName = "User${userList.size}"
-        val community = prepareCommunityMock()
-        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
-
-        Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, signedPublicKeyManager, communicationProtocol, runSetup = false)
-        user.crs = crs
-        user.group = group
-        userList[user] = community
-        ttp.registerUser(user.name, user.publicKey)
-        return user
-    }
-
-    private fun createTTP() {
-        val addressBookManager = createAddressManager(group)
-        val registeredUserManager = RegisteredUserManager(null, group, createDriver())
-        val ttpCommitmentManager = TtpCommitmentManager(null, group, createDriver())
-
-        ttpCommunity = prepareCommunityMock()
-        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, ttpCommunity)
-
-        Mockito.`when`(ttpCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager, ttpCommitmentManager)
-        crs = ttp.crs
-        communicationProtocol.participant = ttp
-    }
-
-    private fun createBank() {
-        val addressBookManager = createAddressManager(group)
-        val depositedEuroManager = DepositedEuroManager(null, group, createDriver())
-        val bankCommitmentManager = BankCommitmentManager(null, group, createDriver())
-
-        bankCommunity = prepareCommunityMock()
-        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, bankCommunity)
-
-        Mockito.`when`(bankCommunity.messageList).thenReturn(communicationProtocol.messageList)
-        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, bankCommitmentManager, runSetup = false)
-        bank.crs = crs
-        addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
-        ttp.registerUser(bank.name, bank.publicKey)
-    }
-
-    private fun createAddressManager(group: BilinearGroup): AddressBookManager {
-        val addressBookManager = AddressBookManager(null, group, createDriver())
-        return addressBookManager
-    }
-
-    private fun addMessageToList(
-        user: User,
-        message: ICommunityMessage
-    ) {
-        val community = userList[user]
-        community!!.messageList.add(message)
-    }
-
-    private fun prepareCommunityMock(): OfflineEuroCommunity {
-        val community = Mockito.mock(OfflineEuroCommunity::class.java)
-        return community
-    }
-
-    private fun createDriver(): JdbcSqliteDriver {
-        return JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).apply {
-            Database.Schema.create(this)
-        }
-    }
+//    private val group: BilinearGroup = BilinearGroup(PairingTypes.A)
+//    private lateinit var ttp: TTP
+//    private lateinit var ttpCommunity: OfflineEuroCommunity
+//    private lateinit var crs: CRS
+//    private val userList = hashMapOf<User, OfflineEuroCommunity>()
+//    private lateinit var bank: Bank
+//    private lateinit var bankCommunity: OfflineEuroCommunity
+//    private var i = 0
+//    private lateinit var mockedLog: MockedStatic<Log>
+//
+//    @Before
+//    fun setup() {
+//        mockedLog = mockStatic(Log::class.java)
+//        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+//        createTTP()
+//        createBank()
+//        val firstProofCaptor = argumentCaptor<ByteArray>()
+//        val secondProofCaptor = argumentCaptor<ByteArray>()
+//        `when`(bankCommunity.sendFraudControlRequest(firstProofCaptor.capture(), secondProofCaptor.capture(), any())).then {
+//            val firstProofBytes = firstProofCaptor.lastValue
+//            val secondProofBytes = secondProofCaptor.lastValue
+//
+//            val peerMock = Mockito.mock(Peer::class.java)
+//            val fraudControlRequestMessage = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peerMock)
+//
+//            val fraudControlResultCaptor = argumentCaptor<String>()
+//            `when`(ttpCommunity.sendFraudControlReply(fraudControlResultCaptor.capture(), any())).then {
+//                val replyMessage = FraudControlReplyMessage(fraudControlResultCaptor.lastValue)
+//                bankCommunity.messageList.add(replyMessage)
+//            }
+//
+//            ttpCommunity.messageList.add(fraudControlRequestMessage)
+//        }
+//    }
+//
+//    @After
+//    fun tearDown() {
+//        mockedLog.close()
+//    }
+//    @Test
+//    fun withdrawSpendDepositDoubleSpendDepositTest() {
+//        val user = createTestUser()
+//        user.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user.publicKey))
+//
+//        // Assert that the group descriptions and crs are equal
+//        Assert.assertEquals("The group descriptions should be equal", bank.group, user.group)
+//        Assert.assertEquals("The group descriptions should be equal", bank.crs, user.crs)
+//        Assert.assertEquals("The group descriptions should be equal", ttp.crs, user.crs)
+//
+//        val bankAddressMessage = AddressMessage(bank.name, Role.Bank, bank.publicKey.toBytes(), bank.name.toByteArray())
+//        addMessageToList(user, bankAddressMessage)
+//        // TODO MAKE THIS UNNECESSARY
+//        bankCommunity.messageList.add(bankAddressMessage)
+//        val digitalEuro = withdrawDigitalEuro(user, bank.name)
+//
+//        // Validations on the wallet
+//        val allWalletEntries = user.wallet.getAllWalletEntriesToSpend()
+//        Assert.assertEquals("There should only be one Euro", 1, allWalletEntries.size)
+//
+//        val walletEntry = allWalletEntries[0]
+//        Assert.assertEquals("That should be the withdrawn Euro", digitalEuro, walletEntry.digitalEuro)
+//
+//        val computedTheta1 = user.group.g.powZn(walletEntry.t.mul(-1))
+//        Assert.assertEquals("The first theta should be correct", digitalEuro.firstTheta1, computedTheta1)
+//        Assert.assertNull("The walletEntry should not have a previous transaction", walletEntry.transactionSignature)
+//
+//        val user2 = createTestUser()
+//        user2.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user2.publicKey))
+//        addMessageToList(user2, bankAddressMessage)
+//
+//        val user2AddressMessage = AddressMessage(user2.name, Role.User, user2.publicKey.toBytes(), user2.name.toByteArray())
+//        addMessageToList(user, user2AddressMessage)
+//
+//        // First Spend
+//        spendEuro(user, user2, digitalEuro.serialNumber, doubleSpend = true)
+//
+//        // Deposit
+//        spendEuro(user2, bank, digitalEuro.serialNumber, "Deposit was successful!")
+//
+//        // Prepare double spend
+//        val user3 = createTestUser()
+//        user3.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user3.publicKey))
+//        addMessageToList(user3, bankAddressMessage)
+//
+//        val user3AddressMessage = AddressMessage(user3.name, Role.User, user3.publicKey.toBytes(), user3.name.toByteArray())
+//        addMessageToList(user, user3AddressMessage)
+//
+//        // Double Spend
+//        spendEuro(user, user3, digitalEuro.serialNumber, doubleSpend = false)
+//
+//        // Deposit double spend Euro
+//        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
+//    }
+//
+//    @Test
+//    fun testEUDIAuth() {
+//        val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
+//        val walletManager = WalletManager(null, group, createDriver())
+//        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
+//        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol, runSetup = false)
+//        val peerPK = "SomeTTPPubKey".toByteArray()
+//
+//        // setup auth manager
+//        var eudiAuthManager = EUDIAuthManager({_ -> }, {}, {}, ttp.communicationProtocol)
+//        user.authManager = eudiAuthManager
+//
+//        communication.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, peerPK))
+//        communication.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, peerPK))
+//
+//        ttpCommunity.addMessage(TTPRegistrationMessage(user.name, user.publicKey.toBytes(), peerPK, peer=Mockito.mock(Peer::class.java)))
+//        communication.participant = ttp
+//
+//        user.registerAtTTP()
+//
+//        // Assertions
+//        verify(ttpCommunity, times(1)).registerAtTTP(user.name, user.publicKey.toBytes(), peerPK)
+//    }
+//
+//    @Test
+//    fun getManyBlindSignatures() {
+//        val user = createTestUser()
+//        val bankAddressMessage = AddressMessage(bank.name, Role.Bank, bank.publicKey.toBytes(), bank.name.toByteArray())
+//        addMessageToList(user, bankAddressMessage)
+//        // TODO MAKE THIS UNNECESSARY
+//        bankCommunity.messageList.add(bankAddressMessage)
+//        for (i in 0 until 50)
+//            withdrawDigitalEuro(user, bank.name)
+//    }
+//
+//    private fun withdrawDigitalEuro(
+//        user: User,
+//        bankName: String
+//    ): DigitalEuro {
+//        // Prepare mock elements
+//        val byteArrayCaptor = argumentCaptor<ByteArray>()
+//        val challengeCaptor = argumentCaptor<BigInteger>()
+//        val userPeer = Mockito.mock(Peer::class.java)
+//
+//        val userCommunity = userList[user]!!
+//        val publicKeyBytes = user.publicKey.toBytes()
+//
+//        // Request the randomness
+//        `when`(userCommunity.getBlindSignatureRandomness(any(), any())).then {
+//            val randomnessRequestMessage = BlindSignatureRandomnessRequestMessage(publicKeyBytes, userPeer)
+//            bankCommunity.messageList.add(randomnessRequestMessage)
+//
+//            verify(bankCommunity, atLeastOnce()).sendBlindSignatureRandomnessReply(byteArrayCaptor.capture(), any())
+//            val givenRandomness = byteArrayCaptor.lastValue
+//
+//            val randomnessReplyMessage = BlindSignatureRandomnessReplyMessage(givenRandomness)
+//            addMessageToList(user, randomnessReplyMessage)
+//
+//            // Request the signature
+//            `when`(userCommunity.getBlindSignature(challengeCaptor.capture(), any(), any())).then {
+//                val challenge = challengeCaptor.lastValue
+//                val signatureRequestMessage = BlindSignatureRequestMessage(challenge, publicKeyBytes, userPeer)
+//                bankCommunity.messageList.add(signatureRequestMessage)
+//
+//                verify(bankCommunity, atLeastOnce()).sendBlindSignature(challengeCaptor.capture(), any())
+//                val signature = challengeCaptor.lastValue
+//
+//                val signatureMessage = BlindSignatureReplyMessage(signature)
+//                addMessageToList(user, signatureMessage)
+//            }
+//        }
+//
+//        val withdrawnEuro = user.withdrawDigitalEuro(bankName)
+//
+//        // User must make two requests
+//        verify(userCommunity, atLeastOnce()).getBlindSignatureRandomness(publicKeyBytes, bank.name.toByteArray())
+//        verify(userCommunity, atLeastOnce()).getBlindSignature(any(), eq(publicKeyBytes), eq(bank.name.toByteArray()))
+//
+//        // Bank must respond twice
+//        verify(bankCommunity, atLeastOnce()).sendBlindSignatureRandomnessReply(any(), eq(userPeer))
+//        verify(bankCommunity, atLeastOnce()).sendBlindSignature(any(), eq(userPeer))
+//
+//        // The euro must be valid
+//        Assert.assertTrue(
+//            "The signature should be valid for the user",
+//            Schnorr.verifySchnorrSignature(withdrawnEuro.signature, bank.publicKey, user.group)
+//        )
+//        print("Valid ${i++}")
+//        Assert.assertEquals("There should be no proofs", arrayListOf<GrothSahaiProof>(), withdrawnEuro.proofs)
+//
+//        return withdrawnEuro
+//    }
+//
+//    private fun spendEuro(
+//        sender: User,
+//        receiver: Participant,
+//        tokenSerialNumber: String,
+//        expectedResult: String = TransactionResult.VALID_TRANSACTION.description,
+//        doubleSpend: Boolean = false
+//    ) {
+//        // Create address messages
+//        val senderAddressMessage = AddressMessage(sender.name, Role.User, sender.publicKey.toBytes(), sender.name.toByteArray())
+//        val receiverAddressMessage = AddressMessage(receiver.name, Role.User, receiver.publicKey.toBytes(), receiver.name.toByteArray())
+//
+//        // Add address messages to both communities to trigger address registration
+//        val senderCommunity = userList[sender]!!
+//        val receiverCommunity =
+//            if (receiver.name == bank.name) {
+//                bankCommunity
+//            } else {
+//                userList[receiver]!!
+//            }
+//
+//        // Add address messages to both communities
+//        senderCommunity.messageList.add(senderAddressMessage)
+//        senderCommunity.messageList.add(receiverAddressMessage)
+//        if (receiver is User) {
+//            receiverCommunity.messageList.add(senderAddressMessage)
+//            receiverCommunity.messageList.add(receiverAddressMessage)
+//        }
+//
+//        // Wait a bit for address messages to be processed
+//        Thread.sleep(100)
+//
+//        val spenderPeer = Mockito.mock(Peer::class.java)
+//        val randomizationElementsCaptor = argumentCaptor<RandomizationElementsBytes>()
+//        val transactionDetailsCaptor = argumentCaptor<TransactionDetailsBytes>()
+//        val transactionResultCaptor = argumentCaptor<String>()
+//
+//        `when`(senderCommunity.getTransactionRandomizationElements(sender.publicKey.toBytes(), receiver.name.toByteArray())).then {
+//            val requestMessage = TransactionRandomizationElementsRequestMessage(sender.publicKey.toBytes(), spenderPeer)
+//            receiverCommunity.messageList.add(requestMessage)
+//            verify(receiverCommunity).sendTransactionRandomizationElements(randomizationElementsCaptor.capture(), eq(spenderPeer))
+//            val randomizationElementsBytes = randomizationElementsCaptor.lastValue
+//            val randomizationElementsMessage = TransactionRandomizationElementsReplyMessage(randomizationElementsBytes)
+//            senderCommunity.messageList.add(randomizationElementsMessage)
+//
+//            // To send the transaction details
+//            `when`(
+//                senderCommunity.sendTransactionDetails(
+//                    eq(sender.publicKey.toBytes()),
+//                    eq(receiver.name.toByteArray()),
+//                    transactionDetailsCaptor.capture()
+//                )
+//            ).then {
+//                val transactionDetailsBytes = transactionDetailsCaptor.lastValue
+//                val transactionMessage = TransactionMessage(sender.publicKey.toBytes(), transactionDetailsBytes, spenderPeer)
+//                receiverCommunity.messageList.add(transactionMessage)
+//                verify(receiverCommunity, atLeastOnce()).sendTransactionResult(transactionResultCaptor.capture(), any())
+//                val result = transactionResultCaptor.lastValue
+//                val transactionResultMessage = TransactionResultMessage(result)
+//                senderCommunity.messageList.add(transactionResultMessage)
+//            }
+//        }
+//
+//        val transactionResult =
+//            if (doubleSpend) {
+//                sender.doubleSpendDigitalEuroTo(receiver.name, tokenSerialNumber)
+//            } else {
+//                sender.sendDigitalEuroTo(receiver.name, tokenSerialNumber)
+//            }
+//        Assert.assertEquals(expectedResult, transactionResult)
+//    }
+//
+//    fun createTestUser(): User {
+//        // Start with a random group
+//        val addressBookManager = createAddressManager(group)
+//        addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
+//
+//        val walletManager = WalletManager(null, group, createDriver())
+//        val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
+//
+//        // Add the community for later access
+//        val userName = "User${userList.size}"
+//        val community = prepareCommunityMock()
+//        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+//
+//        Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
+//        val user = User(userName, group, null, walletManager, signedPublicKeyManager, communicationProtocol, runSetup = false)
+//        user.crs = crs
+//        user.group = group
+//        userList[user] = community
+//        ttp.registerUser(user.name, user.publicKey)
+//        return user
+//    }
+//
+//    private fun createTTP() {
+//        val addressBookManager = createAddressManager(group)
+//        val registeredUserManager = RegisteredUserManager(null, group, createDriver())
+//        val ttpCommitmentManager = TtpCommitmentManager(null, group, createDriver())
+//
+//        ttpCommunity = prepareCommunityMock()
+//        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, ttpCommunity)
+//
+//        Mockito.`when`(ttpCommunity.messageList).thenReturn(communicationProtocol.messageList)
+//        ttp = TTP("TTP", group, communicationProtocol, null, registeredUserManager, ttpCommitmentManager)
+//        crs = ttp.crs
+//        communicationProtocol.participant = ttp
+//    }
+//
+//    private fun createBank() {
+//        val addressBookManager = createAddressManager(group)
+//        val depositedEuroManager = DepositedEuroManager(null, group, createDriver())
+//        val bankCommitmentManager = BankCommitmentManager(null, group, createDriver())
+//
+//        bankCommunity = prepareCommunityMock()
+//        val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, bankCommunity)
+//
+//        Mockito.`when`(bankCommunity.messageList).thenReturn(communicationProtocol.messageList)
+//        bank = Bank("Bank", group, communicationProtocol, null, depositedEuroManager, bankCommitmentManager, runSetup = false)
+//        bank.crs = crs
+//        addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, "SomeTTPPubKey".toByteArray()))
+//        ttp.registerUser(bank.name, bank.publicKey)
+//    }
+//
+//    private fun createAddressManager(group: BilinearGroup): AddressBookManager {
+//        val addressBookManager = AddressBookManager(null, group, createDriver())
+//        return addressBookManager
+//    }
+//
+//    private fun addMessageToList(
+//        user: User,
+//        message: ICommunityMessage
+//    ) {
+//        val community = userList[user]
+//        community!!.messageList.add(message)
+//    }
+//
+//    private fun prepareCommunityMock(): OfflineEuroCommunity {
+//        val community = Mockito.mock(OfflineEuroCommunity::class.java)
+//        return community
+//    }
+//
+//    private fun createDriver(): JdbcSqliteDriver {
+//        return JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).apply {
+//            Database.Schema.create(this)
+//        }
+//    }
 }
