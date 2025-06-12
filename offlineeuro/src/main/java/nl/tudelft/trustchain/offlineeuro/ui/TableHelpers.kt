@@ -486,6 +486,8 @@ object TableHelpers {
                     onSendClick(1, tokenList.digitalEuro.serialNumber)
                 }
             }
+            sendButton.isEnabled = true
+            sendButton.isClickable = true
 
             val doubleSpendButton = Button(context).apply {
                 text = "DOUBLE SPEND"
@@ -499,6 +501,8 @@ object TableHelpers {
                     onDoubleSpendClick(1, tokenList.digitalEuro.serialNumber)
                 }
             }
+            doubleSpendButton.isEnabled = true
+            doubleSpendButton.isClickable = true
 
             val depositButton = Button(context).apply {
                 text = "DEPOSIT"
@@ -512,6 +516,8 @@ object TableHelpers {
                     onDepositClick(1, tokenList.digitalEuro.serialNumber)
                 }
             }
+            depositButton.isEnabled = true
+            depositButton.isClickable = true
 
             buttonRow.addView(sendButton)
             buttonRow.addView(doubleSpendButton)
