@@ -123,7 +123,7 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
         if (this::user.isInitialized) {
             requireActivity().runOnUiThread {
                 val context = requireContext()
-                val view = requireView()
+                val view = this.view ?: return@runOnUiThread
 
                 if (message != null) {
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
