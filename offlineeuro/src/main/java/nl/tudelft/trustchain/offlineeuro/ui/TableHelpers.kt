@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.content.Context
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.widget.Button
@@ -233,6 +234,7 @@ object TableHelpers {
         secondaryButton.text = "Double Spend"
         secondaryButton.setOnClickListener {
             try {
+                Log.i("double spent", "7")
                 val result = user.doubleSpendDigitalEuroTo(userName)
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()

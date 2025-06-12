@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.cryptography
 
 import android.content.Context
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import it.unisa.dia.gas.jpbc.Pairing
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory
@@ -129,10 +130,12 @@ class BilinearGroup(
     }
 
     fun gElementFromBytes(bytes: ByteArray): Element {
+        Log.i("double spent", "12")
         return pairing.g1.newElementFromBytes(bytes).immutable
     }
 
     fun hElementFromBytes(bytes: ByteArray): Element {
+        Log.i("double spent", "11")
         return pairing.g2.newElementFromBytes(bytes).immutable
     }
 

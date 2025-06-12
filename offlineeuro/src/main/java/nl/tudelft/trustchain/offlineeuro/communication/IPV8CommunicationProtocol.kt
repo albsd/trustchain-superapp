@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.communication
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.community.message.AddressMessage
@@ -98,8 +99,11 @@ class IPV8CommunicationProtocol(
         group: BilinearGroup
     ): RandomizationElements {
         val peerAddress = addressBookManager.getAddressByName(userNameReceiver)
+        Log.i("double spent", "8")
         community.getTransactionRandomizationElements(participant.publicKey.toBytes(), peerAddress.peerPublicKey!!)
+        Log.i("double spent", "9")
         val message = waitForMessage(CommunityMessageType.TransactionRandomnessReplyMessage) as TransactionRandomizationElementsReplyMessage
+        Log.i("double spent", "10")
         return message.randomizationElementsBytes.toRandomizationElements(group)
     }
 
@@ -108,12 +112,15 @@ class IPV8CommunicationProtocol(
         transactionDetails: TransactionDetails
     ): String {
         val peerAddress = addressBookManager.getAddressByName(userNameReceiver)
+        Log.i("double spent", "17")
         community.sendTransactionDetails(
             participant.publicKey.toBytes(),
             peerAddress.peerPublicKey!!,
             transactionDetails.toTransactionDetailsBytes()
         )
+        Log.i("double spent", "18")
         val message = waitForMessage(CommunityMessageType.TransactionResultMessage) as TransactionResultMessage
+        Log.i("double spent", "19")
         return message.result
     }
 

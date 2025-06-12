@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.cryptography
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.libraries.EBMap
 import nl.tudelft.trustchain.offlineeuro.libraries.GrothSahaiSerializer
@@ -155,6 +156,10 @@ data class RandomizationElementsBytes(
     val uTInv: ByteArray
 ) {
     fun toRandomizationElements(group: BilinearGroup): RandomizationElements {
+        Log.i("double spent", group2T.size.toString())
+        Log.i("double spent", vT.size.toString())
+        Log.i("double spent", group1TInv.size.toString())
+        Log.i("double spent", uTInv.size.toString())
         return RandomizationElements(
             group.hElementFromBytes(group2T),
             group.hElementFromBytes(vT),

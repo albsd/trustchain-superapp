@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -36,20 +37,30 @@ class User(
     }
 
     fun sendDigitalEuroTo(nameReceiver: String): String {
+        Log.i("double spent", "1")
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
+        Log.i("double spent", "2")
         val transactionDetails =
             wallet.spendEuro(randomizationElements, group, crs)
                 ?: throw Exception("No euro to spend")
-
+        Log.i("double spent", "3")
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails)
+
+        Log.i("double spent", "4")
         onDataChangeCallback?.invoke(result)
+
+        Log.i("double spent", "5")
         return result
     }
 
     fun doubleSpendDigitalEuroTo(nameReceiver: String): String {
+        Log.i("double spent", "6")
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
+        Log.i("double spent", "14")
         val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs)
+        Log.i("double spent", "15")
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)
+        Log.i("double spent", "16")
         onDataChangeCallback?.invoke(result)
         return result
     }
