@@ -127,23 +127,19 @@ class IPV8CommunicationProtocol(
     }
 
     override fun requestFraudControl(
+        serialNumber: String,
         firstProof: GrothSahaiProof,
         secondProof: GrothSahaiProof,
         nameTTP: String
-    ): FraudControlResult {
+    ) {
         val ttpAddress = addressBookManager.getAddressByName(nameTTP)
         Log.i("FRAUD", "sending message to ttp");
         community.sendFraudControlRequest(
+            serialNumber,
             GrothSahaiSerializer.serializeGrothSahaiProof(firstProof),
             GrothSahaiSerializer.serializeGrothSahaiProof(secondProof),
             ttpAddress.peerPublicKey!!
         )
-        val message = waitForMessage(CommunityMessageType.FraudControlReplyMessage) as FraudControlReplyMessage
-        Log.i("FRAUD", "received from ttp");
-        val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
-        val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
-
-        return FraudControlResult(message.isFraud, message.jwtPlaintext, nonce, message.userName, userPK)
     }
 
     override fun completeVerification() {
@@ -359,11 +355,24 @@ class IPV8CommunicationProtocol(
         }
         Log.i("FRAUD", "received fraud control request")
         val ttp = participant as TTP
+        val serialNumber = message.serialNumber
         val firstProof = GrothSahaiSerializer.deserializeProofBytes(message.firstProofBytes, participant.group)
         val secondProof = GrothSahaiSerializer.deserializeProofBytes(message.secondProofBytes, participant.group)
         val result = ttp.getUserFromProofs(firstProof, secondProof)
         Log.i("FRAUD", "sending fraud control response")
-        community.sendFraudControlReply(result, message.requestingPeer)
+        community.sendFraudControlReply(serialNumber, result, message.requestingPeer)
+    }
+
+    private fun handleFraudControlReplyMessage(message: FraudControlReplyMessage) {
+        if (getParticipantRole() != Role.Bank) {
+            return
+        }
+        val bank = participant as Bank
+        Log.i("FRAUD", "received from ttp");
+        val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
+        val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
+
+        bank.depositFraudResult(message.serialNumber, FraudControlResult(message.isFraud, message.jwtPlaintext, nonce, message.userName, userPK))
     }
 
     private fun handleTTPCommitmentMessage(message: TTPCommitmentMessage) {
@@ -390,6 +399,7 @@ class IPV8CommunicationProtocol(
             is TTPVerificationCompleteMessage -> handleVerificationCompleteMessage(message)
             is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
+            is FraudControlReplyMessage -> handleFraudControlReplyMessage(message)
             is TTPCommitmentMessage -> handleTTPCommitmentMessage(message)
             else -> throw Exception("Unsupported message type")
         }

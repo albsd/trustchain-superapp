@@ -139,35 +139,27 @@ class Bank(
             Log.i("FRAUD", "detected some fraud");
             val euroProof = euro.proofs[maxFirstDifferenceIndex]
             val depositProof = doubleSpendEuro.proofs[maxFirstDifferenceIndex]
-            try {
-                Log.i("FRAUD", "sending fraud control request");
-                val dsResult =
-                    communicationProtocol.requestFraudControl(euroProof, depositProof, "TTP")
-
-                if (dsResult.isFraud) {
-                    // Double spender detected
-                    depositedEuroLogger.add(Pair(euro.serialNumber, dsResult))
-                    // <Increase user balance here and penalize the fraudulent User>
-                    depositedEuroManager.insertDigitalEuro(euro)
-                    emitEvent(dsResult.toString())
-
-                    // PK and name of the double spender can be extracted from dsResult
-                    revealDoubleSpender(dsResult)
-                    return dsResult.toString()
-                }
-            } catch (e: Exception) {
-                depositedEuroLogger.add(Pair(euro.serialNumber, FraudControlResult(true, null, null, null, null)))
-                depositedEuroManager.insertDigitalEuro(euro)
-                emitEvent("Noticed double spending but could not reach TTP")
-                return "Found double spending proofs, but TTP is unreachable"
-            }
+            communicationProtocol.requestFraudControl(euro.serialNumber, euroProof, depositProof, "TTP")
+            depositedEuroManager.insertDigitalEuro(euro)
+            emitEvent("Double spending detected on deposit!")
+            return "Deposit was successful!"
         }
 
         depositedEuroLogger.add(Pair(euro.serialNumber, FraudControlResult(true, null, null, null, null)))
-        // <Increase user balance here>
         depositedEuroManager.insertDigitalEuro(euro)
         emitEvent("Noticed double spending but could not find a proof")
         return "Detected double spending but could not blame anyone"
+    }
+
+    fun depositFraudResult(serialNumber: String, dsResult: FraudControlResult) {
+        if (dsResult.isFraud) {
+            // Double spender detected
+            depositedEuroLogger.add(Pair(serialNumber, dsResult))
+            emitEvent(dsResult.toString())
+
+            // PK and name of the double spender can be extracted from dsResult
+            revealDoubleSpender(dsResult)
+        }
     }
 
     private fun revealDoubleSpender(fraud: FraudControlResult) {

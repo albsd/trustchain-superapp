@@ -8,6 +8,7 @@ import nl.tudelft.ipv8.messaging.deserializeVarLen
 import nl.tudelft.ipv8.messaging.serializeVarLen
 
 class FraudControlReplyPayload(
+    val serialNumber: String,
     val isFraud : Boolean,
     val jwtPlaintext: String?,
     val noncePlaintext : ByteArray?,
@@ -18,6 +19,7 @@ class FraudControlReplyPayload(
     override fun serialize(): ByteArray {
         val json = Json
         val jsonObject = buildJsonObject {
+            put("serialNumber", serialNumber)
             put("isFraud", isFraud)
             put("jwt", jwtPlaintext?.let { JsonPrimitive(it) } ?: JsonNull)
             put("nonce", noncePlaintext?.let { JsonPrimitive(Base64.getEncoder().encodeToString(it)) } ?: JsonNull)
@@ -42,6 +44,8 @@ class FraudControlReplyPayload(
             val jsonString = jsonBuffer.decodeToString()
             val jsonObject = json.decodeFromString(JsonObject.serializer(), jsonString)
 
+            val serialNumber = jsonObject["serialNumber"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing serialNumber")
             val isFraud = jsonObject["isFraud"]?.jsonPrimitive?.boolean
                 ?: throw IllegalArgumentException("Missing isFraud")
             val jwt = jsonObject["jwt"]?.jsonPrimitive?.contentOrNull
@@ -52,6 +56,7 @@ class FraudControlReplyPayload(
             }
             return Pair(
                 FraudControlReplyPayload(
+                    serialNumber,
                     isFraud,
                     jwt,
                     nonce,

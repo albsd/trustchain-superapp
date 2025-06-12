@@ -574,6 +574,7 @@ class OfflineEuroCommunity(
     }
 
     fun sendFraudControlRequest(
+        serialNumber: String,
         firstProofBytes: ByteArray,
         secondProofBytes: ByteArray,
         ttpPublicKeyBytes: ByteArray
@@ -586,6 +587,7 @@ class OfflineEuroCommunity(
             serializePacket(
                 MessageID.FRAUD_CONTROL_REQUEST,
                 FraudControlRequestPayload(
+                    serialNumber,
                     firstProofBytes,
                     secondProofBytes
                 )
@@ -603,11 +605,12 @@ class OfflineEuroCommunity(
         peer: Peer,
         payload: FraudControlRequestPayload
     ) {
-        val message = FraudControlRequestMessage(payload.firstProofBytes, payload.secondProofBytes, peer)
+        val message = FraudControlRequestMessage(payload.serialNumber, payload.firstProofBytes, payload.secondProofBytes, peer)
         addMessage(message)
     }
 
     fun sendFraudControlReply(
+        serialNumber: String,
         result: FraudControlResult,
         peer: Peer
     ) {
@@ -615,6 +618,7 @@ class OfflineEuroCommunity(
             serializePacket(
                 MessageID.FRAUD_CONTROL_REPLY,
                 FraudControlReplyPayload(
+                    serialNumber,
                     result.isFraud,
                     result.jwt,
                     result.nonce?.toBytes(),
@@ -634,6 +638,7 @@ class OfflineEuroCommunity(
     fun onFraudControlReply(payload: FraudControlReplyPayload) {
         Log.i("FRAUD", "ADDING FRAUD CONTROL REPLY BACK");
         addMessage(FraudControlReplyMessage(
+            payload.serialNumber,
             payload.isFraud,
             payload.jwtPlaintext,
             payload.noncePlaintext,

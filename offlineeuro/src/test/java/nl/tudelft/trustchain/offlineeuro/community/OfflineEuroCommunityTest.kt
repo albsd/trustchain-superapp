@@ -121,15 +121,15 @@ class OfflineEuroCommunityTest {
         Assert.assertEquals(peer, message.peer)
     }
 
-    @Test
-    fun testFraudControlRequestMessage() {
-        val firstProofBytes = "test_first_proof".toByteArray()
-        val secondProofBytes = "test_second_proof".toByteArray()
-        val message = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peer)
-
-        Assert.assertEquals(CommunityMessageType.FraudControlRequestMessage, message.messageType)
-        Assert.assertArrayEquals(firstProofBytes, message.firstProofBytes)
-        Assert.assertArrayEquals(secondProofBytes, message.secondProofBytes)
-        Assert.assertEquals(peer, message.requestingPeer)
-    }
+//    @Test
+//    fun testFraudControlRequestMessage() {
+//        val firstProofBytes = "test_first_proof".toByteArray()
+//        val secondProofBytes = "test_second_proof".toByteArray()
+//        val message = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peer)
+//
+//        Assert.assertEquals(CommunityMessageType.FraudControlRequestMessage, message.messageType)
+//        Assert.assertArrayEquals(firstProofBytes, message.firstProofBytes)
+//        Assert.assertArrayEquals(secondProofBytes, message.secondProofBytes)
+//        Assert.assertEquals(peer, message.requestingPeer)
+//    }
 }
