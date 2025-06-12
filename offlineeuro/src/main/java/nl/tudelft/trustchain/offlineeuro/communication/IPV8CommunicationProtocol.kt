@@ -270,7 +270,9 @@ class IPV8CommunicationProtocol(
 
         if (response != null) {
             Log.i("EUDI", "Am trimis presentation request")
-            community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
+            community.sendRegistrationCompleteMessage("Completed", message.peer)
+            ttp.markRegistered(publicKey)
+//            community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
         }
     }
 

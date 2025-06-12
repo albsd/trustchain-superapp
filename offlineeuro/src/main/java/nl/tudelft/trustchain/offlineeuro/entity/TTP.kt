@@ -191,6 +191,10 @@ class TTP(
         }
     }
 
+    fun markRegistered(publicKey: Element) {
+        registeredUserManager.verifyUserByPublicKey(publicKey)
+    }
+
     fun getRegisteredUsers(): List<RegisteredUser> {
         return registeredUserManager.getAllRegisteredUsers()
     }
