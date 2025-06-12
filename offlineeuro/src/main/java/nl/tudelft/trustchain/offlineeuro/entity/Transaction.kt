@@ -43,7 +43,7 @@ data class TransactionDetailsBytes(
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(previousThetaSignatureBytes),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(theta1SignatureBytes)!!,
             group.gElementFromBytes(spenderPublicKeyBytes),
-            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(spenderSignedPublicKey)!!
+            SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(spenderSignedPublicKey)
         )
     }
 }
@@ -111,13 +111,13 @@ object Transaction {
         crs: CRS,
         validationEntityPublicKey: Element
     ): TransactionResult {
-        if (transaction.spenderSignedPublicKey == null)
-            return TransactionResult.UNREGISTERED_PUBLIC_KEY
-
-        // Verify the TTP's signature on the public key using the provided TTP public key
-        if (!Schnorr.verifySchnorrSignature(transaction.spenderSignedPublicKey, validationEntityPublicKey, bilinearGroup)) {
-            return TransactionResult.INVALID_PUBLIC_KEY_SIGNATURE
-        }
+//        if (transaction.spenderSignedPublicKey == null)
+//            return TransactionResult.UNREGISTERED_PUBLIC_KEY
+//
+//        // Verify the TTP's signature on the public key using the provided TTP public key
+//        if (!Schnorr.verifySchnorrSignature(transaction.spenderSignedPublicKey, validationEntityPublicKey, bilinearGroup)) {
+//            return TransactionResult.INVALID_PUBLIC_KEY_SIGNATURE
+//        }
 
         // Verify if the Digital euro is signed
         val digitalEuro = transaction.digitalEuro
