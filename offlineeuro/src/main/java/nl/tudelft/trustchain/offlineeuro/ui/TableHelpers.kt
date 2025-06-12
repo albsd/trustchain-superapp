@@ -2,6 +2,7 @@ package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.content.Context
 import android.media.Image
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.widget.Button
@@ -218,27 +219,19 @@ object TableHelpers {
         return tableRow
     }
 
-    // Function to add addresses to the tables in the User Fragment
     fun addAddressesToTable(
         table: LinearLayout,
         addresses: List<Address>,
         user: User,
-        context: Context,
-        onSendClick: (String) -> Unit       // Listener for clicking the send euro button
+        context: Context
     ) {
         removeAllButFirstRow(table)
-
         for (address in addresses) {
-            val row = when (address.type) {
-                Role.Bank -> addressToBankAccountsTableRow(address, context, user)                     // Add row to Bank Accounts table
-                Role.User -> addressToPeerTransactionsTableRow(address, context, user, onSendClick)   // Add row to Peer Transactions table
-                Role.TTP -> addressToTTPTableRow(address, context, user)                             // Add row to TTP table
-            }
-            table.addView(row)
+            table.addView(addressToTableRow(address, context, user))
         }
     }
 
-    private fun addressToBankAccountsTableRow(
+    private fun addressToTableRow(
         address: Address,
         context: Context,
         user: User
@@ -246,92 +239,101 @@ object TableHelpers {
         val tableRow = LinearLayout(context)
         tableRow.layoutParams = rowParams(context)
         tableRow.orientation = LinearLayout.HORIZONTAL
+
         val styledContext = ContextThemeWrapper(context, R.style.TableCell)
-
-        val bankNameField =
+        val nameField =
             TextView(styledContext).apply {
-                layoutParams = layoutParams(0.25f)
+                layoutParams = layoutParams(0.5f)
                 text = address.name
-                gravity = Gravity.CENTER
             }
 
-        val balanceField =
+        val roleField =
             TextView(styledContext).apply {
-                layoutParams = layoutParams(0.25f)
-                text = user.getBalance().toString()      //todo: replace with the correct balance for each specific bank the user is registered at
-                gravity = Gravity.CENTER
+                layoutParams = layoutParams(0.2f)
+                text = address.type.toString()
+            }
+        tableRow.addView(nameField)
+        tableRow.addView(roleField)
+
+        if (address.type == Role.TTP) {
+            val actionField =
+                TextView(context).apply {
+                    layoutParams = layoutParams(0.8f)
+                }
+            tableRow.addView(actionField)
+        } else {
+            val buttonWrapper = LinearLayout(context)
+            val params = layoutParams(0.8f)
+            buttonWrapper.gravity = Gravity.CENTER_HORIZONTAL
+            buttonWrapper.orientation = LinearLayout.HORIZONTAL
+            buttonWrapper.layoutParams = params
+
+            val mainActionButton = Button(context)
+            val secondaryButton = Button(context)
+
+            applyButtonStyling(mainActionButton, context)
+            applyButtonStyling(secondaryButton, context)
+
+            buttonWrapper.addView(mainActionButton)
+            buttonWrapper.addView(secondaryButton)
+
+            when (address.type) {
+                Role.Bank -> {
+                    setBankActionButtons(mainActionButton, secondaryButton, address.name, user, context)
+                }
+                Role.User -> {
+                    setUserActionButtons(mainActionButton, secondaryButton, address.name, user, context)
+                }
+
+                else -> {}
             }
 
-        val depositContainer = LinearLayout(context).apply {
-            layoutParams = layoutParams(0.25f)
-            gravity = Gravity.CENTER
-            orientation = LinearLayout.HORIZONTAL
+            tableRow.addView(buttonWrapper)
         }
-
-        val depositButton = ImageButton(context)
-        applyButtonStylingToBankAction(depositButton, context)
-        depositContainer.addView(depositButton)
-
-        val withdrawContainer = LinearLayout(context).apply {
-            layoutParams = layoutParams(0.25f)
-            gravity = Gravity.CENTER
-            orientation = LinearLayout.HORIZONTAL
-        }
-
-        val withdrawButton = ImageButton(context)
-        applyButtonStylingToBankAction(withdrawButton, context)
-        withdrawContainer.addView(withdrawButton)
-
-        setBankActionButtons(depositButton, withdrawButton, address.name, user, context)
-
-        tableRow.addView(bankNameField)
-        tableRow.addView(balanceField)
-        tableRow.addView(depositContainer)
-        tableRow.addView(withdrawContainer)
 
         return tableRow
     }
 
-    private fun addressToPeerTransactionsTableRow(
-        address: Address,
-        context: Context,
-        user: User,
-        onSendClick: (String) -> Unit
-    ): LinearLayout {
-        val tableRow = LinearLayout(context)
-        tableRow.layoutParams = rowParams(context)
-        tableRow.orientation = LinearLayout.HORIZONTAL
-        val styledContext = ContextThemeWrapper(context, R.style.TableCell)
-
-        val peerNameField =
-            TextView(styledContext).apply {
-                layoutParams = layoutParams(0.30f)
-                text = address.name
-                gravity = Gravity.CENTER
-            }
-
-        val sendEuroButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
-            layoutParams = layoutParams(0.30f)
-            text = "Send"
-        }
-
-        val doubleSpendButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
-            layoutParams = layoutParams(0.35f).apply {
-                (this as? LinearLayout.LayoutParams)?.marginStart = 2.dp(context)
-            }
-            text = "Double Spend"
-        }
-
-        applyButtonStylingToAction(sendEuroButton, context)
-        applyButtonStylingToAction(doubleSpendButton, context)
-        setUserActionButtons(sendEuroButton, doubleSpendButton, address.name, user, context, onSendClick)
-
-        tableRow.addView(peerNameField)
-        tableRow.addView(sendEuroButton)
-        tableRow.addView(doubleSpendButton)
-
-        return tableRow
-    }
+//    private fun addressToPeerTransactionsTableRow(
+//        address: Address,
+//        context: Context,
+//        user: User,
+//        onSendClick: (String) -> Unit
+//    ): LinearLayout {
+//        val tableRow = LinearLayout(context)
+//        tableRow.layoutParams = rowParams(context)
+//        tableRow.orientation = LinearLayout.HORIZONTAL
+//        val styledContext = ContextThemeWrapper(context, R.style.TableCell)
+//
+//        val peerNameField =
+//            TextView(styledContext).apply {
+//                layoutParams = layoutParams(0.30f)
+//                text = address.name
+//                gravity = Gravity.CENTER
+//            }
+//
+//        val sendEuroButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
+//            layoutParams = layoutParams(0.30f)
+//            text = "Send"
+//        }
+//
+//        val doubleSpendButton = Button(ContextThemeWrapper(context, R.style.Button)).apply {
+//            layoutParams = layoutParams(0.35f).apply {
+//                (this as? LinearLayout.LayoutParams)?.marginStart = 2.dp(context)
+//            }
+//            text = "Double Spend"
+//        }
+//
+//        applyButtonStylingToAction(sendEuroButton, context)
+//        applyButtonStylingToAction(doubleSpendButton, context)
+//        setUserActionButtons(sendEuroButton, doubleSpendButton, address.name, user, context, onSendClick)
+//
+//        tableRow.addView(peerNameField)
+//        tableRow.addView(sendEuroButton)
+//        tableRow.addView(doubleSpendButton)
+//
+//        return tableRow
+//    }
 
     private fun addressToTTPTableRow(
         address: Address,
@@ -363,16 +365,25 @@ object TableHelpers {
         return tableRow
     }
 
-    private fun setBankActionButtons(
-        depositButton: ImageButton,
-        withdrawButton: ImageButton,
+    fun setBankActionButtons(
+        mainButton: Button,
+        secondaryButton: Button,
         bankName: String,
         user: User,
         context: Context
     ) {
-        depositButton.setBackgroundResource(R.drawable.ic_baseline_outgoing_24)
-        depositButton.contentDescription = "deposit"
-        depositButton.setOnClickListener {
+        mainButton.text = "Withdraw"
+        mainButton.setOnClickListener {
+            try {
+                val digitalEuro = user.withdrawDigitalEuro(bankName)
+                Toast.makeText(context, "Successfully withdrawn ${digitalEuro.serialNumber}", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        secondaryButton.text = "Deposit"
+        secondaryButton.setOnClickListener {
             try {
                 val depositResult = user.sendDigitalEuroTo(bankName)
 
@@ -381,33 +392,28 @@ object TableHelpers {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
-        withdrawButton.setBackgroundResource(R.drawable.ic_baseline_incoming_24)
-        withdrawButton.contentDescription = "withdraw"
-        withdrawButton.setOnClickListener {
+    fun setUserActionButtons(
+        mainButton: Button,
+        secondaryButton: Button,
+        userName: String,
+        user: User,
+        context: Context
+    ) {
+        mainButton.text = "Send Euro"
+        mainButton.setOnClickListener {
             try {
-                val digitalEuro = user.withdrawDigitalEuro(bankName)
-                Toast.makeText(context, "Successfully withdrawn ${digitalEuro.serialNumber}", Toast.LENGTH_SHORT).show()
+                val result = user.sendDigitalEuroTo(userName)
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
-    }
 
-    private fun setUserActionButtons(
-        sendEuroButton: Button,
-        doubleSpendButton: Button,
-        userName: String,
-        user: User,
-        context: Context,
-        onSendClick: (String) -> Unit
-    ) {
-        sendEuroButton.setOnClickListener {
-            onSendClick(userName)
-        }
-
-        doubleSpendButton.setOnClickListener {
+        secondaryButton.text = "Double Spend"
+        secondaryButton.setOnClickListener {
             try {
+                Log.i("double spent", "7")
                 val result = user.doubleSpendDigitalEuroTo(userName)
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
@@ -480,5 +486,16 @@ object TableHelpers {
 
     private fun Int.dp(context: Context): Int {
         return (this * context.resources.displayMetrics.density).toInt()
+    }
+    fun applyButtonStyling(
+        button: Button,
+        context: Context
+    ) {
+        button.setTextColor(context.getColor(R.color.white))
+        button.background.setTint(context.resources.getColor(R.color.colorPrimary))
+        button.isAllCaps = false
+        button.textSize = 12f
+        button.setPadding(14, 14, 14, 14)
+        button.letterSpacing = 0f
     }
 }

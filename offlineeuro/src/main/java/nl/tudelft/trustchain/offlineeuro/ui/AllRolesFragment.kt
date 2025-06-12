@@ -38,10 +38,10 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
         val addressBookManager = AddressBookManager(context, group)
         iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
         ttp = TTP("TTP", group, iPV8CommunicationProtocol, context)
-        ttp.addCallback(onTTPDataChangeCallback)
+//        ttp.addCallback(onTTPDataChangeCallback)
 
         bank = Bank("Bank", group, iPV8CommunicationProtocol, context, runSetup = false)
-        bank.addCallback(onBankDataChangeCallBack)
+//        bank.addCallback(onBankDataChangeCallBack)
         user =
             User(
                 "TestUser",
@@ -51,7 +51,7 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
                 iPV8CommunicationProtocol,
                 runSetup = false,
             )
-        user.addCallback(onUserDataChangeCallBack)
+//        user.addCallback(onUserDataChangeCallBack)
 
         bank.group = ttp.group
         bank.crs = ttp.crs
@@ -73,101 +73,101 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
         iPV8CommunicationProtocol.addressBookManager.insertAddress(Address(user.name, Role.User, user.publicKey, null))
         iPV8CommunicationProtocol.addressBookManager.insertAddress(Address(ttp.name, Role.TTP, ttp.publicKey, null))
 
-        prepareButtons(view)
-        setTTPAsChild()
-        updateUserList(view)
+//        prepareButtons(view)
+//        setTTPAsChild()
+//        updateUserList(view)
     }
 
-    private fun prepareButtons(view: View) {
-        val ttpButton = view.findViewById<Button>(R.id.all_roles_set_ttp)
-        val bankButton = view.findViewById<Button>(R.id.all_roles_set_bank)
-        val userButton = view.findViewById<Button>(R.id.all_roles_set_user)
-        ttpButton.setOnClickListener {
-            ttpButton.isEnabled = false
-            bankButton.isEnabled = true
-            userButton.isEnabled = true
-            setTTPAsChild()
-        }
-
-        bankButton.setOnClickListener {
-            ttpButton.isEnabled = true
-            bankButton.isEnabled = false
-            userButton.isEnabled = true
-            setBankAsChild()
-        }
-
-        userButton.setOnClickListener {
-            ttpButton.isEnabled = true
-            bankButton.isEnabled = true
-            userButton.isEnabled = false
-            setUserAsChild()
-        }
-    }
-
-    private fun setTTPAsChild() {
-        iPV8CommunicationProtocol.participant = ttp
-        val ttpFragment = TTPHomeFragment()
-        childFragmentManager.beginTransaction()
-            .replace(R.id.parent_fragment_container, ttpFragment)
-            .commit()
-        Toast.makeText(context, "Switched to TTP", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun setBankAsChild() {
-        iPV8CommunicationProtocol.participant = bank
-        val bankFragment = BankHomeFragment()
-        childFragmentManager.beginTransaction()
-            .replace(R.id.parent_fragment_container, bankFragment)
-            .commit()
-        Toast.makeText(context, "Switched to Bank", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun setUserAsChild() {
-        iPV8CommunicationProtocol.participant = user
-        userFragment = UserHomeFragment()
-        childFragmentManager.beginTransaction()
-            .replace(R.id.parent_fragment_container, userFragment)
-            .commit()
-        Toast.makeText(context, "Switched to User", Toast.LENGTH_SHORT).show()
-    }
-
-    private val onBankDataChangeCallBack: (String?) -> Unit = { message ->
-        if (this::bank.isInitialized) {
-            requireActivity().runOnUiThread {
-                CallbackLibrary.bankCallback(requireContext(), message, requireView(), bank)
-            }
-        }
-    }
-
-    private val onUserDataChangeCallBack: (String?) -> Unit = { message ->
-        if (this::user.isInitialized) {
-            requireActivity().runOnUiThread {
-                val context = requireContext()
-                CallbackLibrary.userCallback(
-                    context,
-                    message,
-                    requireView(),
-                    iPV8CommunicationProtocol,
-                    user,
-                    userFragment.updateUI
-                )
-            }
-        }
-    }
-
-    private val onTTPDataChangeCallback: (String?) -> Unit = { message ->
-        if (this::ttp.isInitialized) {
-            requireActivity().runOnUiThread {
-                val context = requireContext()
-                CallbackLibrary.ttpCallback(context, message, requireView(), ttp)
-            }
-        }
-    }
-
-    private fun updateUserList(view: View) {
-        val table = view.findViewById<LinearLayout>(R.id.ttp_home_registered_user_list) ?: return
-        val users = ttp.getRegisteredUsers()
-        TableHelpers.removeAllButFirstRow(table)
-        TableHelpers.addRegisteredUsersToTable(table, users)
-    }
+//    private fun prepareButtons(view: View) {
+//        val ttpButton = view.findViewById<Button>(R.id.all_roles_set_ttp)
+//        val bankButton = view.findViewById<Button>(R.id.all_roles_set_bank)
+//        val userButton = view.findViewById<Button>(R.id.all_roles_set_user)
+//        ttpButton.setOnClickListener {
+//            ttpButton.isEnabled = false
+//            bankButton.isEnabled = true
+//            userButton.isEnabled = true
+//            setTTPAsChild()
+//        }
+//
+//        bankButton.setOnClickListener {
+//            ttpButton.isEnabled = true
+//            bankButton.isEnabled = false
+//            userButton.isEnabled = true
+//            setBankAsChild()
+//        }
+//
+//        userButton.setOnClickListener {
+//            ttpButton.isEnabled = true
+//            bankButton.isEnabled = true
+//            userButton.isEnabled = false
+//            setUserAsChild()
+//        }
+//    }
+//
+//    private fun setTTPAsChild() {
+//        iPV8CommunicationProtocol.participant = ttp
+//        val ttpFragment = TTPHomeFragment()
+//        childFragmentManager.beginTransaction()
+//            .replace(R.id.parent_fragment_container, ttpFragment)
+//            .commit()
+//        Toast.makeText(context, "Switched to TTP", Toast.LENGTH_SHORT).show()
+//    }
+//
+//    private fun setBankAsChild() {
+//        iPV8CommunicationProtocol.participant = bank
+//        val bankFragment = BankHomeFragment()
+//        childFragmentManager.beginTransaction()
+//            .replace(R.id.parent_fragment_container, bankFragment)
+//            .commit()
+//        Toast.makeText(context, "Switched to Bank", Toast.LENGTH_SHORT).show()
+//    }
+//
+//    private fun setUserAsChild() {
+//        iPV8CommunicationProtocol.participant = user
+//        userFragment = UserHomeFragment()
+//        childFragmentManager.beginTransaction()
+//            .replace(R.id.parent_fragment_container, userFragment)
+//            .commit()
+//        Toast.makeText(context, "Switched to User", Toast.LENGTH_SHORT).show()
+//    }
+//
+//    private val onBankDataChangeCallBack: (String?) -> Unit = { message ->
+//        if (this::bank.isInitialized) {
+//            requireActivity().runOnUiThread {
+//                CallbackLibrary.bankCallback(requireContext(), message, requireView(), bank)
+//            }
+//        }
+//    }
+//
+//    private val onUserDataChangeCallBack: (String?) -> Unit = { message ->
+//        if (this::user.isInitialized) {
+//            requireActivity().runOnUiThread {
+//                val context = requireContext()
+//                CallbackLibrary.userCallback(
+//                    context,
+//                    message,
+//                    requireView(),
+//                    iPV8CommunicationProtocol,
+//                    user,
+//                    userFragment.updateUI
+//                )
+//            }
+//        }
+//    }
+//
+//    private val onTTPDataChangeCallback: (String?) -> Unit = { message ->
+//        if (this::ttp.isInitialized) {
+//            requireActivity().runOnUiThread {
+//                val context = requireContext()
+//                CallbackLibrary.ttpCallback(context, message, requireView(), ttp)
+//            }
+//        }
+//    }
+//
+//    private fun updateUserList(view: View) {
+//        val table = view.findViewById<LinearLayout>(R.id.ttp_home_registered_user_list) ?: return
+//        val users = ttp.getRegisteredUsers()
+//        TableHelpers.removeAllButFirstRow(table)
+//        TableHelpers.addRegisteredUsersToTable(table, users)
+//    }
 }

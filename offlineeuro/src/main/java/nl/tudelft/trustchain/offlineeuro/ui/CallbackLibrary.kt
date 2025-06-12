@@ -3,6 +3,7 @@ package nl.tudelft.trustchain.offlineeuro.ui
 import android.content.Context
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
@@ -54,13 +55,16 @@ object CallbackLibrary {
         message: String?,
         view: View,
         communicationProtocol: IPV8CommunicationProtocol,
-        user: User,
-        updateAllAddresses: (View) -> Unit
+        user: User
     ) {
         if (message != null) {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
-        updateAllAddresses(view)
+        val balanceField = view.findViewById<TextView>(R.id.user_home_balance)
+        balanceField.text = user.getBalance().toString()
+        val addressList = view.findViewById<LinearLayout>(R.id.user_home_addresslist)
+        val addresses = communicationProtocol.addressBookManager.getAllAddresses()
+        TableHelpers.addAddressesToTable(addressList, addresses, user, context)
         view.refreshDrawableState()
     }
 }
