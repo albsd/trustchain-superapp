@@ -1,6 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
@@ -135,9 +136,11 @@ class Bank(
         }
 
         if (doubleSpendEuro != null) {
+            Log.i("FRAUD", "detected some fraud");
             val euroProof = euro.proofs[maxFirstDifferenceIndex]
             val depositProof = doubleSpendEuro.proofs[maxFirstDifferenceIndex]
             try {
+                Log.i("FRAUD", "sending fraud control request");
                 val dsResult =
                     communicationProtocol.requestFraudControl(euroProof, depositProof, "TTP")
 

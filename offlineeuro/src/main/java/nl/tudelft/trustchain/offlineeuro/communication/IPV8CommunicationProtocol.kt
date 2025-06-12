@@ -132,12 +132,14 @@ class IPV8CommunicationProtocol(
         nameTTP: String
     ): FraudControlResult {
         val ttpAddress = addressBookManager.getAddressByName(nameTTP)
+        Log.i("FRAUD", "sending message to ttp");
         community.sendFraudControlRequest(
             GrothSahaiSerializer.serializeGrothSahaiProof(firstProof),
             GrothSahaiSerializer.serializeGrothSahaiProof(secondProof),
             ttpAddress.peerPublicKey!!
         )
         val message = waitForMessage(CommunityMessageType.FraudControlReplyMessage) as FraudControlReplyMessage
+        Log.i("FRAUD", "received from ttp");
         val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
         val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
 
@@ -355,10 +357,12 @@ class IPV8CommunicationProtocol(
         if (getParticipantRole() != Role.TTP) {
             return
         }
+        Log.i("FRAUD", "received fraud control request")
         val ttp = participant as TTP
         val firstProof = GrothSahaiSerializer.deserializeProofBytes(message.firstProofBytes, participant.group)
         val secondProof = GrothSahaiSerializer.deserializeProofBytes(message.secondProofBytes, participant.group)
         val result = ttp.getUserFromProofs(firstProof, secondProof)
+        Log.i("FRAUD", "sending fraud control response")
         community.sendFraudControlReply(result, message.requestingPeer)
     }
 
