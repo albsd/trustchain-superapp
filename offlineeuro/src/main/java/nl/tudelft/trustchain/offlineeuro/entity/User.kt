@@ -106,7 +106,7 @@ class User(
     }
 
     // only for demo purposes
-    fun generateNewEuroDemo() {
+    fun generateNewEuroDemo(amount: Int = 5) {
         val walletEntry = wallet.generateWalletEntry()
         walletManager!!.insertWalletEntry(walletEntry)
     }
