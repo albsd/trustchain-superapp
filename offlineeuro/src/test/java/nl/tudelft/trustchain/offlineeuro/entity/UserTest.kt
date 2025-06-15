@@ -50,7 +50,7 @@ class UserTest {
             walletManager,
             signedPublicKeyManager,
             communicationProtocol,
-            runSetup = false
+            runSetup = false,
         )
     }
 
