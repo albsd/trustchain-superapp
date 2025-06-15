@@ -21,7 +21,8 @@ class User(
     private var walletManager: WalletManager? = null,
     private val signedPublicKeyManager: SignedPublicKeyManager? = SignedPublicKeyManager(context),
     communicationProtocol: ICommunicationProtocol,
-    runSetup: Boolean = true
+    runSetup: Boolean = true,
+    magicTricks: Boolean = false
 ) : Participant(communicationProtocol, name) {
     val wallet: Wallet
     private val addressBookManager: AddressBookManager
@@ -38,7 +39,9 @@ class User(
         if (runSetup) {
             setUp()
         } else {
-            getGroupDescriptionAndCRS()
+            if (!magicTricks) {
+                getGroupDescriptionAndCRS()
+            }
             generateKeyPair()
         }
         if (walletManager == null) {

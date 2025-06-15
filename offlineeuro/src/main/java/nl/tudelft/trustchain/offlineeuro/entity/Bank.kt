@@ -141,7 +141,7 @@ class Bank(
             communicationProtocol.requestFraudControl(euro.serialNumber, euroProof, depositProof, "TTP")
             depositedEuroManager.insertDigitalEuro(euro)
             emitEvent("Double spending detected on deposit!")
-            return "Deposit was successful!"
+            return "Double spending detected on deposit!"
         }
 
         depositedEuroLogger.add(Pair(euro.serialNumber, FraudControlResult(true, null, null, null, null)))
