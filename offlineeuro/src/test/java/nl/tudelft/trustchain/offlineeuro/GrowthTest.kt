@@ -194,7 +194,8 @@ class GrowthTest {
             walletManager,
             signedPublicKeyManager,
             communicationProtocol,
-            runSetup = false
+            runSetup = false,
+            magicTricks = true
         )
         user.crs = crs
         userList[user] = community

@@ -346,7 +346,8 @@ class TransactionTest {
             walletManager,
             signedPublicKeyManager,
             communicationProtocol,
-            runSetup = false
+            runSetup = false,
+            magicTricks = true
         )
         user.crs = ttp.crs
         userList[user] = community
