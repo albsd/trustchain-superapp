@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
+import android.util.Log
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
 import nl.tudelft.trustchain.offlineeuro.community.message.AddressMessage
@@ -9,11 +10,12 @@ import nl.tudelft.trustchain.offlineeuro.cryptography.CRSGenerator
 import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
 import nl.tudelft.trustchain.offlineeuro.cryptography.Schnorr
 import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
-import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
 import nl.tudelft.trustchain.offlineeuro.db.BankCommitmentManager
+import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 import org.junit.Assert
 import org.junit.Test
+import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -21,11 +23,6 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigInteger
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mockStatic
-import android.util.Log
-import org.junit.Before
-import org.junit.After
 
 class BankTest {
     private val ttpGroup = BilinearGroup(PairingTypes.FromFile)
@@ -34,16 +31,6 @@ class BankTest {
     private val bankCommitmentManager = Mockito.mock(BankCommitmentManager::class.java)
     private lateinit var mockedLog: MockedStatic<Log>
 
-    @Before
-    fun setUp() {
-        mockedLog = mockStatic(Log::class.java)
-        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
-    }
-
-    @After
-    fun tearDown() {
-        mockedLog.close()
-    }
 
     @Test
     fun initWithSetupTest() {

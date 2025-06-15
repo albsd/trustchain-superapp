@@ -58,16 +58,10 @@ class TransactionTest {
 
     @Before
     fun setup() {
-        mockedLog = mockStatic(Log::class.java)
-        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
         createTTP()
         createBank()
     }
 
-    @After
-    fun tearDown() {
-        mockedLog.close()
-    }
     @Test
     fun transactionWithoutProofsTest() {
         val user = createTestUser()
