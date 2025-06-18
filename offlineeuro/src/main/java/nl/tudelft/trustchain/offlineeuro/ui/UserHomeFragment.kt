@@ -159,7 +159,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     // in case we decidce to allow tokens to be more than 1 eur
     private fun onDepositToken(amount: Int, tokenSerialNumber: String) {
         user.doubleSpendDigitalEuroTo("Bank", tokenSerialNumber)
-        Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Deposited token!", Toast.LENGTH_SHORT).show()
     }
 
     private fun showUserSelectionWithConfirmation(
