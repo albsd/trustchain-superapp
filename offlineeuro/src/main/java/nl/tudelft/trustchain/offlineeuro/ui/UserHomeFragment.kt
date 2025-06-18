@@ -64,9 +64,26 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
             if (bank.isEmpty()) {
                 Toast.makeText(context, "Could not find bank. Try again later...", Toast.LENGTH_SHORT).show()
-            } else {
-                user.withdrawDigitalEuro("Bank");
+                return@setOnClickListener
             }
+
+            val options = arrayOf("1 €", "5 €", "25 €", "100 €")
+            val values = arrayOf(1, 5, 25, 100)
+
+            AlertDialog.Builder(requireContext())
+                .setTitle("Select amount to withdraw")
+                .setItems(options) { dialog, which ->
+                    val selectedValue = values[which]
+                    try {
+                        user.withdrawDigitalEuro("Bank", value = selectedValue)
+                        Toast.makeText(context, "Requested $selectedValue €", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Failed to withdraw: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+                .show()
         }
 
         updateAllAddresses(view)
