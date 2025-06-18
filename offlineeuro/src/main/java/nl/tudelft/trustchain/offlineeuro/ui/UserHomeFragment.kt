@@ -16,9 +16,6 @@ import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
-import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
-import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
-import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 
@@ -68,7 +65,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             }
 
             val options = arrayOf("1 €", "5 €", "25 €", "100 €")
-            val values = arrayOf(1, 5, 25, 100)
+            val values = arrayOf(1L, 5L, 25L, 100L)
 
             AlertDialog.Builder(requireContext())
                 .setTitle("Select amount to withdraw")

@@ -18,8 +18,8 @@ import kotlin.ByteArray
 import kotlin.Int
 import kotlin.String
 
-fun Int.toByteArray(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
-fun ByteArray.toIntFromByteArray(): Int = ByteBuffer.wrap(this).int
+fun Long.toByteArray(): ByteArray = ByteBuffer.allocate(4).putLong(this).array()
+fun ByteArray.toLongFromByteArray(): Long = ByteBuffer.wrap(this).long
 
 data class DigitalEuroBytes(
     val serialNumberBytes: ByteArray,
@@ -34,7 +34,7 @@ data class DigitalEuroBytes(
             group.gElementFromBytes(firstTheta1Bytes),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signatureBytes)!!,
             GrothSahaiSerializer.deserializeProofListBytes(proofsBytes, group),
-            amountBytes.toIntFromByteArray(),
+            amountBytes.toLongFromByteArray(),
         )
     }
 }
@@ -44,7 +44,7 @@ data class DigitalEuro(
     val firstTheta1: Element,
     val signature: SchnorrSignature,
     val proofs: ArrayList<GrothSahaiProof> = arrayListOf(),
-    val amount: Int = 1,
+    val amount: Long = 1,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

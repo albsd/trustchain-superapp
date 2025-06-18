@@ -88,7 +88,7 @@ class Wallet(
     }
 
     // ONLY FOR DEMO PURPOSES
-    fun generateWalletEntry(amount: Int = 5): WalletEntry {
+    fun generateWalletEntry(amount: Long = 5): WalletEntry {
         val group = BilinearGroup()
         val signature = generateRandomSignature()
         val randomDigitalEuro =

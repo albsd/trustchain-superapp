@@ -71,7 +71,7 @@ class User(
         return result
     }
 
-    fun withdrawDigitalEuro(bank: String, value: Int = 1): DigitalEuro {
+    fun withdrawDigitalEuro(bank: String, value: Long = 1): DigitalEuro {
         val serialNumber = UUID.randomUUID().toString()
         val firstT = group.getRandomZr()
         val tInv = firstT.mul(-1)
@@ -97,7 +97,7 @@ class User(
         return usernames
     }
 
-    fun getBalance(): Int {
+    fun getBalance(): Long {
         return walletManager!!.getWalletEntriesToSpend().sumOf { it.digitalEuro.amount }
     }
 

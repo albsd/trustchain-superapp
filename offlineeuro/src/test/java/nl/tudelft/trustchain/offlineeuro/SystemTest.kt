@@ -10,8 +10,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRandomn
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRandomnessRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRequestMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
