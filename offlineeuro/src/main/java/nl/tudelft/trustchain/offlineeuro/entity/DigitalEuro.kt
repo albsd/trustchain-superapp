@@ -18,7 +18,7 @@ import kotlin.ByteArray
 import kotlin.Int
 import kotlin.String
 
-fun Long.toByteArray(): ByteArray = ByteBuffer.allocate(4).putLong(this).array()
+fun Long.toByteArray(): ByteArray = ByteBuffer.allocate(8).putLong(this).array()
 fun ByteArray.toLongFromByteArray(): Long = ByteBuffer.wrap(this).long
 
 data class DigitalEuroBytes(
