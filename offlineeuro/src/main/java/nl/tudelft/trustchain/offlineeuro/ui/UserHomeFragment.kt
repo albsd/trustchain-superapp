@@ -137,7 +137,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         showUserSelectionWithConfirmation("Send", amount) { selectedUserName ->
             try {
                 user.sendDigitalEuroTo(selectedUserName, tokenSerialNumber)
-                Toast.makeText(requireContext(), "Sent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Sent token to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error sending euro", Toast.LENGTH_SHORT).show()
             }
@@ -149,7 +149,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         showUserSelectionWithConfirmation("Double Spend", amount) { selectedUserName ->
             try {
                 user.doubleSpendDigitalEuroTo(selectedUserName, tokenSerialNumber)
-                Toast.makeText(requireContext(), "Double spent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Double spent token to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error double spending euro", Toast.LENGTH_SHORT).show()
             }
