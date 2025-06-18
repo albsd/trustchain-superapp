@@ -9,7 +9,10 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
@@ -38,6 +41,12 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             val userName: String = user.name
             val welcomeTextView = view.findViewById<TextView>(R.id.user_welcome_text)
             welcomeTextView.text = welcomeTextView.text.toString().replace("_name_", userName)
+            viewLifecycleOwner.lifecycleScope.launch {
+                while (true) {
+                    communicationProtocol.scopePeers()
+                    delay(1000)
+                }
+            }
         } else {
             Log.e("user_home", "User should have been initialized already before reaching user home fragment!!")
             return findNavController().navigate(R.id.action_userHomeFragment_to_homeFragment)
@@ -135,7 +144,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
 
     // in case we decidce to allow tokens to be more than 1 eur
     private fun onDepositToken(amount: Int, tokenSerialNumber: String) {
-        user.sendDigitalEuroTo("Bank", tokenSerialNumber)
+        user.doubleSpendDigitalEuroTo("Bank", tokenSerialNumber)
         Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
     }
 

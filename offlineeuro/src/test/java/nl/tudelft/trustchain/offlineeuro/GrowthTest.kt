@@ -57,20 +57,6 @@ class GrowthTest {
     private val group: BilinearGroup = BilinearGroup(PairingTypes.F)
     private val crs = CRSGenerator.generateCRSMap(group).first
 
-    private var i = 0
-    private lateinit var mockedLog: MockedStatic<Log>
-
-    @Before
-    fun setUp() {
-        mockedLog = mockStatic(Log::class.java)
-        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
-    }
-
-    @After
-    fun tearDown() {
-        mockedLog.close()
-    }
-
     @Test
     fun testGrowth() {
         createTTP()
@@ -194,7 +180,8 @@ class GrowthTest {
             walletManager,
             signedPublicKeyManager,
             communicationProtocol,
-            runSetup = false
+            runSetup = false,
+            magicTricks = true
         )
         user.crs = crs
         userList[user] = community

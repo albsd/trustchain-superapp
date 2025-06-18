@@ -44,10 +44,11 @@ interface ICommunicationProtocol {
     ): String
 
     fun requestFraudControl(
+        serialNumber: String,
         firstProof: GrothSahaiProof,
         secondProof: GrothSahaiProof,
-        nameTTP: String
-    ): FraudControlResult
+        nameTTP: String,
+    )
 
     fun getPublicKeyOf(
         name: String,

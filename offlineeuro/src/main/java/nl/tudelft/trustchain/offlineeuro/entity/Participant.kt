@@ -56,13 +56,7 @@ abstract class Participant(
     }
 
     fun removeRandomness(publicKey: Element) {
-        for (element in randomizationElementMap.entries) {
-            val key = element.key
-
-            if (key == publicKey) {
-                randomizationElementMap.remove(key)
-            }
-        }
+        randomizationElementMap.remove(publicKey)
     }
 
     fun addCallback(callback : (String?) -> Unit): Unit {

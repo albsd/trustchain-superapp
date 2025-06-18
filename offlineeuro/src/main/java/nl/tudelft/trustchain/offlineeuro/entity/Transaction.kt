@@ -205,6 +205,7 @@ object Transaction {
             if (!verifyProofChain(previousProof, proof, bilinearGroup)) {
                 return TransactionResult.INVALID_CHAIN_OF_PROOFS
             }
+
             previousProof = proof
         }
 
@@ -232,12 +233,12 @@ object Transaction {
         currentProof: GrothSahaiProof,
         bilinearGroup: BilinearGroup,
     ): Boolean {
+
         val g = bilinearGroup.g
         val h = bilinearGroup.h
         val previousTargetToBytes = previousProof.target.toCanonicalRepresentation()
         val previousTargetAsPower = bilinearGroup.pairing.zr.newElementFromBytes(previousTargetToBytes)
         val expectedTarget = bilinearGroup.pair(g, h).powZn(previousTargetAsPower)
-
         if (expectedTarget != currentProof.target) {
             return false
         }
@@ -258,6 +259,7 @@ object Transaction {
 
         val expectedPairing = bilinearGroup.pair(g, h)
         val actualPairing = bilinearGroup.pair(theta, s)
+
         return expectedPairing == actualPairing
     }
 }

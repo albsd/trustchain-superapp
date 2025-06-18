@@ -14,7 +14,9 @@ class MessageList<ICommunityMessage>(private val onRequestMessageAdded: (ICommun
             TTPVerificationRequestMessage::class.java,
             TTPVerificationCompleteMessage::class.java,
             TTPRegistrationCompleteMessage::class.java,
-            FraudControlRequestMessage::class.java
+            FraudControlRequestMessage::class.java,
+            FraudControlReplyMessage::class.java,
+            TTPCommitmentMessage::class.java,
         )
 
     override fun add(element: ICommunityMessage): Boolean {

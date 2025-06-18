@@ -20,7 +20,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPCommitmentMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPSignedPublicKeyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
@@ -128,21 +127,18 @@ class IPV8CommunicationProtocol(
     }
 
     override fun requestFraudControl(
+        serialNumber: String,
         firstProof: GrothSahaiProof,
         secondProof: GrothSahaiProof,
         nameTTP: String
-    ): FraudControlResult {
+    ) {
         val ttpAddress = addressBookManager.getAddressByName(nameTTP)
         community.sendFraudControlRequest(
+            serialNumber,
             GrothSahaiSerializer.serializeGrothSahaiProof(firstProof),
             GrothSahaiSerializer.serializeGrothSahaiProof(secondProof),
             ttpAddress.peerPublicKey!!
         )
-        val message = waitForMessage(CommunityMessageType.FraudControlReplyMessage) as FraudControlReplyMessage
-        val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
-        val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
-
-        return FraudControlResult(message.isFraud, message.jwtPlaintext, nonce, message.userName, userPK)
     }
 
     override fun completeVerification() {
@@ -273,13 +269,9 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        Log.i("Registering user", message.userName)
         val response = ttp.registerUser(message.userName, publicKey)
-        val signedPublicKey = ttp.getSignedUserPublicKey(publicKey)
-        community.sendSignedPublicKey(signedPublicKey.toBytes(), message.peer)
 
         if (response != null) {
-            Log.i("EUDI", "Am trimis presentation request")
             community.sendVerificationRequest(response["client_id"]!!, response["request_uri"]!!, response["request_uri_method"]!!, message.peer)
         }
     }
@@ -315,18 +307,18 @@ class IPV8CommunicationProtocol(
         }
         val ttp = participant as TTP
         val publicKey = ttp.group.gElementFromBytes(message.userPKBytes)
-        Log.i("verification", "Verifying user ${message.userName}")
 
         try {
             val dcSdJwt = ttp.verifyUser(message.userName, publicKey)
-            Log.i("verification good", "User: ${message.userName}")
             val commitment = dcSdJwt?.let { ttp.generateAndStoreJwtCommitment(publicKey, it) }
             if (commitment != null) {
-                community.sendTTPCommitmentToBank(commitment.toBytes(), message.peer)
+                val bankAddress = addressBookManager.getAddressByName("Bank")
+                community.sendTTPCommitmentToBank(commitment.toBytes(), bankAddress.peerPublicKey!!)
             }
-            community.sendRegistrationCompleteMessage("Completed", message.peer)
+            val signedPK = ttp.getSignedUserPublicKey(publicKey)
+            community.sendRegistrationCompleteMessage("Completed", signedPK.toBytesWithLength(), message.peer)
         } catch (e: Exception) {
-            community.sendRegistrationCompleteMessage("Failed", message.peer)
+            community.sendRegistrationCompleteMessage("Failed", ByteArray(0), message.peer)
         }
     }
 
@@ -335,6 +327,7 @@ class IPV8CommunicationProtocol(
             return
         }
         val user = participant as User
+        user.storeSignedPublicKey(SchnorrSignature.fromBytes(message.signedPK))
         user.authStatus(message.status)
     }
 
@@ -349,10 +342,22 @@ class IPV8CommunicationProtocol(
             return
         }
         val ttp = participant as TTP
+        val serialNumber = message.serialNumber
         val firstProof = GrothSahaiSerializer.deserializeProofBytes(message.firstProofBytes, participant.group)
         val secondProof = GrothSahaiSerializer.deserializeProofBytes(message.secondProofBytes, participant.group)
         val result = ttp.getUserFromProofs(firstProof, secondProof)
-        community.sendFraudControlReply(result, message.requestingPeer)
+        community.sendFraudControlReply(serialNumber, result, message.requestingPeer)
+    }
+
+    private fun handleFraudControlReplyMessage(message: FraudControlReplyMessage) {
+        if (getParticipantRole() != Role.Bank) {
+            return
+        }
+        val bank = participant as Bank
+        val userPK = message.pkBytes?.let { participant.group.gElementFromBytes(it) }
+        val nonce = message.noncePlaintext?.let { participant.group.gElementFromBytes(it) }
+
+        bank.depositFraudResult(message.serialNumber, FraudControlResult(message.isFraud, message.jwtPlaintext, nonce, message.userName, userPK))
     }
 
     private fun handleTTPCommitmentMessage(message: TTPCommitmentMessage) {
@@ -361,16 +366,7 @@ class IPV8CommunicationProtocol(
         }
         val bank = participant as Bank
         val commitment = bank.group.gElementFromBytes(message.commitmentBytes)
-
         bank.storeUserCommitment(bank.publicKey, commitment)
-    }
-
-    private fun handleSignedPublicKeyMessage(message: TTPSignedPublicKeyMessage) {
-        if (participant !is User) {
-            return
-        }
-        val user = participant as User
-        user.storeSignedPublicKey(SchnorrSignature.fromBytes(message.signedPublicKeyBytes))
     }
 
     private fun handleRequestMessage(message: ICommunityMessage) {
@@ -387,8 +383,8 @@ class IPV8CommunicationProtocol(
             is TTPVerificationCompleteMessage -> handleVerificationCompleteMessage(message)
             is TTPRegistrationCompleteMessage -> handleRegistrationCompleteMessage(message)
             is FraudControlRequestMessage -> handleFraudControlRequestMessage(message)
+            is FraudControlReplyMessage -> handleFraudControlReplyMessage(message)
             is TTPCommitmentMessage -> handleTTPCommitmentMessage(message)
-            is TTPSignedPublicKeyMessage -> handleSignedPublicKeyMessage(message)
             else -> throw Exception("Unsupported message type")
         }
         return

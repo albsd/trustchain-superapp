@@ -7,10 +7,12 @@ import nl.tudelft.ipv8.messaging.serializeVarLen
 
 class TTPRegistrationCompletePayload (
     val status: String,
+    val signedPK: ByteArray
 ) : Serializable {
     override fun serialize(): ByteArray {
         var payload = ByteArray(0)
         payload += serializeVarLen(status.toByteArray())
+        payload += serializeVarLen(signedPK)
         return payload
     }
 
@@ -24,9 +26,13 @@ class TTPRegistrationCompletePayload (
             val (statusBytes, statusSize) = deserializeVarLen(buffer, localOffset)
             localOffset += statusSize
 
+            val (signedPK, pkSize) = deserializeVarLen(buffer, localOffset)
+            localOffset += pkSize
+
             return Pair(
                 TTPRegistrationCompletePayload(
                     statusBytes.toString(Charsets.UTF_8),
+                    signedPK
                 ),
                 localOffset - offset
             )

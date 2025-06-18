@@ -23,7 +23,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.MessageList
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPCommitmentMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.TTPSignedPublicKeyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationCompleteMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPVerificationRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
@@ -36,6 +35,7 @@ import nl.tudelft.trustchain.offlineeuro.community.payload.BlindSignatureRequest
 import nl.tudelft.trustchain.offlineeuro.community.payload.ByteArrayPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlReplyPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.FraudControlRequestPayload
+import nl.tudelft.trustchain.offlineeuro.community.payload.TTPCommitmentMessagePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationCompletePayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPRegistrationPayload
 import nl.tudelft.trustchain.offlineeuro.community.payload.TTPVerificationCompletePayload
@@ -75,7 +75,6 @@ object MessageID {
     const val VERIFICATION_COMPLETE_TTP = 25
     const val REGISTRATION_COMPLETE_TTP = 26
     const val COMMITMENT_SENT_TTP = 27
-    const val SIGNED_PUBLIC_KEY_TTP = 28
 }
 
 class OfflineEuroCommunity(
@@ -83,7 +82,7 @@ class OfflineEuroCommunity(
     database: TrustChainStore,
     crawler: TrustChainCrawler = TrustChainCrawler()
 ) : TrustChainCommunity(settings, database, crawler) {
-    override val serviceId = "ffffd716494b474ea9f614a16a4da0aed6899aec"
+    override val serviceId = "ffffd716494b474ea9f614a16a4da0aed6899aef"
 
     lateinit var messageList: MessageList<ICommunityMessage>
 
@@ -116,7 +115,6 @@ class OfflineEuroCommunity(
         messageHandlers[MessageID.VERIFICATION_COMPLETE_TTP] = ::onVerificationComplete
         messageHandlers[MessageID.REGISTRATION_COMPLETE_TTP] = ::onRegistrationComplete
         messageHandlers[MessageID.COMMITMENT_SENT_TTP] = ::onCommitmentSent
-        messageHandlers[MessageID.SIGNED_PUBLIC_KEY_TTP] = ::onSignedPublicKey
     }
 
     fun getGroupDescriptionAndCRS() {
@@ -244,12 +242,13 @@ class OfflineEuroCommunity(
      * @param message The result message, e.g., "Completed" or "Failed".
      * @param peer The peer to which the message is sent.
      */
-    fun sendRegistrationCompleteMessage(message: String, peer: Peer) {
+    fun sendRegistrationCompleteMessage(message: String, signedPK: ByteArray, peer: Peer) {
         val registrationCompletePacket =
             serializePacket(
                 MessageID.REGISTRATION_COMPLETE_TTP,
                 TTPRegistrationCompletePayload(
-                    message
+                    message,
+                    signedPK
                 )
             )
         send(peer, registrationCompletePacket)
@@ -273,7 +272,7 @@ class OfflineEuroCommunity(
 
     fun onRegistrationComplete(packet: Packet) {
         val (peer, payload) = packet.getAuthPayload(TTPRegistrationCompletePayload)
-        val msg = TTPRegistrationCompleteMessage (payload.status)
+        val msg = TTPRegistrationCompleteMessage (payload.status, payload.signedPK)
         addMessage(msg)
     }
 
@@ -575,6 +574,7 @@ class OfflineEuroCommunity(
     }
 
     fun sendFraudControlRequest(
+        serialNumber: String,
         firstProofBytes: ByteArray,
         secondProofBytes: ByteArray,
         ttpPublicKeyBytes: ByteArray
@@ -587,6 +587,7 @@ class OfflineEuroCommunity(
             serializePacket(
                 MessageID.FRAUD_CONTROL_REQUEST,
                 FraudControlRequestPayload(
+                    serialNumber,
                     firstProofBytes,
                     secondProofBytes
                 )
@@ -604,11 +605,12 @@ class OfflineEuroCommunity(
         peer: Peer,
         payload: FraudControlRequestPayload
     ) {
-        val message = FraudControlRequestMessage(payload.firstProofBytes, payload.secondProofBytes, peer)
+        val message = FraudControlRequestMessage(payload.serialNumber, payload.firstProofBytes, payload.secondProofBytes, peer)
         addMessage(message)
     }
 
     fun sendFraudControlReply(
+        serialNumber: String,
         result: FraudControlResult,
         peer: Peer
     ) {
@@ -616,6 +618,7 @@ class OfflineEuroCommunity(
             serializePacket(
                 MessageID.FRAUD_CONTROL_REPLY,
                 FraudControlReplyPayload(
+                    serialNumber,
                     result.isFraud,
                     result.jwt,
                     result.nonce?.toBytes(),
@@ -633,6 +636,7 @@ class OfflineEuroCommunity(
 
     fun onFraudControlReply(payload: FraudControlReplyPayload) {
         addMessage(FraudControlReplyMessage(
+            payload.serialNumber,
             payload.isFraud,
             payload.jwtPlaintext,
             payload.noncePlaintext,
@@ -698,29 +702,21 @@ class OfflineEuroCommunity(
 
     fun sendTTPCommitmentToBank(
         commitmentBytes: ByteArray,
-        bankPeer: Peer
+        bankPublicKeyBytes: ByteArray,
     ) {
-        val message = TTPCommitmentMessage(
-            commitmentBytes,
-            bankPeer
+        val bankPeer = getPeerByPublicKeyBytes(bankPublicKeyBytes) ?: throw Exception("bank not found")
+        val message = serializePacket(
+            MessageID.COMMITMENT_SENT_TTP,
+            TTPCommitmentMessagePayload(
+                commitmentBytes
+            )
         )
-        addMessage(message)
+        send(bankPeer, message)
     }
 
     fun onCommitmentSent(packet: Packet) {
-        val (peer, payload) = packet.getAuthPayload(ByteArrayPayload)
-        val message = TTPCommitmentMessage(payload.bytes, peer)
-        addMessage(message)
-    }
-
-    fun sendSignedPublicKey(signedPublicKeyBytes: ByteArray, peer: Peer) {
-        val message = TTPSignedPublicKeyMessage(signedPublicKeyBytes, peer)
-        addMessage(message)
-    }
-
-    fun onSignedPublicKey(packet: Packet) {
-        val (peer, payload) = packet.getAuthPayload(ByteArrayPayload)
-        val message = TTPSignedPublicKeyMessage(payload.bytes, peer)
+        val (peer, payload) = packet.getAuthPayload(TTPCommitmentMessagePayload)
+        val message = TTPCommitmentMessage(payload.commitmentBytes)
         addMessage(message)
     }
 

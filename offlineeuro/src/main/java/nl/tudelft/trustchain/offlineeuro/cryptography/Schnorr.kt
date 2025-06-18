@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.cryptography
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -7,14 +8,19 @@ import java.security.MessageDigest
 data class BlindedChallenge(val challenge: BigInteger, val blindedChallenge: BigInteger, val alpha: BigInteger, val message: ByteArray)
 
 data class SchnorrSignature(val signature: BigInteger, val encryption: BigInteger, val signedMessage: ByteArray) {
-    /**
+    fun toBytes(): ByteArray {
+        return signature.toByteArray() + encryption.toByteArray() + signedMessage
+    }
+        /**
      * Converts the [SchnorrSignature] to a [ByteArray] such that the first target element
      * can be computed.
      * @return The [SchnorrSignature] converted a [ByteArray]
      */
-    fun toBytes(): ByteArray {
+    fun toBytesWithLength(): ByteArray {
         val sigBytes = signature.toByteArray()
         val encBytes = encryption.toByteArray()
+        Log.i("schnorr-sig", sigBytes.size.toString());
+        Log.i("schnorr-enc", encBytes.size.toString());
         return byteArrayOf(sigBytes.size.toByte()) + sigBytes +
             byteArrayOf(encBytes.size.toByte()) + encBytes +
             signedMessage

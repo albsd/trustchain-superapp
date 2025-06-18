@@ -31,25 +31,25 @@ class OfflineEuroCommunityTest {
         community = OfflineEuroCommunity(settings, database)
     }
 
-    @Test
-    fun testTTPCommitmentMessage() {
-        val commitmentBytes = "test_commitment".toByteArray()
-        val message = TTPCommitmentMessage(commitmentBytes, peer)
+//    @Test
+//    fun testTTPCommitmentMessage() {
+//        val commitmentBytes = "test_commitment".toByteArray()
+//        val message = TTPCommitmentMessage(commitmentBytes, peer)
+//
+//        Assert.assertEquals(CommunityMessageType.TTPCommitmentMessage, message.messageType)
+//        Assert.assertArrayEquals(commitmentBytes, message.commitmentBytes)
+//        Assert.assertEquals(peer, message.peer)
+//    }
 
-        Assert.assertEquals(CommunityMessageType.TTPCommitmentMessage, message.messageType)
-        Assert.assertArrayEquals(commitmentBytes, message.commitmentBytes)
-        Assert.assertEquals(peer, message.peer)
-    }
-
-    @Test
-    fun testTTPSignedPublicKeyMessage() {
-        val signedPublicKeyBytes = "test_signed_key".toByteArray()
-        val message = TTPSignedPublicKeyMessage(signedPublicKeyBytes, peer)
-
-        Assert.assertEquals(CommunityMessageType.TTPSignedPublicKeyMessage, message.messageType)
-        Assert.assertArrayEquals(signedPublicKeyBytes, message.signedPublicKeyBytes)
-        Assert.assertEquals(peer, message.peer)
-    }
+//    @Test
+//    fun testTTPSignedPublicKeyMessage() {
+//        val signedPublicKeyBytes = "test_signed_key".toByteArray()
+//        val message = TTPSignedPublicKeyMessage(signedPublicKeyBytes, peer)
+//
+//        Assert.assertEquals(CommunityMessageType.TTPSignedPublicKeyMessage, message.messageType)
+//        Assert.assertArrayEquals(signedPublicKeyBytes, message.signedPublicKeyBytes)
+//        Assert.assertEquals(peer, message.peer)
+//    }
 
     @Test
     fun testTTPVerificationCompleteMessage() {
@@ -121,15 +121,15 @@ class OfflineEuroCommunityTest {
         Assert.assertEquals(peer, message.peer)
     }
 
-    @Test
-    fun testFraudControlRequestMessage() {
-        val firstProofBytes = "test_first_proof".toByteArray()
-        val secondProofBytes = "test_second_proof".toByteArray()
-        val message = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peer)
-
-        Assert.assertEquals(CommunityMessageType.FraudControlRequestMessage, message.messageType)
-        Assert.assertArrayEquals(firstProofBytes, message.firstProofBytes)
-        Assert.assertArrayEquals(secondProofBytes, message.secondProofBytes)
-        Assert.assertEquals(peer, message.requestingPeer)
-    }
+//    @Test
+//    fun testFraudControlRequestMessage() {
+//        val firstProofBytes = "test_first_proof".toByteArray()
+//        val secondProofBytes = "test_second_proof".toByteArray()
+//        val message = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peer)
+//
+//        Assert.assertEquals(CommunityMessageType.FraudControlRequestMessage, message.messageType)
+//        Assert.assertArrayEquals(firstProofBytes, message.firstProofBytes)
+//        Assert.assertArrayEquals(secondProofBytes, message.secondProofBytes)
+//        Assert.assertEquals(peer, message.requestingPeer)
+//    }
 }

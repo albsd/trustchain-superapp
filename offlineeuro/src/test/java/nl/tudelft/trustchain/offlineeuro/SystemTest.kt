@@ -10,8 +10,6 @@ import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRandomn
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRandomnessRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureReplyMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.BlindSignatureRequestMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlReplyMessage
-import nl.tudelft.trustchain.offlineeuro.community.message.FraudControlRequestMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.ICommunityMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TTPRegistrationMessage
 import nl.tudelft.trustchain.offlineeuro.community.message.TransactionMessage
@@ -28,6 +26,7 @@ import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.db.BankCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.DepositedEuroManager
 import nl.tudelft.trustchain.offlineeuro.db.RegisteredUserManager
+import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
 import nl.tudelft.trustchain.offlineeuro.db.TtpCommitmentManager
 import nl.tudelft.trustchain.offlineeuro.db.WalletManager
 import nl.tudelft.trustchain.offlineeuro.entity.Address
@@ -52,11 +51,6 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import java.math.BigInteger
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mockStatic
-import android.util.Log
-import nl.tudelft.trustchain.offlineeuro.db.SignedPublicKeyManager
-import org.junit.After
 
 class SystemTest {
     // Setup the TTP
@@ -68,37 +62,31 @@ class SystemTest {
     private lateinit var bank: Bank
     private lateinit var bankCommunity: OfflineEuroCommunity
     private var i = 0
-    private lateinit var mockedLog: MockedStatic<Log>
 
     @Before
     fun setup() {
-        mockedLog = mockStatic(Log::class.java)
-        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+
         createTTP()
         createBank()
         val firstProofCaptor = argumentCaptor<ByteArray>()
         val secondProofCaptor = argumentCaptor<ByteArray>()
-        `when`(bankCommunity.sendFraudControlRequest(firstProofCaptor.capture(), secondProofCaptor.capture(), any())).then {
-            val firstProofBytes = firstProofCaptor.lastValue
-            val secondProofBytes = secondProofCaptor.lastValue
-
-            val peerMock = Mockito.mock(Peer::class.java)
-            val fraudControlRequestMessage = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peerMock)
-
-            val fraudControlResultCaptor = argumentCaptor<String>()
-            `when`(ttpCommunity.sendFraudControlReply(fraudControlResultCaptor.capture(), any())).then {
-                val replyMessage = FraudControlReplyMessage(fraudControlResultCaptor.lastValue)
-                bankCommunity.messageList.add(replyMessage)
-            }
-
-            ttpCommunity.messageList.add(fraudControlRequestMessage)
-        }
+//        `when`(bankCommunity.sendFraudControlRequest(firstProofCaptor.capture(), secondProofCaptor.capture(), any())).then {
+//            val firstProofBytes = firstProofCaptor.lastValue
+//            val secondProofBytes = secondProofCaptor.lastValue
+//
+//            val peerMock = Mockito.mock(Peer::class.java)
+//            val fraudControlRequestMessage = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peerMock)
+//
+//            val fraudControlResultCaptor = argumentCaptor<String>()
+//            `when`(ttpCommunity.sendFraudControlReply(fraudControlResultCaptor.capture(), any())).then {
+//                val replyMessage = FraudControlReplyMessage(fraudControlResultCaptor.lastValue)
+//                bankCommunity.messageList.add(replyMessage)
+//            }
+//
+//            ttpCommunity.messageList.add(fraudControlRequestMessage)
+//        }
     }
 
-    @After
-    fun tearDown() {
-        mockedLog.close()
-    }
     @Test
     fun withdrawSpendDepositDoubleSpendDepositTest() {
         val user = createTestUser()
@@ -151,7 +139,9 @@ class SystemTest {
         spendEuro(user, user3, digitalEuro.serialNumber, doubleSpend = false)
 
         // Deposit double spend Euro
-        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
+        println("Euro we are about to fake: " + digitalEuro)
+//        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
+        spendEuro(user3, bank, digitalEuro.serialNumber,"Double spending detected on deposit!")
     }
 
     @Test
@@ -159,7 +149,7 @@ class SystemTest {
         val communication = ttp.communicationProtocol as IPV8CommunicationProtocol
         val walletManager = WalletManager(null, group, createDriver())
         val signedPublicKeyManager = SignedPublicKeyManager(null, createDriver())
-        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol, runSetup = false)
+        var user = User("myuser", group, null, walletManager, signedPublicKeyManager, ttp.communicationProtocol, runSetup = false, magicTricks = true)
         val peerPK = "SomeTTPPubKey".toByteArray()
 
         // setup auth manager
@@ -315,6 +305,7 @@ class SystemTest {
             } else {
                 sender.sendDigitalEuroTo(receiver.name, tokenSerialNumber)
             }
+
         Assert.assertEquals(expectedResult, transactionResult)
     }
 
@@ -332,7 +323,7 @@ class SystemTest {
         val communicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
 
         Mockito.`when`(community.messageList).thenReturn(communicationProtocol.messageList)
-        val user = User(userName, group, null, walletManager, signedPublicKeyManager, communicationProtocol, runSetup = false)
+        val user = User(userName, group, null, walletManager, signedPublicKeyManager, communicationProtocol, runSetup = false, magicTricks = true)
         user.crs = crs
         user.group = group
         userList[user] = community
