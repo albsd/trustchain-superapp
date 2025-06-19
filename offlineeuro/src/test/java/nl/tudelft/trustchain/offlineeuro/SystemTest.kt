@@ -72,6 +72,7 @@ class SystemTest {
     @Test
     fun withdrawSpendDepositDoubleSpendDepositTest() {
         val user = createTestUser()
+        user.registerAtTTP()
         user.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user.publicKey))
 
         // Assert that the group descriptions and crs are equal
