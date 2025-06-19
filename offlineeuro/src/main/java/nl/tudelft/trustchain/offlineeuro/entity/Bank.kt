@@ -32,7 +32,6 @@ class Bank(
         if (runSetup) {
             setUp()
         } else {
-            Log.i("bank-CRS", "nu faceam asta?")
             getGroupDescriptionAndCRS()
             generateKeyPair()
         }

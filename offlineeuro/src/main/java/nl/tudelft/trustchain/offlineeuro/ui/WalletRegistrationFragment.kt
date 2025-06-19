@@ -86,7 +86,6 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
 
     private fun openInWallet(deepLink: Uri) {
         requireActivity().runOnUiThread {
-            Log.e("wallet frontend", "am ajuns aici")
             // When a deep link is ready, the option to open in wallet becomes available
             val openWalletButton =
                 requireView().findViewById<Button>(R.id.wallet_registration_button)

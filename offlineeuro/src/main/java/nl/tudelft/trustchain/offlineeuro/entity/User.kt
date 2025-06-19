@@ -54,7 +54,6 @@ class User(
     }
 
     fun sendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
-        Log.i("token_number", "sent $tokenSerialNumber")
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails =
             wallet.spendEuro(randomizationElements, group, crs, tokenSerialNumber)
@@ -66,7 +65,6 @@ class User(
     }
 
     fun doubleSpendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
-        Log.i("token_number", "sent $tokenSerialNumber")
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs, tokenSerialNumber)
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)
