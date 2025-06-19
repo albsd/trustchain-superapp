@@ -59,14 +59,14 @@ abstract class Participant(
     }
 
     fun removeRandomness(publicKey: Element) {
-        randomizationElementMap.remove(publicKey)
-//        for (element in randomizationElementMap.entries) {
-//            val key = element.key
-//
-//            if (key == publicKey) {
-//                randomizationElementMap.remove(key)
-//            }
-//        }
+        //randomizationElementMap.remove(publicKey)
+        for (element in randomizationElementMap.entries) {
+            val key = element.key
+
+            if (key == publicKey) {
+                randomizationElementMap.remove(key)
+            }
+        }
     }
 
     abstract fun onReceivedTransaction(
