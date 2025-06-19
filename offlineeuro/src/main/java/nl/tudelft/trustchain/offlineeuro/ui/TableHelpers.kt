@@ -1,9 +1,7 @@
 package nl.tudelft.trustchain.offlineeuro.ui
 
 import android.content.Context
-import android.media.Image
 import android.os.Bundle
-import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.widget.Button
@@ -14,7 +12,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.marginTop
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.entity.Address
 import nl.tudelft.trustchain.offlineeuro.entity.Bank
@@ -458,9 +455,12 @@ object TableHelpers {
         val tokens: List<WalletEntry> = user.getTokens()
 
         for (tokenList in tokens) {
+            val amount : Long = tokenList.digitalEuro.amount
+            val textLabel = "$amount €"
+
 
             val label = TextView(context).apply {
-                text = "1 €"
+                text = textLabel
                 textSize = 16f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(

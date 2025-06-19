@@ -88,7 +88,7 @@ class Wallet(
     }
 
     // ONLY FOR DEMO PURPOSES
-    fun generateWalletEntry(): WalletEntry {
+    fun generateWalletEntry(amount: Long = 5): WalletEntry {
         val group = BilinearGroup()
         val signature = generateRandomSignature()
         val randomDigitalEuro =
@@ -96,7 +96,8 @@ class Wallet(
                 UUID.randomUUID().toString(),
                 group.generateRandomElementOfG(),
                 generateRandomSignature(),
-                arrayListOf()
+                arrayListOf(),
+                amount = amount
             )
 
         return WalletEntry(randomDigitalEuro, group.getRandomZr(), signature)

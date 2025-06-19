@@ -11,24 +11,30 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 import java.lang.Byte
+import java.nio.ByteBuffer
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.ByteArray
 import kotlin.Int
 import kotlin.String
 
+fun Long.toByteArray(): ByteArray = ByteBuffer.allocate(8).putLong(this).array()
+fun ByteArray.toLongFromByteArray(): Long = ByteBuffer.wrap(this).long
+
 data class DigitalEuroBytes(
     val serialNumberBytes: ByteArray,
     val firstTheta1Bytes: ByteArray,
     val signatureBytes: ByteArray,
     val proofsBytes: ByteArray,
+    val amountBytes: ByteArray,
 ) : Serializable {
     fun toDigitalEuro(group: BilinearGroup): DigitalEuro {
         return DigitalEuro(
             serialNumberBytes.toString(Charsets.UTF_8),
             group.gElementFromBytes(firstTheta1Bytes),
             SchnorrSignatureSerializer.deserializeSchnorrSignatureBytes(signatureBytes)!!,
-            GrothSahaiSerializer.deserializeProofListBytes(proofsBytes, group)
+            GrothSahaiSerializer.deserializeProofListBytes(proofsBytes, group),
+            amountBytes.toLongFromByteArray(),
         )
     }
 }
@@ -38,6 +44,7 @@ data class DigitalEuro(
     val firstTheta1: Element,
     val signature: SchnorrSignature,
     val proofs: ArrayList<GrothSahaiProof> = arrayListOf(),
+    val amount: Long = 1,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -78,7 +85,8 @@ data class DigitalEuro(
         val signatureByteSize = signatureBytes?.size ?: 0
         val proofByteSize = proofBytes?.size ?: 0
         val test2 = serialize().size
-        return serialNumberBytes.size + firstTheta1Bytes.size + signatureByteSize + proofByteSize
+        val amountBytes = amount.toByteArray()
+        return serialNumberBytes.size + firstTheta1Bytes.size + amountBytes.size +signatureByteSize + proofByteSize
     }
 
     fun toDigitalEuroBytes(): DigitalEuroBytes {
@@ -87,7 +95,8 @@ data class DigitalEuro(
             serialNumber.toByteArray(),
             firstTheta1.toBytes(),
             SchnorrSignatureSerializer.serializeSchnorrSignature(signature)!!,
-            proofBytes ?: ByteArray(0)
+            proofBytes ?: ByteArray(0),
+            amount.toByteArray()
         )
     }
 }

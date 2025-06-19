@@ -65,7 +65,8 @@ class WalletRegistrationFragment : OfflineEuroBaseFragment(R.layout.fragment_wal
                 null,
                 null,
                 communicationProtocol,
-                runSetup = false
+                runSetup = false,
+//                magicTricks = true
             )
 
             user.authManager = eudiAuthManager
