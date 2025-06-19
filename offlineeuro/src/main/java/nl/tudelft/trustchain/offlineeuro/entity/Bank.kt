@@ -32,7 +32,6 @@ class Bank(
         if (runSetup) {
             setUp()
         } else {
-            getGroupDescriptionAndCRS()
             generateKeyPair()
         }
     }
