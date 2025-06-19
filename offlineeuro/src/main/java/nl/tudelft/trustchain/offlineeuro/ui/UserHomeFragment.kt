@@ -132,39 +132,36 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         builder.show()
     }
 
-    // in case we decide to allow tokens to be more than 1 eur
-    private fun onSendTokenClick(amount: Int, tokenSerialNumber: String) {
+    private fun onSendTokenClick(amount: Long, tokenSerialNumber: String) {
         showUserSelectionWithConfirmation("Send", amount) { selectedUserName ->
             try {
                 user.sendDigitalEuroTo(selectedUserName, tokenSerialNumber)
-                Toast.makeText(requireContext(), "Sent token to $selectedUserName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Sent $amount to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error sending euro", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // in case we decidce to allow tokens to be more than 1 eur
-    private fun onDoubleSpendTokenClick(amount: Int, tokenSerialNumber: String) {
+    private fun onDoubleSpendTokenClick(amount: Long, tokenSerialNumber: String) {
         showUserSelectionWithConfirmation("Double Spend", amount) { selectedUserName ->
             try {
                 user.doubleSpendDigitalEuroTo(selectedUserName, tokenSerialNumber)
-                Toast.makeText(requireContext(), "Double spent token to $selectedUserName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Double spent $amount to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error double spending euro", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // in case we decidce to allow tokens to be more than 1 eur
-    private fun onDepositToken(amount: Int, tokenSerialNumber: String) {
+    private fun onDepositToken(amount: Long, tokenSerialNumber: String) {
         user.doubleSpendDigitalEuroTo("Bank", tokenSerialNumber)
         Toast.makeText(context, "Deposited token!", Toast.LENGTH_SHORT).show()
     }
 
     private fun showUserSelectionWithConfirmation(
         actionName: String,
-        amount: Int,
+        amount: Long,
         onConfirmed: (String) -> Unit
     ) {
         if (!isAdded) return

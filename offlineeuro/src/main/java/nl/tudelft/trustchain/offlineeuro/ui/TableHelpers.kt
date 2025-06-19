@@ -446,9 +446,9 @@ object TableHelpers {
         tokenContainer: LinearLayout,
         user: User,
         context: Context,
-        onSendClick: (Int, String) -> Unit,
-        onDoubleSpendClick: (Int, String) -> Unit,
-        onDepositClick: (Int, String) -> Unit
+        onSendClick: (Long, String) -> Unit,
+        onDoubleSpendClick: (Long, String) -> Unit,
+        onDepositClick: (Long, String) -> Unit
     ) {
         tokenContainer.removeAllViews()
 
@@ -483,7 +483,7 @@ object TableHelpers {
             val sendButton = Button(context).apply {
                 text = "SEND"
                 setOnClickListener {
-                    onSendClick(1, tokenList.digitalEuro.serialNumber)
+                    onSendClick(amount, tokenList.digitalEuro.serialNumber)
                 }
             }
             sendButton.isEnabled = true
@@ -498,7 +498,7 @@ object TableHelpers {
                     marginStart = 8.dp(context)
                 }
                 setOnClickListener {
-                    onDoubleSpendClick(1, tokenList.digitalEuro.serialNumber)
+                    onDoubleSpendClick(amount, tokenList.digitalEuro.serialNumber)
                 }
             }
             doubleSpendButton.isEnabled = true
@@ -513,7 +513,7 @@ object TableHelpers {
                     marginStart = 8.dp(context)
                 }
                 setOnClickListener {
-                    onDepositClick(1, tokenList.digitalEuro.serialNumber)
+                    onDepositClick(amount, tokenList.digitalEuro.serialNumber)
                 }
             }
             depositButton.isEnabled = true

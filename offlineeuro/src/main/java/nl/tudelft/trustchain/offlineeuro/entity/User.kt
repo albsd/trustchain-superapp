@@ -137,6 +137,7 @@ class User(
             emitEvent("Received an euro from $publicKeySender")
             return transactionResult.description
         }
+
         emitEvent(transactionResult.description)
         return transactionResult.description
     }
