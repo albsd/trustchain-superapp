@@ -19,8 +19,7 @@ data class SchnorrSignature(val signature: BigInteger, val encryption: BigIntege
     fun toBytesWithLength(): ByteArray {
         val sigBytes = signature.toByteArray()
         val encBytes = encryption.toByteArray()
-        Log.i("schnorr-sig", sigBytes.size.toString());
-        Log.i("schnorr-enc", encBytes.size.toString());
+
         return byteArrayOf(sigBytes.size.toByte()) + sigBytes +
             byteArrayOf(encBytes.size.toByte()) + encBytes +
             signedMessage

@@ -262,10 +262,6 @@ object Transaction {
         val expectedPairing = bilinearGroup.pair(g, h)
         val actualPairing = bilinearGroup.pair(theta, s)
 
-        if (expectedPairing != actualPairing) {
-            Log.i("proofs", "invalid pairing; expected: ${expectedPairing}, actual :${actualPairing}")
-        }
-
         return expectedPairing == actualPairing
     }
 }

@@ -114,15 +114,26 @@ data class GrothSahaiProof(
         if (this === other) return true
         if (other !is GrothSahaiProof) return false
 
-        return c1 == other.c1 &&
-            c2 == other.c2 &&
-            d1 == other.d1 &&
-            d2 == other.d2 &&
-            theta1 == other.theta1 &&
-            theta2 == other.theta2 &&
-            pi1 == other.pi1 &&
-            pi2 == other.pi2 &&
-            target == other.target
+        // i think the previous equals was lowkey broken ( == )
+        // because of no actual equals method within the element class
+        // instead it only had isEqual hence we are using it here
+        return c1.isEqual(other.c1) &&
+            c2.isEqual(other.c2) &&
+            d1.isEqual(other.d1) &&
+            d2.isEqual(other.d2) &&
+            theta1.isEqual(other.theta1) &&
+            theta2.isEqual(other.theta2) &&
+            pi1.isEqual(other.pi1) &&
+            pi2.isEqual(other.pi2) &&
+            target.isEqual(other.target)
+    }
+
+    // we were overriding equals but not also hashcode
+    override fun hashCode(): Int {
+        fun elementHash(e: Element) = e.toBytes().contentHashCode()
+        return listOf(c1, c2, d1, d2, theta1, theta2, pi1, pi2, target)
+            .map(::elementHash)
+            .fold(0) { acc, h -> 31 * acc + h }
     }
 }
 

@@ -2,6 +2,7 @@ package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
@@ -134,6 +135,7 @@ class User(
             emitEvent("Received an euro from $publicKeySender")
             return transactionResult.description
         }
+
         emitEvent(transactionResult.description)
         return transactionResult.description
     }
