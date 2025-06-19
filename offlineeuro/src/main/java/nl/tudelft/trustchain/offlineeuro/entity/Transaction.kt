@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
@@ -260,6 +261,15 @@ object Transaction {
         val expectedPairing = bilinearGroup.pair(g, h)
         val actualPairing = bilinearGroup.pair(theta, s)
 
-        return expectedPairing == actualPairing
+        if (expectedPairing == actualPairing) {
+            Log.i("proofs", "EQUALSCHECK invalid pairing,\nexpected: $expectedPairing,\nactual: $actualPairing")
+        }
+
+        if (!expectedPairing.isEqual(actualPairing)) {
+            Log.i("proofs", "REFCHECK invalid pairing,\nexpected: $expectedPairing,\nactual: $actualPairing")
+        }
+
+
+        return expectedPairing.isEqual(actualPairing)
     }
 }
