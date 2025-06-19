@@ -80,8 +80,9 @@ class DigitalEuroTest {
         val thetaBytes = theta1.toBytes()
         val sigBytes = SchnorrSignatureSerializer.serializeSchnorrSignature(signature)
         val proofBytes = GrothSahaiSerializer.serializeGrothSahaiProofs(digitalEuro.proofs)!!
+        val amountBytes = digitalEuro.amount.toByteArray()
 
-        val expected = serialBytes.size + thetaBytes.size + sigBytes.size + proofBytes.size
+        val expected = serialBytes.size + thetaBytes.size + amountBytes.size + sigBytes.size + proofBytes.size
         assertEquals(expected, digitalEuro.sizeInBytes())
     }
 }
