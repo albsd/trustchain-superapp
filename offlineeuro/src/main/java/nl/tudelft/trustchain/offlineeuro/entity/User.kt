@@ -2,6 +2,7 @@ package nl.tudelft.trustchain.offlineeuro.entity
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.communication.ICommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
@@ -53,6 +54,7 @@ class User(
     }
 
     fun sendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
+        Log.i("token_number", "sent $tokenSerialNumber")
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails =
             wallet.spendEuro(randomizationElements, group, crs, tokenSerialNumber)
@@ -64,6 +66,7 @@ class User(
     }
 
     fun doubleSpendDigitalEuroTo(nameReceiver: String, tokenSerialNumber: String): String {
+        Log.i("token_number", "sent $tokenSerialNumber")
         val randomizationElements = communicationProtocol.requestTransactionRandomness(nameReceiver, group)
         val transactionDetails = wallet.doubleSpendEuro(randomizationElements, group, crs, tokenSerialNumber)
         val result = communicationProtocol.sendTransactionDetails(nameReceiver, transactionDetails!!)

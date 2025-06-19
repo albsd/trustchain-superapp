@@ -248,6 +248,7 @@ class IPV8CommunicationProtocol(
         val transactionDetailsBytes = message.transactionDetailsBytes
         val transactionDetails = transactionDetailsBytes.toTransactionDetails(group)
         val transactionResult = participant.onReceivedTransaction(transactionDetails, bankPublicKey, publicKey)
+        Log.i("token_number", "sent ${transactionDetails.digitalEuro.serialNumber}")
         val requestingPeer = message.requestingPeer
         community.sendTransactionResult(transactionResult, requestingPeer)
     }
