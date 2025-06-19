@@ -1,5 +1,6 @@
 package nl.tudelft.trustchain.offlineeuro.entity
 
+import android.util.Log
 import it.unisa.dia.gas.jpbc.Element
 import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
 import nl.tudelft.trustchain.offlineeuro.cryptography.CRS
@@ -240,6 +241,7 @@ object Transaction {
         val previousTargetAsPower = bilinearGroup.pairing.zr.newElementFromBytes(previousTargetToBytes)
         val expectedTarget = bilinearGroup.pair(g, h).powZn(previousTargetAsPower)
         if (expectedTarget != currentProof.target) {
+            Log.i("proofs", "invalid target; expected: ${expectedTarget}, actual :${currentProof.target}")
             return false
         }
 
@@ -259,6 +261,10 @@ object Transaction {
 
         val expectedPairing = bilinearGroup.pair(g, h)
         val actualPairing = bilinearGroup.pair(theta, s)
+
+        if (expectedPairing != actualPairing) {
+            Log.i("proofs", "invalid pairing; expected: ${expectedPairing}, actual :${actualPairing}")
+        }
 
         return expectedPairing == actualPairing
     }
