@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS Wallet (
     previousProofs BLOB,
     secretT BLOB NOT NULL,
     transactionSignature BLOB,
-    timesSpent INTEGER NOT NULL
+    timesSpent INTEGER NOT NULL,
+    amount INTEGER NOT NULL
 );
 
 insertWalletEntry:
@@ -16,14 +17,16 @@ INSERT INTO Wallet(serialNumber,
     previousProofs,
     secretT,
     transactionSignature,
-    timesSpent)
+    timesSpent,
+    amount)
 VALUES (?,
     ?,
     ?,
     ?,
     ?,
     ?,
-    0
+    0,
+    ?
 );
 
 getWalletEntryByDescriptor:

@@ -23,18 +23,20 @@ class WalletManager(
             previousProofs: ByteArray?,
             secretT: ByteArray,
             transactionSignature: ByteArray?,
-            timesSpent: Long
+            timesSpent: Long,
+            amount: Long
         ->
         WalletEntry(
             DigitalEuro(
                 serialNumber,
                 group.gElementFromBytes(firstTheta),
                 deserializeSchnorr(signature)!!,
-                deserializeGSP(previousProofs)
+                deserializeGSP(previousProofs),
+                amount
             ),
             group.zrElementFromBytes(secretT),
             deserializeSchnorr(transactionSignature),
-            timesSpent
+            timesSpent,
         )
     }
 
@@ -61,7 +63,8 @@ class WalletManager(
             serialize(digitalEuro.signature)!!,
             serialize(digitalEuro.proofs),
             walletEntry.t.toBytes(),
-            serialize(walletEntry.transactionSignature)
+            serialize(walletEntry.transactionSignature),
+            digitalEuro.amount
         )
         return true
     }

@@ -16,9 +16,6 @@ import kotlinx.coroutines.launch
 import nl.tudelft.trustchain.offlineeuro.R
 import nl.tudelft.trustchain.offlineeuro.communication.IPV8CommunicationProtocol
 import nl.tudelft.trustchain.offlineeuro.community.OfflineEuroCommunity
-import nl.tudelft.trustchain.offlineeuro.cryptography.BilinearGroup
-import nl.tudelft.trustchain.offlineeuro.cryptography.PairingTypes
-import nl.tudelft.trustchain.offlineeuro.db.AddressBookManager
 import nl.tudelft.trustchain.offlineeuro.entity.User
 import nl.tudelft.trustchain.offlineeuro.enums.Role
 
@@ -64,9 +61,26 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
             val bank = communicationProtocol.addressBookManager.getAllAddresses().filter { it.type == Role.Bank }
             if (bank.isEmpty()) {
                 Toast.makeText(context, "Could not find bank. Try again later...", Toast.LENGTH_SHORT).show()
-            } else {
-                user.withdrawDigitalEuro("Bank");
+                return@setOnClickListener
             }
+
+            val options = arrayOf("1 €", "5 €", "25 €", "100 €")
+            val values = arrayOf(1L, 5L, 25L, 100L)
+
+            AlertDialog.Builder(requireContext())
+                .setTitle("Select amount to withdraw")
+                .setItems(options) { dialog, which ->
+                    val selectedValue = values[which]
+                    try {
+                        user.withdrawDigitalEuro("Bank", value = selectedValue)
+                        Toast.makeText(context, "Requested $selectedValue €", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Failed to withdraw: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+                .show()
         }
 
         updateAllAddresses(view)
@@ -123,7 +137,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         showUserSelectionWithConfirmation("Send", amount) { selectedUserName ->
             try {
                 user.sendDigitalEuroTo(selectedUserName, tokenSerialNumber)
-                Toast.makeText(requireContext(), "Sent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Sent token to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error sending euro", Toast.LENGTH_SHORT).show()
             }
@@ -135,7 +149,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
         showUserSelectionWithConfirmation("Double Spend", amount) { selectedUserName ->
             try {
                 user.doubleSpendDigitalEuroTo(selectedUserName, tokenSerialNumber)
-                Toast.makeText(requireContext(), "Double spent $amount € to $selectedUserName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Double spent token to $selectedUserName", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Error double spending euro", Toast.LENGTH_SHORT).show()
             }
@@ -145,7 +159,7 @@ class UserHomeFragment : OfflineEuroBaseFragment(R.layout.fragment_user_home) {
     // in case we decidce to allow tokens to be more than 1 eur
     private fun onDepositToken(amount: Int, tokenSerialNumber: String) {
         user.doubleSpendDigitalEuroTo("Bank", tokenSerialNumber)
-        Toast.makeText(context, "Deposited 1 €", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Deposited token!", Toast.LENGTH_SHORT).show()
     }
 
     private fun showUserSelectionWithConfirmation(

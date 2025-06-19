@@ -241,6 +241,7 @@ object Transaction {
         val previousTargetAsPower = bilinearGroup.pairing.zr.newElementFromBytes(previousTargetToBytes)
         val expectedTarget = bilinearGroup.pair(g, h).powZn(previousTargetAsPower)
         if (expectedTarget != currentProof.target) {
+            Log.i("proofs", "invalid target; expected: ${expectedTarget}, actual :${currentProof.target}")
             return false
         }
 
@@ -263,13 +264,13 @@ object Transaction {
 
         if (expectedPairing != actualPairing) {
             Log.i("proofs", "EQUALSCHECK invalid pairing,\nexpected: $expectedPairing,\nactual: $actualPairing")
+            Log.i("proofs", "invalid pairing; expected: ${expectedPairing}, actual :${actualPairing}")
         }
 
         if (!expectedPairing.isEqual(actualPairing)) {
             Log.i("proofs", "REFCHECK invalid pairing,\nexpected: $expectedPairing,\nactual: $actualPairing")
         }
 
-
-        return expectedPairing.isEqual(actualPairing)
+        return expectedPairing == actualPairing
     }
 }

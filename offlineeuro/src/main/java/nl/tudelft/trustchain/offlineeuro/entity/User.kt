@@ -74,7 +74,7 @@ class User(
         return result
     }
 
-    fun withdrawDigitalEuro(bank: String): DigitalEuro {
+    fun withdrawDigitalEuro(bank: String, value: Long = 1): DigitalEuro {
         val serialNumber = UUID.randomUUID().toString()
         val firstT = group.getRandomZr()
         val tInv = firstT.mul(-1)
@@ -88,7 +88,7 @@ class User(
         val blindedChallenge = Schnorr.createBlindedChallenge(bankRandomness, bytesToSign, bankPublicKey, group)
         val blindSignature = communicationProtocol.requestBlindSignature(publicKey, bank, blindedChallenge.blindedChallenge)
         val signature = Schnorr.unblindSignature(blindedChallenge, blindSignature)
-        val digitalEuro = DigitalEuro(serialNumber, initialTheta, signature, arrayListOf())
+        val digitalEuro = DigitalEuro(serialNumber, initialTheta, signature, arrayListOf(), value)
         wallet.addToWallet(digitalEuro, firstT)
         emitEvent("Withdrawn ${digitalEuro.serialNumber} successfully!")
         return digitalEuro
@@ -100,8 +100,8 @@ class User(
         return usernames
     }
 
-    fun getBalance(): Int {
-        return walletManager!!.getWalletEntriesToSpend().count()
+    fun getBalance(): Long {
+        return walletManager!!.getWalletEntriesToSpend().sumOf { it.digitalEuro.amount }
     }
 
     fun getTokens(): List<WalletEntry> {
@@ -109,7 +109,7 @@ class User(
     }
 
     // only for demo purposes
-    fun generateNewEuroDemo() {
+    fun generateNewEuroDemo(amount: Int = 5) {
         val walletEntry = wallet.generateWalletEntry()
         walletManager!!.insertWalletEntry(walletEntry)
     }

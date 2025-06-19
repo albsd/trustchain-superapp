@@ -61,10 +61,10 @@ class AllRolesFragment : OfflineEuroBaseFragment(R.layout.fragment_all_roles_hom
             )
 
         // give the user some tokenz
-        user.generateNewEuroDemo()
-        user.generateNewEuroDemo()
-        user.generateNewEuroDemo()
-        user.generateNewEuroDemo()
+        user.generateNewEuroDemo(amount = 5)
+        user.generateNewEuroDemo(amount = 10)
+        user.generateNewEuroDemo(amount = 50)
+        user.generateNewEuroDemo(amount = 200)
 
         user.addCallback(onUserDataChangeCallBack)
 
