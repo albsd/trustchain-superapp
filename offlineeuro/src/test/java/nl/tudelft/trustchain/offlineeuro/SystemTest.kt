@@ -65,31 +65,14 @@ class SystemTest {
 
     @Before
     fun setup() {
-
         createTTP()
         createBank()
-        val firstProofCaptor = argumentCaptor<ByteArray>()
-        val secondProofCaptor = argumentCaptor<ByteArray>()
-//        `when`(bankCommunity.sendFraudControlRequest(firstProofCaptor.capture(), secondProofCaptor.capture(), any())).then {
-//            val firstProofBytes = firstProofCaptor.lastValue
-//            val secondProofBytes = secondProofCaptor.lastValue
-//
-//            val peerMock = Mockito.mock(Peer::class.java)
-//            val fraudControlRequestMessage = FraudControlRequestMessage(firstProofBytes, secondProofBytes, peerMock)
-//
-//            val fraudControlResultCaptor = argumentCaptor<String>()
-//            `when`(ttpCommunity.sendFraudControlReply(fraudControlResultCaptor.capture(), any())).then {
-//                val replyMessage = FraudControlReplyMessage(fraudControlResultCaptor.lastValue)
-//                bankCommunity.messageList.add(replyMessage)
-//            }
-//
-//            ttpCommunity.messageList.add(fraudControlRequestMessage)
-//        }
     }
 
     @Test
     fun withdrawSpendDepositDoubleSpendDepositTest() {
         val user = createTestUser()
+        user.registerAtTTP()
         user.wallet.updateUserSignedPublicKey(ttp.getSignedUserPublicKey(user.publicKey))
 
         // Assert that the group descriptions and crs are equal
@@ -140,7 +123,6 @@ class SystemTest {
 
         // Deposit double spend Euro
         println("Euro we are about to fake: " + digitalEuro)
-//        spendEuro(user3, bank, digitalEuro.serialNumber, "Double spending detected. Double spender is ${user.name} with PK: ${user.publicKey}")
         spendEuro(user3, bank, digitalEuro.serialNumber,"Double spending detected on deposit!")
     }
 

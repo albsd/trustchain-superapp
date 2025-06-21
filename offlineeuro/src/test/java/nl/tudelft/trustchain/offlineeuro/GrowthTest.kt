@@ -88,7 +88,7 @@ class GrowthTest {
                     crs,
                 )
             println(transactionDetails.digitalEuro.sizeInBytes())
-            // Assert.assertTrue("The transaction should be valid", Transaction.validate(transactionDetails, bank.publicKey, group, crs).valid)
+            Assert.assertTrue("The transaction should be valid", Transaction.validate(transactionDetails, bank.publicKey, group, crs, ttp.publicKey).valid)
             entry = detailsToWalletEntry(transactionDetails, randomT)
         }
 

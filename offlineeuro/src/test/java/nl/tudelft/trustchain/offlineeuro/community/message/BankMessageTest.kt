@@ -93,16 +93,17 @@ class BankMessageTest {
         Assert.assertArrayEquals(publicKeyBytes, deserialized.publicKeyBytes)
     }
 
-//    @Test
-//    fun testFraudControlRequestPayload() {
-//        val firstProofBytes = "test_first_proof".toByteArray()
-//        val secondProofBytes = "test_second_proof".toByteArray()
-//
-//        val payload = FraudControlRequestPayload(firstProofBytes, secondProofBytes)
-//        val serialized = payload.serialize()
-//        val (deserialized, _) = FraudControlRequestPayload.deserialize(serialized, 0)
-//
-//        Assert.assertArrayEquals(firstProofBytes, deserialized.firstProofBytes)
-//        Assert.assertArrayEquals(secondProofBytes, deserialized.secondProofBytes)
-//    }
+    @Test
+    fun testFraudControlRequestPayload() {
+        val firstProofBytes = "test_first_proof".toByteArray()
+        val secondProofBytes = "test_second_proof".toByteArray()
+        val serialNumber = "serial_number"
+
+        val payload = FraudControlRequestPayload(serialNumber, firstProofBytes, secondProofBytes)
+        val serialized = payload.serialize()
+        val (deserialized, _) = FraudControlRequestPayload.deserialize(serialized, 0)
+
+        Assert.assertArrayEquals(firstProofBytes, deserialized.firstProofBytes)
+        Assert.assertArrayEquals(secondProofBytes, deserialized.secondProofBytes)
+    }
 }

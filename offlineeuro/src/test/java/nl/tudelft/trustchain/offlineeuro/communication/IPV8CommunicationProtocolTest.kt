@@ -46,357 +46,356 @@ import org.mockito.MockedStatic
 import android.net.Uri
 import org.mockito.Mockito.mockStatic
 import android.util.Log
-import nl.tudelft.trustchain.offlineeuro.cryptography.PedersenCommitment
 import org.junit.After
-import nl.tudelft.trustchain.offlineeuro.entity.Participant
 import nl.tudelft.trustchain.offlineeuro.cryptography.SchnorrSignature
 
 class IPV8CommunicationProtocolTest {
-//    private val context = null
-//    private val driver =
-//        JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).apply {
-//            Database.Schema.create(this)
-//        }
-//
-//    private val community: OfflineEuroCommunity = Mockito.mock(OfflineEuroCommunity::class.java)
-//
-//    // Setup the TTP
-//    private val groupDescription = BilinearGroup(PairingTypes.FromFile)
-//    private val ttpCRS = CRSGenerator.generateCRSMap(groupDescription)
-//    private val ttpPK = groupDescription.generateRandomElementOfG()
-//    private val ttpAddress = Address("TTP", Role.Bank, ttpPK, "TTPPublicKey".toByteArray())
-//
-//    // Set up bank
-//    private val bankPK = groupDescription.generateRandomElementOfG()
-//    private val bankAddress = Address("Bank", Role.Bank, bankPK, "BankPublicKey".toByteArray())
-//    private val blindSignatureRandomness = groupDescription.generateRandomElementOfG()
-//    private val blindSignature = BigInteger("1236231234124321421")
-//
-//    // Set up receiver
-//    private val receiverPK = groupDescription.generateRandomElementOfG()
-//    private val receiverAddress = Address("Receiver", Role.User, receiverPK, "UserPublicKey".toByteArray())
-//    private val randomizationElements = GrothSahai.tToRandomizationElements(groupDescription.getRandomZr(), groupDescription, ttpCRS.first)
-//    private val transactionResult = "Successful Transaction!"
-//
-//    private val initialBilinearGroup = BilinearGroup(PairingTypes.FromFile)
-//    private val addressBookManager = AddressBookManager(context, initialBilinearGroup, driver)
-//
-//    private val userRandomness: HashMap<Element, Element> = hashMapOf()
-//
-//    private val receivingPeer = Mockito.mock(Peer::class.java)
-//
-//    private val iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
-//
-//    private lateinit var mockedLog: MockedStatic<Log>
-//    private lateinit var mockedUri: MockedStatic<Uri>
-//
-//    @Before
-//    fun setup() {
-//        mockedLog = mockStatic(Log::class.java)
-//        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
-//
-//        mockedUri = mockStatic(Uri::class.java)
-//        val mockUri = Mockito.mock(Uri::class.java)
-//        mockedUri.`when`<Uri> { Uri.parse(any()) }.thenReturn(mockUri)
-//
-//        `when`(community.messageList).thenReturn(iPV8CommunicationProtocol.messageList)
-//        val ttpAddressMessage = AddressMessage(ttpAddress.name, ttpAddress.type, ttpAddress.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
-//        `when`(community.getGroupDescriptionAndCRS()).then {
-//            val message = BilinearGroupCRSReplyMessage(groupDescription.toGroupElementBytes(), ttpCRS.first.toCRSBytes(), ttpAddressMessage)
-//            community.messageList.add(message)
-//        }
-//
-//        `when`(community.sendGroupDescriptionAndCRS(any(), any(), any(), any())).then { }
-//
-//        `when`(community.registerAtTTP(any(), any(), any())).then { }
-//
-//        `when`(community.sendBlindSignatureRandomnessReply(any(), any())).then { }
-//        `when`(community.sendBlindSignature(any(), any())).then { }
-//
-//        `when`(community.getBlindSignatureRandomness(any(), any())).then {
-//            val message = BlindSignatureRandomnessReplyMessage(blindSignatureRandomness.toBytes())
-//            community.messageList.add(message)
-//        }
-//
-//        `when`(community.getBlindSignature(any(), any(), any())).then {
-//            val message = BlindSignatureReplyMessage(blindSignature)
-//            community.messageList.add(message)
-//        }
-//
-//        `when`(community.getTransactionRandomizationElements(any(), any())).then {
-//            val message = TransactionRandomizationElementsReplyMessage(randomizationElements.toRandomizationElementsBytes())
-//            community.messageList.add(message)
-//        }
-//
-//        `when`(community.sendTransactionDetails(any(), any(), any())).then {
-//            val message = TransactionResultMessage(transactionResult)
-//            community.messageList.add(message)
-//        }
-//    }
-//
-//    @After
-//    fun tearDown() {
-//        mockedLog.close()
-//        mockedUri.close()
-//    }
-//
-//    @Test
-//    fun getGroupDescriptionAndCRSTest() {
-//        val ttp = Mockito.mock(TTP::class.java)
-//        iPV8CommunicationProtocol.participant = ttp
-//        `when`(ttp.group).thenReturn(groupDescription)
-//        `when`(ttp.crs).thenReturn(ttpCRS.first)
-//
-//        iPV8CommunicationProtocol.getGroupDescriptionAndCRS()
-//        val groupDescription = ttp.group
-//        val crs = ttp.crs
-//        Assert.assertEquals(this.groupDescription.pairing, groupDescription.pairing)
-//        Assert.assertEquals(this.groupDescription.g, groupDescription.g)
-//        Assert.assertEquals(this.groupDescription.h, groupDescription.h)
-//        Assert.assertEquals(this.groupDescription.gt, groupDescription.gt)
-//        Assert.assertEquals("The crs should be correct", ttpCRS.first, crs)
-//    }
-//
-//    @Test
-//    fun sendBilinearGroupAndCRSTest() {
-//        val message = BilinearGroupCRSRequestMessage(receivingPeer)
-//
-//        val ttp = Mockito.mock(TTP::class.java)
-//        iPV8CommunicationProtocol.participant = ttp
-//
-//        `when`(ttp.group).thenReturn(groupDescription)
-//        `when`(ttp.crs).thenReturn(ttpCRS.first)
-//        `when`(ttp.publicKey).thenReturn(ttpPK)
-//
-//        val expectedGroupElements = groupDescription.toGroupElementBytes()
-//        val expectedCRSBytes = ttpCRS.first.toCRSBytes()
-//
-//        community.messageList.add(message)
-//        verify(community, times(1))
-//            .sendGroupDescriptionAndCRS(expectedGroupElements, expectedCRSBytes, ttpAddress.publicKey.toBytes(), receivingPeer)
-//    }
-//
-//    @Test
-//    fun registrationTest() {
-//        val publicKey = groupDescription.generateRandomElementOfG()
-//        val userName = "UserTryingToRegister"
-//        val participant = Mockito.mock(User::class.java)
-//        `when`(participant.publicKey).thenReturn(publicKey)
-//        `when`(participant.name).thenReturn(userName)
-//        `when`(participant.group).thenReturn(groupDescription)
-//
-//        iPV8CommunicationProtocol.participant = participant
-//        iPV8CommunicationProtocol.messageList.add(
-//            AddressMessage(ttpAddress.name, ttpAddress.type, ttpAddress.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
-//        )
-//        iPV8CommunicationProtocol.register(userName, publicKey, ttpAddress.name)
-//        // Assert that the registration request is sent correctly
-//        verify(community, times(1)).registerAtTTP(userName, publicKey.toBytes(), ttpAddress.peerPublicKey!!)
-//    }
-//
-//    @Test
-//    fun getBlindSignatureRandomnessTest() {
-//        addressBookManager.insertAddress(bankAddress)
-//        val publicKey = groupDescription.generateRandomElementOfG()
-//        val randomness = iPV8CommunicationProtocol.getBlindSignatureRandomness(publicKey, bankAddress.name, groupDescription)
-//        verify(community, times(1)).getBlindSignatureRandomness(publicKey.toBytes(), bankAddress.peerPublicKey!!)
-//        Assert.assertEquals("The randomness should be correct", blindSignatureRandomness, randomness)
-//    }
-//
-//    @Test
-//    fun sendBlindSignatureRandomnessTest() {
-//        val bank = Mockito.mock(Bank::class.java)
-//        iPV8CommunicationProtocol.participant = bank
-//
-//        val givenRandomness = groupDescription.generateRandomElementOfG()
-//        val publicKey = groupDescription.generateRandomElementOfG()
-//        `when`(bank.getBlindSignatureRandomness(any())).thenReturn(givenRandomness)
-//        `when`(bank.group).thenReturn(groupDescription)
-//        val requestMessage = BlindSignatureRandomnessRequestMessage(publicKey.toBytes(), receivingPeer)
-//        community.messageList.add(requestMessage)
-//
-//        verify(bank, times(1)).getBlindSignatureRandomness(publicKey)
-//        verify(community, times(1)).sendBlindSignatureRandomnessReply(givenRandomness.toBytes(), receivingPeer)
-//    }
-//
-//    @Test
-//    fun requestBlindSignatureTest() {
-//        val bank = Mockito.mock(Bank::class.java)
-//        iPV8CommunicationProtocol.participant = bank
-//        addressBookManager.insertAddress(bankAddress)
-//        val publicKey = groupDescription.generateRandomElementOfG()
-//        val challenge = BigInteger("12352132521521321521312")
-//        val signature = iPV8CommunicationProtocol.requestBlindSignature(publicKey, bankAddress.name, challenge)
-//        verify(community, times(1)).getBlindSignature(challenge, publicKey.toBytes(), bankAddress.peerPublicKey!!)
-//        Assert.assertEquals("The returned signature should be correct", blindSignature, signature)
-//    }
-//
-//    @Test
-//    fun sendBlindSignatureTest() {
-//        val bank = Mockito.mock(Bank::class.java)
-//        iPV8CommunicationProtocol.participant = bank
-//
-//        val challenge = BigInteger("321321521421097502142")
-//        val publicKey = groupDescription.generateRandomElementOfG()
-//        val signature = BigInteger("2457921903721896428193682163921")
-//        `when`(bank.createBlindSignature(challenge, publicKey)).thenReturn(signature)
-//        `when`(bank.group).thenReturn(groupDescription)
-//        val blindSignatureRequestMessage = BlindSignatureRequestMessage(challenge, publicKey.toBytes(), receivingPeer)
-//        community.messageList.add(blindSignatureRequestMessage)
-//
-//        verify(bank, times(1)).createBlindSignature(challenge, publicKey)
-//        verify(community, times(1)).sendBlindSignature(signature, receivingPeer)
-//    }
-//
-//    @Test
-//    fun requestTransactionRandomnessTest() {
-//        val bank = Mockito.mock(Bank::class.java)
-//        iPV8CommunicationProtocol.participant = bank
-//
-//        val bankPK = groupDescription.generateRandomElementOfG()
-//        `when`(bank.publicKey).thenReturn(bankPK)
-//        addressBookManager.insertAddress(receiverAddress)
-//        val transactionRandomness = iPV8CommunicationProtocol.requestTransactionRandomness(receiverAddress.name, groupDescription)
-//        verify(community, times(1)).getTransactionRandomizationElements(bankPK.toBytes(), receiverAddress.peerPublicKey!!)
-//        Assert.assertEquals("The transaction randomness should be correct", randomizationElements, transactionRandomness)
-//    }
-//
-//    @Test
-//    fun sendTransactionRandomnessTest() {
-//        val user = Mockito.mock(User::class.java)
-//        iPV8CommunicationProtocol.participant = user
-//
-//        val randomT = groupDescription.getRandomZr()
-//        val randomizationElements = GrothSahai.tToRandomizationElements(randomT, groupDescription, ttpCRS.first)
-//        val publicKey = groupDescription.generateRandomElementOfG()
-//        `when`(user.group).thenReturn(groupDescription)
-//        `when`(user.generateRandomizationElements(any())).thenReturn(randomizationElements)
-//        `when`(community.sendTransactionRandomizationElements(any(), any())).then { }
-//
-//        val requestMessage = TransactionRandomizationElementsRequestMessage(publicKey.toBytes(), receivingPeer)
-//        community.messageList.add(requestMessage)
-//
-//        verify(user, times(1)).generateRandomizationElements(publicKey)
-//        verify(
-//            community,
-//            times(1)
-//        ).sendTransactionRandomizationElements(randomizationElements.toRandomizationElementsBytes(), receivingPeer)
-//    }
-//
-//    @Test
-//    fun sendTransactionDetailsTest() {
-//        val user = Mockito.mock(User::class.java)
-//        iPV8CommunicationProtocol.participant = user
-//
-//        val userPK = groupDescription.generateRandomElementOfG()
-//        `when`(user.publicKey).thenReturn(userPK)
-//
-//        addressBookManager.insertAddress(receiverAddress)
-//        val transactionDetails = Mockito.mock(TransactionDetails::class.java)
-//        val transactionDetailsBytes = Mockito.mock(TransactionDetailsBytes::class.java)
-//        `when`(transactionDetails.toTransactionDetailsBytes()).thenReturn(transactionDetailsBytes)
-//
-//        val result = iPV8CommunicationProtocol.sendTransactionDetails(receiverAddress.name, transactionDetails)
-//        verify(
-//            community,
-//            times(1)
-//        ).sendTransactionDetails(userPK.toBytes(), receiverAddress.peerPublicKey!!, transactionDetails.toTransactionDetailsBytes())
-//        Assert.assertEquals("The returned result should be correct", transactionResult, result)
-//    }
-//
-//    @Test
-//    fun onTransactionDetailsReceived() {
-//        val user = Mockito.mock(User::class.java)
-//        iPV8CommunicationProtocol.participant = user
-//
-//        addressBookManager.insertAddress(bankAddress)
-//        val transactionDetails = Mockito.mock(TransactionDetails::class.java)
-//        val transactionDetailsBytes = Mockito.mock(TransactionDetailsBytes::class.java)
-//        val publicKeySender = groupDescription.generateRandomElementOfG()
-//        val result = "Transaction Mocking"
-//
-//        `when`(transactionDetailsBytes.toTransactionDetails(groupDescription)).thenReturn(transactionDetails)
-//        `when`(user.group).thenReturn(groupDescription)
-//        `when`(user.onReceivedTransaction(transactionDetails, bankPK, publicKeySender)).thenReturn(result)
-//        `when`(community.sendTransactionResult(result, receivingPeer)).then { }
-//
-//        val message = TransactionMessage(publicKeySender.toBytes(), transactionDetailsBytes, receivingPeer)
-//        community.messageList.add(message)
-//
-//        verify(user, times(1)).onReceivedTransaction(transactionDetails, bankPK, publicKeySender)
-//        verify(community, times(1)).sendTransactionResult(result, receivingPeer)
-//    }
-//
-//    @Test
-//    fun handleVerificationCompleteMessage_successTest() {
-//        val group = groupDescription
-//        val ttp = Mockito.mock(TTP::class.java)
-//        val userName = "UserToVerify"
-//        val publicKey = group.generateRandomElementOfG()
-//        val peer = Mockito.mock(Peer::class.java)
-//        val jwtToken = """
-//            eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2Y3QiOiJ1cm46ZXVkaTpwaWQ6MSIsInNhbHQiOiJhYmNkZWYiLCJfc2RfYWxnIjoic2hhLTI1NiJ9.~WyIxMjM0NTYiLCJmYW1pbHlfbmFtZSIsIkRvZSJd~eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyLCJzdWIiOiIxMjM0NTY3ODkwIn0.signature
-//        """.trimIndent()
-//
-//        `when`(ttp.group).thenReturn(group)
-//        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(jwtToken)
-//        `when`(ttp.publicKey).thenReturn(ttpPK)
-//
-//        iPV8CommunicationProtocol.participant = ttp
-//
-//        val message = TTPVerificationCompleteMessage(userName, publicKey.toBytes(), peer)
-//        iPV8CommunicationProtocol.messageList.add(message)
-//
-//        verify(ttp, times(1)).verifyUser(userName, publicKey)
-//        verify(community, times(1)).sendRegistrationCompleteMessage("Completed", peer)
-//    }
-//
-//    @Test
-//    fun handleRegistrationMessage_successTest() {
-//        val group = groupDescription
-//        val ttp = Mockito.mock(TTP::class.java)
-//        val userName = "UserRegistering"
-//        val publicKey = group.generateRandomElementOfG()
-//        val peer = Mockito.mock(Peer::class.java)
-//        val responseMap = mapOf(
-//            "client_id" to "client123",
-//            "request_uri" to "https://example.com/uri",
-//            "request_uri_method" to "GET"
-//        )
-//
-//        `when`(ttp.group).thenReturn(group)
-//        `when`(ttp.registerUser(userName, publicKey)).thenReturn(responseMap)
-//        `when`(ttp.getSignedUserPublicKey(publicKey)).thenReturn(SchnorrSignature(BigInteger.ONE, BigInteger.ONE, "test".toByteArray()))
-//
-//        iPV8CommunicationProtocol.participant = ttp
-//
-//        val message = TTPRegistrationMessage(userName, publicKey.toBytes(), publicKey.toBytes(), peer)
-//        iPV8CommunicationProtocol.messageList.add(message)
-//
-//        verify(ttp, times(1)).registerUser(userName, publicKey)
-//        verify(community, times(1)).sendSignedPublicKey(any(), eq(peer))
-//        verify(community, times(1)).sendVerificationRequest("client123", "https://example.com/uri", "GET", peer)
-//    }
-//
-//    @Test
-//    fun handleRegistrationCompleteMessage_noopTest() {
-//        val message = TTPRegistrationCompleteMessage("Completed")
-//        iPV8CommunicationProtocol.participant = Mockito.mock(User::class.java)
-//        iPV8CommunicationProtocol.messageList.add(message)
-//    }
-//
-//    @Test
-//    fun handleVerificationRequestMessage_noopTest() {
-//        val mockUri = Mockito.mock(Uri::class.java)
-//        val mockUriBuilder = Mockito.mock(Uri.Builder::class.java)
-//
-//        `when`(Uri.parse("eudi-openid4vp://")).thenReturn(mockUri)
-//        `when`(mockUri.buildUpon()).thenReturn(mockUriBuilder)
-//        `when`(mockUriBuilder.appendQueryParameter(any(), any())).thenReturn(mockUriBuilder)
-//        `when`(mockUriBuilder.build()).thenReturn(mockUri)
-//
-//        val message = TTPVerificationRequestMessage("client_id", "request_uri", "get")
-//        iPV8CommunicationProtocol.participant = Mockito.mock(User::class.java)
-//        iPV8CommunicationProtocol.messageList.add(message)
-//    }
+    private val context = null
+    private val driver =
+        JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).apply {
+            Database.Schema.create(this)
+        }
+
+    private val community: OfflineEuroCommunity = Mockito.mock(OfflineEuroCommunity::class.java)
+
+    // Setup the TTP
+    private val groupDescription = BilinearGroup(PairingTypes.FromFile)
+    private val ttpCRS = CRSGenerator.generateCRSMap(groupDescription)
+    private val ttpPK = groupDescription.generateRandomElementOfG()
+    private val ttpAddress = Address("TTP", Role.Bank, ttpPK, "TTPPublicKey".toByteArray())
+
+    // Set up bank
+    private val bankPK = groupDescription.generateRandomElementOfG()
+    private val bankAddress = Address("Bank", Role.Bank, bankPK, "BankPublicKey".toByteArray())
+    private val blindSignatureRandomness = groupDescription.generateRandomElementOfG()
+    private val blindSignature = BigInteger("1236231234124321421")
+
+    // Set up receiver
+    private val receiverPK = groupDescription.generateRandomElementOfG()
+    private val receiverAddress = Address("Receiver", Role.User, receiverPK, "UserPublicKey".toByteArray())
+    private val randomizationElements = GrothSahai.tToRandomizationElements(groupDescription.getRandomZr(), groupDescription, ttpCRS.first)
+    private val transactionResult = "Successful Transaction!"
+
+    private val initialBilinearGroup = BilinearGroup(PairingTypes.FromFile)
+    private val addressBookManager = AddressBookManager(context, initialBilinearGroup, driver)
+
+    private val userRandomness: HashMap<Element, Element> = hashMapOf()
+
+    private val receivingPeer = Mockito.mock(Peer::class.java)
+
+    private val iPV8CommunicationProtocol = IPV8CommunicationProtocol(addressBookManager, community)
+
+    private lateinit var mockedLog: MockedStatic<Log>
+    private lateinit var mockedUri: MockedStatic<Uri>
+
+    @Before
+    fun setup() {
+        mockedLog = mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.i(any(), any()) }.thenReturn(0)
+
+        mockedUri = mockStatic(Uri::class.java)
+        val mockUri = Mockito.mock(Uri::class.java)
+        mockedUri.`when`<Uri> { Uri.parse(any()) }.thenReturn(mockUri)
+
+        `when`(community.messageList).thenReturn(iPV8CommunicationProtocol.messageList)
+        val ttpAddressMessage = AddressMessage(ttpAddress.name, ttpAddress.type, ttpAddress.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+        `when`(community.getGroupDescriptionAndCRS()).then {
+            val message = BilinearGroupCRSReplyMessage(groupDescription.toGroupElementBytes(), ttpCRS.first.toCRSBytes(), ttpAddressMessage)
+            community.messageList.add(message)
+        }
+
+        `when`(community.sendGroupDescriptionAndCRS(any(), any(), any(), any())).then { }
+
+        `when`(community.registerAtTTP(any(), any(), any())).then { }
+
+        `when`(community.sendBlindSignatureRandomnessReply(any(), any())).then { }
+        `when`(community.sendBlindSignature(any(), any())).then { }
+
+        `when`(community.getBlindSignatureRandomness(any(), any())).then {
+            val message = BlindSignatureRandomnessReplyMessage(blindSignatureRandomness.toBytes())
+            community.messageList.add(message)
+        }
+
+        `when`(community.getBlindSignature(any(), any(), any())).then {
+            val message = BlindSignatureReplyMessage(blindSignature)
+            community.messageList.add(message)
+        }
+
+        `when`(community.getTransactionRandomizationElements(any(), any())).then {
+            val message = TransactionRandomizationElementsReplyMessage(randomizationElements.toRandomizationElementsBytes())
+            community.messageList.add(message)
+        }
+
+        `when`(community.sendTransactionDetails(any(), any(), any())).then {
+            val message = TransactionResultMessage(transactionResult)
+            community.messageList.add(message)
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockedLog.close()
+        mockedUri.close()
+    }
+
+    @Test
+    fun getGroupDescriptionAndCRSTest() {
+        val ttp = Mockito.mock(TTP::class.java)
+        iPV8CommunicationProtocol.participant = ttp
+        `when`(ttp.group).thenReturn(groupDescription)
+        `when`(ttp.crs).thenReturn(ttpCRS.first)
+
+        iPV8CommunicationProtocol.getGroupDescriptionAndCRS()
+        val groupDescription = ttp.group
+        val crs = ttp.crs
+        Assert.assertEquals(this.groupDescription.pairing, groupDescription.pairing)
+        Assert.assertEquals(this.groupDescription.g, groupDescription.g)
+        Assert.assertEquals(this.groupDescription.h, groupDescription.h)
+        Assert.assertEquals(this.groupDescription.gt, groupDescription.gt)
+        Assert.assertEquals("The crs should be correct", ttpCRS.first, crs)
+    }
+
+    @Test
+    fun sendBilinearGroupAndCRSTest() {
+        val message = BilinearGroupCRSRequestMessage(receivingPeer)
+
+        val ttp = Mockito.mock(TTP::class.java)
+        iPV8CommunicationProtocol.participant = ttp
+
+        `when`(ttp.group).thenReturn(groupDescription)
+        `when`(ttp.crs).thenReturn(ttpCRS.first)
+        `when`(ttp.publicKey).thenReturn(ttpPK)
+
+        val expectedGroupElements = groupDescription.toGroupElementBytes()
+        val expectedCRSBytes = ttpCRS.first.toCRSBytes()
+
+        community.messageList.add(message)
+        verify(community, times(1))
+            .sendGroupDescriptionAndCRS(expectedGroupElements, expectedCRSBytes, ttpAddress.publicKey.toBytes(), receivingPeer)
+    }
+
+    @Test
+    fun registrationTest() {
+        val publicKey = groupDescription.generateRandomElementOfG()
+        val userName = "UserTryingToRegister"
+        val participant = Mockito.mock(User::class.java)
+        `when`(participant.publicKey).thenReturn(publicKey)
+        `when`(participant.name).thenReturn(userName)
+        `when`(participant.group).thenReturn(groupDescription)
+
+        iPV8CommunicationProtocol.participant = participant
+        iPV8CommunicationProtocol.messageList.add(
+            AddressMessage(ttpAddress.name, ttpAddress.type, ttpAddress.publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+        )
+        iPV8CommunicationProtocol.register(userName, publicKey, ttpAddress.name)
+        // Assert that the registration request is sent correctly
+        verify(community, times(1)).registerAtTTP(userName, publicKey.toBytes(), ttpAddress.peerPublicKey!!)
+    }
+
+    @Test
+    fun getBlindSignatureRandomnessTest() {
+        addressBookManager.insertAddress(bankAddress)
+        val publicKey = groupDescription.generateRandomElementOfG()
+        val randomness = iPV8CommunicationProtocol.getBlindSignatureRandomness(publicKey, bankAddress.name, groupDescription)
+        verify(community, times(1)).getBlindSignatureRandomness(publicKey.toBytes(), bankAddress.peerPublicKey!!)
+        Assert.assertEquals("The randomness should be correct", blindSignatureRandomness, randomness)
+    }
+
+    @Test
+    fun sendBlindSignatureRandomnessTest() {
+        val bank = Mockito.mock(Bank::class.java)
+        iPV8CommunicationProtocol.participant = bank
+
+        val givenRandomness = groupDescription.generateRandomElementOfG()
+        val publicKey = groupDescription.generateRandomElementOfG()
+        `when`(bank.getBlindSignatureRandomness(any())).thenReturn(givenRandomness)
+        `when`(bank.group).thenReturn(groupDescription)
+        val requestMessage = BlindSignatureRandomnessRequestMessage(publicKey.toBytes(), receivingPeer)
+        community.messageList.add(requestMessage)
+
+        verify(bank, times(1)).getBlindSignatureRandomness(publicKey)
+        verify(community, times(1)).sendBlindSignatureRandomnessReply(givenRandomness.toBytes(), receivingPeer)
+    }
+
+    @Test
+    fun requestBlindSignatureTest() {
+        val bank = Mockito.mock(Bank::class.java)
+        iPV8CommunicationProtocol.participant = bank
+        addressBookManager.insertAddress(bankAddress)
+        val publicKey = groupDescription.generateRandomElementOfG()
+        val challenge = BigInteger("12352132521521321521312")
+        val signature = iPV8CommunicationProtocol.requestBlindSignature(publicKey, bankAddress.name, challenge)
+        verify(community, times(1)).getBlindSignature(challenge, publicKey.toBytes(), bankAddress.peerPublicKey!!)
+        Assert.assertEquals("The returned signature should be correct", blindSignature, signature)
+    }
+
+    @Test
+    fun sendBlindSignatureTest() {
+        val bank = Mockito.mock(Bank::class.java)
+        iPV8CommunicationProtocol.participant = bank
+
+        val challenge = BigInteger("321321521421097502142")
+        val publicKey = groupDescription.generateRandomElementOfG()
+        val signature = BigInteger("2457921903721896428193682163921")
+        `when`(bank.createBlindSignature(challenge, publicKey)).thenReturn(signature)
+        `when`(bank.group).thenReturn(groupDescription)
+        val blindSignatureRequestMessage = BlindSignatureRequestMessage(challenge, publicKey.toBytes(), receivingPeer)
+        community.messageList.add(blindSignatureRequestMessage)
+
+        verify(bank, times(1)).createBlindSignature(challenge, publicKey)
+        verify(community, times(1)).sendBlindSignature(signature, receivingPeer)
+    }
+
+    @Test
+    fun requestTransactionRandomnessTest() {
+        val bank = Mockito.mock(Bank::class.java)
+        iPV8CommunicationProtocol.participant = bank
+
+        val bankPK = groupDescription.generateRandomElementOfG()
+        `when`(bank.publicKey).thenReturn(bankPK)
+        addressBookManager.insertAddress(receiverAddress)
+        val transactionRandomness = iPV8CommunicationProtocol.requestTransactionRandomness(receiverAddress.name, groupDescription)
+        verify(community, times(1)).getTransactionRandomizationElements(bankPK.toBytes(), receiverAddress.peerPublicKey!!)
+        Assert.assertEquals("The transaction randomness should be correct", randomizationElements, transactionRandomness)
+    }
+
+    @Test
+    fun sendTransactionRandomnessTest() {
+        val user = Mockito.mock(User::class.java)
+        iPV8CommunicationProtocol.participant = user
+
+        val randomT = groupDescription.getRandomZr()
+        val randomizationElements = GrothSahai.tToRandomizationElements(randomT, groupDescription, ttpCRS.first)
+        val publicKey = groupDescription.generateRandomElementOfG()
+        `when`(user.group).thenReturn(groupDescription)
+        `when`(user.generateRandomizationElements(any())).thenReturn(randomizationElements)
+        `when`(community.sendTransactionRandomizationElements(any(), any())).then { }
+
+        val requestMessage = TransactionRandomizationElementsRequestMessage(publicKey.toBytes(), receivingPeer)
+        community.messageList.add(requestMessage)
+
+        verify(user, times(1)).generateRandomizationElements(publicKey)
+        verify(
+            community,
+            times(1)
+        ).sendTransactionRandomizationElements(randomizationElements.toRandomizationElementsBytes(), receivingPeer)
+    }
+
+    @Test
+    fun sendTransactionDetailsTest() {
+        val user = Mockito.mock(User::class.java)
+        iPV8CommunicationProtocol.participant = user
+
+        val userPK = groupDescription.generateRandomElementOfG()
+        `when`(user.publicKey).thenReturn(userPK)
+
+        addressBookManager.insertAddress(receiverAddress)
+        val transactionDetails = Mockito.mock(TransactionDetails::class.java)
+        val transactionDetailsBytes = Mockito.mock(TransactionDetailsBytes::class.java)
+        `when`(transactionDetails.toTransactionDetailsBytes()).thenReturn(transactionDetailsBytes)
+
+        val result = iPV8CommunicationProtocol.sendTransactionDetails(receiverAddress.name, transactionDetails)
+        verify(
+            community,
+            times(1)
+        ).sendTransactionDetails(userPK.toBytes(), receiverAddress.peerPublicKey!!, transactionDetails.toTransactionDetailsBytes())
+        Assert.assertEquals("The returned result should be correct", transactionResult, result)
+    }
+
+    @Test
+    fun onTransactionDetailsReceived() {
+        val user = Mockito.mock(User::class.java)
+        iPV8CommunicationProtocol.participant = user
+
+        addressBookManager.insertAddress(bankAddress)
+        val transactionDetails = Mockito.mock(TransactionDetails::class.java)
+        val transactionDetailsBytes = Mockito.mock(TransactionDetailsBytes::class.java)
+        val publicKeySender = groupDescription.generateRandomElementOfG()
+        val result = "Transaction Mocking"
+
+        `when`(transactionDetailsBytes.toTransactionDetails(groupDescription)).thenReturn(transactionDetails)
+        `when`(user.group).thenReturn(groupDescription)
+        `when`(user.onReceivedTransaction(transactionDetails, bankPK, publicKeySender)).thenReturn(result)
+        `when`(community.sendTransactionResult(result, receivingPeer)).then { }
+
+        val message = TransactionMessage(publicKeySender.toBytes(), transactionDetailsBytes, receivingPeer)
+        community.messageList.add(message)
+
+        verify(user, times(1)).onReceivedTransaction(transactionDetails, bankPK, publicKeySender)
+        verify(community, times(1)).sendTransactionResult(result, receivingPeer)
+    }
+
+    @Test
+    fun handleVerificationCompleteMessage_successTest() {
+        val group = groupDescription
+        val ttp = Mockito.mock(TTP::class.java)
+        val userName = "UserToVerify"
+        val publicKey = group.generateRandomElementOfG()
+        val peer = Mockito.mock(Peer::class.java)
+        val jwtToken = """
+            eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2Y3QiOiJ1cm46ZXVkaTpwaWQ6MSIsInNhbHQiOiJhYmNkZWYiLCJfc2RfYWxnIjoic2hhLTI1NiJ9.~WyIxMjM0NTYiLCJmYW1pbHlfbmFtZSIsIkRvZSJd~eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyLCJzdWIiOiIxMjM0NTY3ODkwIn0.signature
+        """.trimIndent()
+
+        `when`(ttp.group).thenReturn(group)
+        `when`(ttp.verifyUser(userName, publicKey)).thenReturn(jwtToken)
+        `when`(ttp.publicKey).thenReturn(ttpPK)
+        `when`(ttp.getSignedUserPublicKey(publicKey)).thenReturn(SchnorrSignature(BigInteger.ONE, BigInteger.ONE, "test".toByteArray()))
+
+        iPV8CommunicationProtocol.participant = ttp
+
+        val message = TTPVerificationCompleteMessage(userName, publicKey.toBytes(), peer)
+        iPV8CommunicationProtocol.messageList.add(message)
+
+        verify(ttp, times(1)).verifyUser(userName, publicKey)
+        verify(community, times(1)).sendRegistrationCompleteMessage(eq("Completed"), any(), eq(peer))
+    }
+
+    @Test
+    fun handleRegistrationMessage_successTest() {
+        val group = groupDescription
+        val ttp = Mockito.mock(TTP::class.java)
+        val userName = "UserRegistering"
+        val publicKey = group.generateRandomElementOfG()
+        val peer = Mockito.mock(Peer::class.java)
+        val responseMap = mapOf(
+            "client_id" to "client123",
+            "request_uri" to "https://example.com/uri",
+            "request_uri_method" to "GET"
+        )
+
+        `when`(ttp.group).thenReturn(group)
+        `when`(ttp.registerUser(userName, publicKey)).thenReturn(responseMap)
+        `when`(ttp.getSignedUserPublicKey(publicKey)).thenReturn(SchnorrSignature(BigInteger.ONE, BigInteger.ONE, "test".toByteArray()))
+
+        iPV8CommunicationProtocol.participant = ttp
+
+        val message = TTPRegistrationMessage(userName, publicKey.toBytes(), publicKey.toBytes(), peer)
+        iPV8CommunicationProtocol.messageList.add(message)
+
+        verify(ttp, times(1)).registerUser(userName, publicKey)
+        verify(community, times(1)).sendVerificationRequest("client123", "https://example.com/uri", "GET", peer)
+    }
+
+    @Test
+    fun handleRegistrationCompleteMessage_noopTest() {
+        val validSignature = SchnorrSignature(BigInteger.ONE, BigInteger.ONE, "test".toByteArray()).toBytesWithLength()
+        val message = TTPRegistrationCompleteMessage("Completed", validSignature)
+        iPV8CommunicationProtocol.participant = Mockito.mock(User::class.java)
+        iPV8CommunicationProtocol.messageList.add(message)
+    }
+
+    @Test
+    fun handleVerificationRequestMessage_noopTest() {
+        val mockUri = Mockito.mock(Uri::class.java)
+        val mockUriBuilder = Mockito.mock(Uri.Builder::class.java)
+
+        `when`(Uri.parse("eudi-openid4vp://")).thenReturn(mockUri)
+        `when`(mockUri.buildUpon()).thenReturn(mockUriBuilder)
+        `when`(mockUriBuilder.appendQueryParameter(any(), any())).thenReturn(mockUriBuilder)
+        `when`(mockUriBuilder.build()).thenReturn(mockUri)
+
+        val message = TTPVerificationRequestMessage("client_id", "request_uri", "get")
+        iPV8CommunicationProtocol.participant = Mockito.mock(User::class.java)
+        iPV8CommunicationProtocol.messageList.add(message)
+    }
 }
