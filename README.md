@@ -155,7 +155,7 @@ The APKs for the EUDI Wallet and OfflineEuro apps that have been used in the dem
 
 The flow of the application has been changed, most notably with the AllRolesFragment being deprecated in favor of individual role panels (and a specific set-up screen for Users). 
 
-To use the application with the Role of a User, uou also need peers acting as the TTP and the Bank. This is because, in the registration step, the TTP signs your public key and sends a commitment for your identity to the Bank. Without those, the registration step cannot be done and you cannot start using the app. Therefore, the registration step must be "online". Afterwards, the app can practically be "offline" until the deposit of a token (so only interactions with other users).  
+To use the application with the Role of a User, you also need peers acting as the TTP and the Bank. This is because, in the registration step, the TTP signs your public key and sends a commitment for your identity to the Bank. Without those, the registration step cannot be done and you cannot start using the app. Therefore, the registration step must be "online". Afterwards, the app can practically be "offline" until the deposit of a token (so only interactions with other users).  
 
 Depositing a token no longer removes it directly from your User screen. This is to test double-deposits easier as a proof of concept.
 
