@@ -137,6 +137,36 @@ Zooming into the actual mechanism of QR-Codes (Creative Commons CC0 license - sh
 
 ![Demo](eurotoken/images/demo.gif)
 
+### OfflineEuro
+
+The application showcases an implementation of the Offline Euro: a digital token, that can be transferred in an offline manner by users. The protocol uses advanced cryptographic schemes such as Groth-Sahai zero knowledge proofs, Schnorr blind signatures and Pedersen commitments to preserve privacy as much as possible within the system. The full cryptographic scheme implementation is based on this [paper](https://arxiv.org/pdf/2407.13776v1).
+
+There are 3 actors in the system: the Bank, the TTP (trusted third-party) and Users. As with other P2P payment systems, the problem of double spending is hard to solve, especially in a system that is based on cryptographic schemes. That is why Users of this system are required to make an account using their [EUDI](https://github.com/eu-digital-identity-wallet/eudi-app-android-wallet-ui) backed identity. This is privately stored by the TTP and revealed to the Bank only in case the User double spends a token.
+
+#### Demo
+The Users are free to transfer tokens between each other. The tokens can have different values: 1, 5, 25 and 100 Eur. We will show a demo of our app that showcases legal and illegal behaviour from Users and how our system deals with it.
+![Demo](offlineeuro/images/demo2.gif)
+
+#### EUDI wallet
+To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a ``FormEU`` type document and fill in the mandatory fields. After that, also create a PID test document with the same options as the previous one. This document will be verified by the OfflineEuro app.
+
+<img src="offlineeuro/images/eudi-demo-registration.gif" alt="Alt Text" width="300" height="650">
+
+The EUDI integration flow can be visualized in the following figure:
+
+<img src="offlineeuro/images/EUDI-integration-and-commitments.png" alt="Alt Text" width="500" height="600">
+The APKs for the EUDI Wallet and OfflineEuro apps that have been used in the demo, are listed in this [github issue](https://github.com/Tribler/tribler/issues/8562).
+
+#### Notes on Flow / Use Cases
+
+The flow of the application has been changed, most notably with the AllRolesFragment being deprecated in favor of individual role panels (and a specific set-up screen for Users). 
+
+To use the application with the Role of a User, you also need peers acting as the TTP and the Bank. This is because, in the registration step, the TTP signs your public key and sends a commitment for your identity to the Bank. Without those, the registration step cannot be done and you cannot start using the app. Therefore, the registration step must be "online". Afterwards, the app can practically be "offline" until the deposit of a token (so only interactions with other users).  
+
+Depositing a token no longer removes it directly from your User screen. This is to test double-deposits easier as a proof of concept.
+
+Upon detection of a double deposit, the Bank gains access to some fields relating to the double-spender's identity (Family Name, Given Name, Issuing Country etc.) with the help of the TTP.
+
 ### Debug
 
 **Debug** shows various information related to connectivity, including:
