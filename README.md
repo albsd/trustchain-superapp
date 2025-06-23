@@ -149,9 +149,12 @@ The Users are free to transfer tokens between each other. The tokens can have di
 
 #### EUDI wallet
 To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a ``FormEU`` type document and fill in the mandatory fields. After that, also create a PID test document with the same options as the previous one. This document will be verified by the OfflineEuro app.
-![Eudi-Demo](offlineeuro/images/eudi-demo-registration.gif)
+
+<img src="offlineeuro/images/eudi-demo-registration.gif" alt="Alt Text" width="300" height="650">
+
 The EUDI integration flow can be visualized in the following figure:
-![EUDI-integration](offlineeuro/images/EUDI-integration-and-commitments.png).
+
+<img src="offlineeuro/images/EUDI-integration-and-commitments.png" alt="Alt Text" width="500" height="600">
 The APKs for the EUDI Wallet and OfflineEuro apps that have been used in the demo, are listed in this [github issue](https://github.com/Tribler/tribler/issues/8562).
 
 #### Notes on Flow / Use Cases
