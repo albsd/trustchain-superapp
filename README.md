@@ -148,7 +148,10 @@ The Users are free to transfer tokens between each other. The tokens can have di
 ![Demo](offlineeuro/images/demo2.gif)
 
 #### EUDI wallet
-To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a ``FormEU`` type document and fill in the mandatory fields. After that, also create a PID test document with the same options as the previous one. This document will be verified by the OfflineEuro app. 
+To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a ``FormEU`` type document and fill in the mandatory fields. After that, also create a PID test document with the same options as the previous one. This document will be verified by the OfflineEuro app.
+![Eudi-Demo](offlineeuro/images/eudi-demo-registration.gif)
+The EUDI integration flow can be visualized in the following figure:
+![EUDI-integration](offlineeuro/images/EUDI-integration-and-commitments.png).
 The APKs for the EUDI Wallet and OfflineEuro apps that have been used in the demo, are listed in this [github issue](https://github.com/Tribler/tribler/issues/8562).
 
 #### Notes on Flow / Use Cases
@@ -160,9 +163,6 @@ To use the application with the Role of a User, you also need peers acting as th
 Depositing a token no longer removes it directly from your User screen. This is to test double-deposits easier as a proof of concept.
 
 Upon detection of a double deposit, the Bank gains access to some fields relating to the double-spender's identity (Family Name, Given Name, Issuing Country etc.) with the help of the TTP.
-
-
-
 
 ### Debug
 
