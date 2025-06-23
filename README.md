@@ -148,8 +148,20 @@ The Users are free to transfer tokens between each other. The tokens can have di
 ![Demo](offlineeuro/images/demo2.gif)
 
 #### EUDI wallet
-To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a "nodeEu" type document and fill in the mandatory fields. After that, also create a PID test document with the same options as the previous one. This document will be verified by the Offlineeuro app. 
-The apks for the Eudi wallet and Offlineeuro apps, that have been used in the demo, are listed in this [github issue](https://github.com/Tribler/tribler/issues/8562).
+To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a ``FormEU`` type document and fill in the mandatory fields. After that, also create a PID test document with the same options as the previous one. This document will be verified by the OfflineEuro app. 
+The APKs for the EUDI Wallet and OfflineEuro apps that have been used in the demo, are listed in this [github issue](https://github.com/Tribler/tribler/issues/8562).
+
+#### Notes on Flow / Use Cases
+
+The flow of the application has been changed, most notably with the AllRolesFragment being deprecated in favor of individual role panels (and a specific set-up screen for Users). 
+
+To use the application with the Role of a User, uou also need peers acting as the TTP and the Bank. This is because, in the registration step, the TTP signs your public key and sends a commitment for your identity to the Bank. Without those, the registration step cannot be done and you cannot start using the app. Therefore, the registration step must be "online". Afterwards, the app can practically be "offline" until the deposit of a token (so only interactions with other users).  
+
+Depositing a token no longer removes it directly from your User screen. This is to test double-deposits easier as a proof of concept.
+
+Upon detection of a double deposit, the Bank gains access to some fields relating to the double-spender's identity (Family Name, Given Name, Issuing Country etc.) with the help of the TTP.
+
+
 
 
 ### Debug
