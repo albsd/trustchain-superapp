@@ -140,10 +140,15 @@ Zooming into the actual mechanism of QR-Codes (Creative Commons CC0 license - sh
 ### OfflineEuro
 
 The application showcases an implementation of the Offline Euro: a digital token, that can be transferred in an offline manner by users. The protocol uses advanced cryptographic schemes such as Groth-Sahai zero knowledge proofs, Schnorr blind signatures and Pedersen commitments to preserve privacy as much as possible within the system. The full cryptographic scheme implementation is based on this [paper](https://arxiv.org/pdf/2407.13776v1).
+
 There are 3 actors in the system: the Bank, the TTP (trusted third-party) and Users. As with other P2P payment systems, the problem of double spending is hard to solve, especially in a system that is based on cryptographic schemes. That is why Users of this system are required to make an account using their [EUDI](https://github.com/eu-digital-identity-wallet/eudi-app-android-wallet-ui) backed identity. This is privately stored by the TTP and revealed to the Bank only in case the User double spends a token.
 
 The Users are free to transfer tokens between each other. We will show a demo of our app that showcases legal and illegal behaviour from Users and how our system deals with it.
 ![Demo](offlineeuro/images/demo2.gif)
+
+To be able to make a User, you also need the EUDI wallet installed on your emulator or phone. After install, the wallet will prompt you to create a PID document. You should create a "nodeEu" type document with whatever data you like. After that, also create a PID test document and choose the same options. This document will be verified by the Offlineeuro app. 
+The apks for the Eudi wallet and Offlineeuro apps, that have been used in the demo, are listed in this [github issue](https://github.com/Tribler/tribler/issues/8562)
+
 
 ### Debug
 
